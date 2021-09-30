@@ -1,0 +1,29 @@
+{
+  "name": "val-stats",
+  "version": "1.0.0",
+  "description": "valorant stats page",
+  "main": "server.js",
+  "scripts": {
+    "test": "test",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Aidanator17/valstats.git"
+  },
+  "keywords": [
+    "valorant"
+  ],
+  "author": "Aidan C",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Aidanator17/valstats/issues"
+  },
+  "homepage": "https://github.com/Aidanator17/valstats#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "express-ejs-layouts": "^2.5.1",
+    "express-session": "^1.17.2",
+    "path": "^0.12.7"
+  }
+}
