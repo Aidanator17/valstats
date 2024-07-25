@@ -1,0 +1,127 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+body, html {
+  height: 100%;
+  width: 100%;
+  background-color: #f4f4f9;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px;
+}
+
+.container {
+  width: 66%;
+  max-width: 1200px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+#playerimg {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  margin-right: 20px;
+  object-fit: cover;
+}
+
+#playername {
+  font-size: 2rem;
+  color: #333;
+  margin: 0;
+  display: flex;
+  align-items: center; /* Ensure alignment with the smaller text */
+}
+#playertag {
+  font-size: 1rem; /* Smaller text size */
+  color: #666; /* Lighter color for differentiation */
+  margin-left: 10px; /* Space between username and tag */
+}
+
+.stats {
+  margin-top: 20px;
+}
+
+.statgrid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.statgrid-item {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* Create five equal columns */
+  align-items: center;
+  gap: 10px;
+}
+.statgrid-title {
+  font-weight: bold;
+}
+
+.statgrid-element {
+  font-size: 1rem;
+  color: #555;
+  text-align: center; /* Center text within each grid cell */
+}
+
+.matches {
+  margin-top: 20px;
+}
+
+.matchgrid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.matchgrid-item {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: grid;
+  grid-template-columns: repeat(8, 1fr); /* Create five equal columns */
+  align-items: center;
+  gap: 10px;
+}
+.matchgrid-title {
+  font-weight: bold;
+}
+
+.matchgrid-element {
+  font-size: 1rem;
+  color: #555;
+  text-align: center; /* Center text within each grid cell */
+}
+
+.view-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.view-button:hover {
+  background-color: #0056b3;
+}

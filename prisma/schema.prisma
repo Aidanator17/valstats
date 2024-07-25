@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model matches {
+  id              Int    @id @default(autoincrement())
+  match_id        String @unique(map: "match_id") @db.VarChar(100)
+  match_info      String @db.LongText
+  match_type      String @db.VarChar(45)
+  match_map       String @db.VarChar(45)
+  match_starttime Int
+}
+
+model players {
+  id              Int               @id @default(autoincrement())
+  puuid           String            @unique(map: "puuid") @db.VarChar(100)
+  players_matches players_matches[]
+}
+
+model players_matches {
+  id        Int     @id @default(autoincrement())
+  player_id Int
+  matchid   String  @db.VarChar(200)
+  players   players @relation(fields: [player_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "players_matches_ibfk_1")
+
+  @@unique([player_id, matchid], map: "unique_playermatches")
+}
