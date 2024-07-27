@@ -72,7 +72,7 @@
                                     Agent
                                 </p>
                                 <p class="matchgrid-element matchgrid-title">
-                                    K/D
+                                    K/D/A (K/D)
                                 </p>
                                 <p class="matchgrid-element matchgrid-title">
                                     HS%
@@ -99,7 +99,7 @@
                                         <%= UserInfo['matches'][match]['data']['metadata']['agent'] %>
                                     </p>
                                     <p class="matchgrid-element">
-                                        <%= UserInfo['matches'][match]['data']['metadata']['kd'] %>
+                                        <%= UserInfo['matches'][match]['data']['metadata']['kills'] %>/<%= UserInfo['matches'][match]['data']['metadata']['deaths'] %>/<%= UserInfo['matches'][match]['data']['metadata']['assists'] %> (<%= UserInfo['matches'][match]['data']['metadata']['kd'] %>)
                                     </p>
                                     <p class="matchgrid-element">
                                         <%= UserInfo['matches'][match]['data']['metadata']['HSP'] %>

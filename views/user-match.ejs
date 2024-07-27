@@ -1,0 +1,80 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Match Details</title>
+    <link rel="stylesheet" href="/css/user-match.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="agent-image">
+                <img src="<%= matchData['data']['metadata']['user_agent_imgs']['small'] %>" alt="Agent Image">
+            </div>
+            <div class="user-info-date">
+                <div class="user-info">
+                    <h1 id="username">
+                        <%= matchData['data']['metadata']['main-username'] %> <span id="tag">
+                                <%= matchData['data']['metadata']['main-tag'] %>
+                            </span>
+                    </h1>
+                    <p id="match-date">
+                        <%= matchData['data']['metadata']['game_start_patched'] %>
+                    </p>
+                </div>
+                <div class="match-info"
+                    style="background-image: url('/images/<%= matchData['data']['metadata']['map'] %>.jpg');">
+                    <p id="m-info">
+                        <%= matchData['data']['metadata']['map'] %> / 
+                            <%= matchData['data']['metadata']['result'] %> / 
+                                <% if (matchData['data']['metadata']['result']=='loss' ){ let
+                                    scores=matchData['data']['metadata']['score'].split("-") %>
+                                    <%= scores[1] %>-<%= scores[0] %>
+                                            <% } else {%>
+                                                <%= matchData['data']['metadata']['score'] %>
+                                                    <%} %>
+                    </p>
+                    <p id="match-info-space"></p>
+                </div>
+            </div>
+        </div>
+        <div class="stats-grid">
+            <p>(personal stats)</p>
+        </div>
+        <div class="buttons">
+            <button class="tab active" id="scoreboard-btn">Scoreboard</button>
+            <button class="tab" id="button2-btn">Button 2</button>
+            <button class="tab" id="button3-btn">Button 3</button>
+        </div>
+        <div class="scoreboard active">
+            <div class="team-section">
+                <div class="team-column">
+                    <div class="column-labels">Column labels</div>
+                    <% for (p in matchData['data']['players']['red']) { %>
+                        <div class="player-stat">
+                            <img src="<%= matchData['data']['players']['red'][p]['assets']['agent']['small'] %>"
+                                alt="Player Image">
+                            <p>
+                                <%= matchData['data']['players']['red'][p]['name'] %>
+                            </p>
+                            <!-- Add additional stats here -->
+                        </div>
+                        <% } %>
+                </div>
+                <div class="team-column">
+                    <div class="column-labels">Column labels</div>
+                    <% for (p in matchData['data']['players']['blue']) { %>
+                        <div class="player-stat">
+                            <img src="<%= matchData['data']['players']['blue'][p]['assets']['agent']['small'] %>"
+                                alt="Player Image">
+                            <p>
+                                <%= matchData['data']['players']['blue'][p]['name'] %>
+                            </p>
+                            <!-- Add additional stats here -->
+                        </div>
+                        <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>

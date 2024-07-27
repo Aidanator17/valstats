@@ -43,7 +43,11 @@ const UserData = {
     },
     alterMatch: async function (match, puuid) {
         if (match['data']['metadata']['mode_id'] == 'deathmatch') {
-            match['data']['metadata']['agent'] = match['data']['players']['all_players'][player]['character']
+            for (player in match['data']['players']['all_players']) {
+                if (match['data']['players']['all_players'][player]['puuid'] == puuid) {
+                    match['data']['metadata']['agent'] = match['data']['players']['all_players'][player]['character']
+                }
+            }
 
         }
         else {
@@ -58,8 +62,17 @@ const UserData = {
                     let headshots = match['data']['players']['all_players'][player]['stats']['headshots']
                     let bodyshots = match['data']['players']['all_players'][player]['stats']['bodyshots']
                     let legshots = match['data']['players']['all_players'][player]['stats']['legshots']
-                    match['data']['metadata']['kd'] = Math.round((kills / deaths)*100)/100
-                    match['data']['metadata']['HSP'] = Math.round((headshots/(headshots+legshots+bodyshots))*1000)/10
+                    match['data']['metadata']['kd'] = Math.round((kills / deaths) * 100) / 100
+                    match['data']['metadata']['kills'] = kills
+                    match['data']['metadata']['deaths'] = deaths
+                    match['data']['metadata']['assists'] = assists
+                    if ((headshots + legshots + bodyshots)==0){
+                        match['data']['metadata']['HSP'] = Math.round((headshots / 1) * 1000) / 10
+                    }
+                    else {
+                        match['data']['metadata']['HSP'] = Math.round((headshots / (headshots + legshots + bodyshots)) * 1000) / 10
+                    }
+                    match['data']['metadata']['user_agent_imgs'] = match['data']['players']['all_players'][player]['assets']['agent']
                     break
                 }
             }
@@ -67,26 +80,26 @@ const UserData = {
             let bluescore = match['data']['teams']['blue']['rounds_won']
             if (redscore > bluescore) {
                 if (playerteam == 'Red') {
-                    match['data']['metadata']['result'] = 'win'
+                    match['data']['metadata']['result'] = 'Win'
                     match['data']['metadata']['score'] = redscore + '-' + bluescore
                 }
                 else {
-                    match['data']['metadata']['result'] = 'loss'
+                    match['data']['metadata']['result'] = 'Loss'
                     match['data']['metadata']['score'] = redscore + '-' + bluescore
                 }
             }
             else if (bluescore > redscore) {
                 if (playerteam == 'Blue') {
-                    match['data']['metadata']['result'] = 'win'
+                    match['data']['metadata']['result'] = 'Win'
                     match['data']['metadata']['score'] = bluescore + '-' + redscore
                 }
                 else {
-                    match['data']['metadata']['result'] = 'loss'
+                    match['data']['metadata']['result'] = 'Loss'
                     match['data']['metadata']['score'] = bluescore + '-' + redscore
                 }
             }
             else {
-                match['data']['metadata']['result'] = 'draw'
+                match['data']['metadata']['result'] = 'Draw'
                 match['data']['metadata']['score'] = bluescore + '-' + redscore
             }
         }

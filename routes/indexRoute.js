@@ -188,7 +188,7 @@ router.get('/user/:user/:tag', async (req, res) => {
                     }
                 }
             }
-            if (UserInfo['matches'][m]['data']['metadata']['result'] == 'win') {
+            if (UserInfo['matches'][m]['data']['metadata']['result'] == 'Win') {
                 if (m < 5) {
                     past5wins = past5wins + 1
                 }
@@ -208,7 +208,7 @@ router.get('/user/:user/:tag', async (req, res) => {
     UserInfo['stats']['past5']['KD'] = Math.round((past5kills / past5deaths) * 100) / 100
     UserInfo['stats']['overall']['wp'] = Math.round((totalwins / (totalwins + totallosses)) * 1000) / 10
     UserInfo['stats']['past5']['wp'] = Math.round((past5wins / (past5wins + past5losses)) * 1000) / 10
-    // console.log(UserInfo['stats'])
+    console.log(UserInfo['stats'])
     end = Date.now()
     console.log(indent + `All matches retrieved and formatted (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
 
@@ -221,7 +221,14 @@ router.get('/user/:user/:tag', async (req, res) => {
 
 })
 router.get('/user/:user/:tag/:matchid', async (req, res) => {
-    res.redirect('/')
+    const match = JSON.parse((await DatabaseFunctions.get_match_by_match_id(req.params.matchid))['match_info'])
+    const puuid = (await UserData.getBasic(req.params.user, req.params.tag)).puuid
+    match['data']['metadata']['main-username'] = req.params.user
+    match['data']['metadata']['main-tag'] = req.params.tag
+
+    const matchData = await UserData.alterMatch(match,puuid)
+    // console.log(matchData['data']['metadata'])
+    res.render('user-match',{matchData})
 })
 
 router.get('/user/mass-adjust', async (req, res) => {

@@ -66,6 +66,14 @@ const DatabaseFunctions = {
         })
         return matches
     },
+    get_match_by_match_id: async function (mid) {
+        const match = await prisma.matches.findUnique({
+            where:{
+                match_id:mid
+            }
+        })
+        return match
+    },
     mass_add: async function (matches, unfiltered_matches, pid) {
         try {
             let matchinput = []
