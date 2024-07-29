@@ -2,14 +2,8 @@ const express = require("express");
 const router = express.Router();
 const fetch = require("node-fetch")
 const UserData = require('../models/valAPI');
-const db = require('../models/databaseModel');
-const key = "?api_key=HDEV-cbf520fc-b91f-4235-b15b-a4d663f6bc9b&size=20"
 const fs = require('fs');
-const path = require('path');
-const moment = require('moment-timezone');
 const DatabaseFunctions = require("../models/databaseModel");
-const { userInfo } = require("os");
-const { match } = require("assert");
 const indent = `    `
 
 async function createJSON(name, jsondata) {
@@ -20,60 +14,29 @@ async function createJSON(name, jsondata) {
     });
 }
 
-function logMassAdjust(startingP, newP, startingPM, newPM, duration) {
-    // Path to the log file
-    const logFilePath = path.join(__dirname, '..', 'logs', 'mass-adjust-log.txt');
 
-    // Get the current time in PST
-    const formattedDate = moment().tz('America/Vancouver').format('YYYY-MM-DD HH:mm');
-
-
-    // Format the log entry
-    const logEntry = `MASS ADJUST --- ${formattedDate}
-  Duration: ${duration}s
-  Players table increased by ${newP - startingP} (${startingP} -> ${newP})
-  Player-Matches table increased by ${newPM - startingPM} (${startingPM} -> ${newPM})
-  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  `;
-
-    // Read the existing log file content
-    let existingLog = '';
-    if (fs.existsSync(logFilePath)) {
-        existingLog = fs.readFileSync(logFilePath, 'utf8');
-    }
-
-    // Append the new log entry at the top
-    fs.writeFileSync(logFilePath, logEntry + "\n" + existingLog);
-}
 
 router.get('/', async (req, res) => {
     // const id = (await UserData.getBasic('Fish','4484')).puuid
     // console.log(await db.check_player(id))
 
-    res.redirect('/userlookup')
-})
-router.get('/user', async (req, res) => {
-    // const id = (await UserData.getBasic('Fish','4484')).puuid
-    // console.log(await db.check_player(id))
-
-    res.redirect('/userlookup')
+    res.redirect('/user/lookup')
 })
 
-
-router.get('/userlookup', async (req, res) => {
+router.get('/lookup', async (req, res) => {
     res.render('userlookup')
 })
-router.post('/userlookup', async (req, res) => {
+
+router.post('/lookup', async (req, res) => {
     res.redirect('/user/' + req.body.user + '/' + req.body.tag)
 })
-router.get('/user/mass-adjust', async (req, res) => {
-    res.render('mass-adjust')
-})
-router.get('/user/:puuid', async (req, res) => {
+
+router.get('/:puuid', async (req, res) => {
     let data = await UserData.getBasic_by_puuid(req.params.puuid)
     res.redirect(`/user/${data['username']}/${data['tag']}`)
 })
-router.get('/user/:user/:tag', async (req, res) => {
+
+router.get('/:user/:tag', async (req, res) => {
     console.log(`Attempting to retrieve data for ${req.params.user}#${req.params.tag}`)
 
     let start = Date.now()
@@ -227,7 +190,8 @@ router.get('/user/:user/:tag', async (req, res) => {
     res.render('user', { UserInfo })
 
 })
-router.get('/user/:user/:tag/:matchid', async (req, res) => {
+
+router.get('/:user/:tag/:matchid', async (req, res) => {
     let start = Date.now()
     const match = JSON.parse((await DatabaseFunctions.get_match_by_match_id(req.params.matchid))['match_info'])
     const puuid = (await UserData.getBasic(req.params.user, req.params.tag)).puuid
@@ -240,51 +204,4 @@ router.get('/user/:user/:tag/:matchid', async (req, res) => {
     res.render('user-match',{matchData})
 })
 
-router.post('/user/mass-adjust', async (req, res) => {
-    if (req.body.pw == '123') {
-        console.log('MASS ADJUST INITIATED')
-        const startingP = (await DatabaseFunctions.get_mass_player()).length
-        const startingPM = (await DatabaseFunctions.get_mass_Player_Matches()).length
-        let data = []
-        let count = 1
-        const all_matches = await DatabaseFunctions.mass_retrieve()
-
-        let start
-        let end
-        let og = Date.now()
-        for (m in all_matches) {
-            start = Date.now()
-            let players = JSON.parse(all_matches[m]['match_info'])['data']['players']['all_players']
-            // createJSON("player.json",players)
-            for (p in players) {
-                let checker = await DatabaseFunctions.check_player(players[p]['puuid'])
-                let exist = checker[0]
-                let pid = checker[1]
-                if (!exist) {
-                    const addplayer = await DatabaseFunctions.create_player(players[p]['puuid'])
-                    checker = await DatabaseFunctions.check_player(players[p]['puuid'])
-                    pid = checker[1]
-                }
-                data.push({
-                    player_id: pid,
-                    matchid: JSON.parse(all_matches[m]['match_info'])['data']['metadata']['matchid']
-                })
-            }
-            await DatabaseFunctions.add_Player_Matches(data)
-            end = Date.now()
-            console.log(`${Math.round((count / all_matches.length) * 10000) / 100}%`)
-            count++
-        }
-        end = Date.now()
-        console.log(`MASS ADJUST CONCLUDED (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
-        const newP = (await DatabaseFunctions.get_mass_player()).length
-        const newPM = (await DatabaseFunctions.get_mass_Player_Matches()).length
-        console.log(`Players table increased by ${newP - startingP} (${startingP} -> ${newP})\nPlayer-Matches table increased by ${newPM - startingPM} (${startingPM} -> ${newPM})`)
-        logMassAdjust(startingP, newP, startingPM, newPM, Math.round(((end - og) / 1000) * 10) / 10)
-        res.redirect('/')
-    }
-    else {
-        res.redirect('/user/mass-adjust')
-    }
-})
 module.exports = router

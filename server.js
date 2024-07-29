@@ -23,8 +23,8 @@ app.use(
 
 // const passport = require("./middleware/passport");
 // const authRoute = require("./routes/authRoute");
-const indexRoute = require("./routes/indexRoute");
-const valRoute = require("./routes/valRoute");
+const userRoute = require("./routes/userRoute");
+const adminRoute = require("./routes/adminRoute");
 
 // Middleware for express
 app.use(express.json());
@@ -45,10 +45,16 @@ app.use(express.urlencoded({ extended: true }));
 //   next();
 // });
 
-app.use("/", indexRoute);
-app.use("/getval", valRoute);
+app.use("/user", userRoute);
+app.use("/admin", adminRoute);
 // app.use("/auth", authRoute);
 
+app.get('/', async (req, res) => {
+  // const id = (await UserData.getBasic('Fish','4484')).puuid
+  // console.log(await db.check_player(id))
+
+  res.redirect('/user/lookup')
+})
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`🚀 Server has started on port ${port}`);

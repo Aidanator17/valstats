@@ -43,7 +43,7 @@ const UserData = {
             reg: data['data']['region']
         }}
         catch{
-            console.log("ERROR PUUID:",pid)
+            // console.log("ERROR PUUID:",pid)
             return {
                 username: 'error',
                 tag: 'error',
