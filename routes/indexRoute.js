@@ -66,6 +66,13 @@ router.get('/userlookup', async (req, res) => {
 router.post('/userlookup', async (req, res) => {
     res.redirect('/user/' + req.body.user + '/' + req.body.tag)
 })
+router.get('/user/mass-adjust', async (req, res) => {
+    res.render('mass-adjust')
+})
+router.get('/user/:puuid', async (req, res) => {
+    let data = await UserData.getBasic_by_puuid(req.params.puuid)
+    res.redirect(`/user/${data['username']}/${data['tag']}`)
+})
 router.get('/user/:user/:tag', async (req, res) => {
     console.log(`Attempting to retrieve data for ${req.params.user}#${req.params.tag}`)
 
@@ -167,7 +174,7 @@ router.get('/user/:user/:tag', async (req, res) => {
     let past5wins = 0
     let past5losses = 0
     for (m in real_matches) {
-        UserInfo['matches'].push(await UserData.alterMatch(JSON.parse(real_matches[m]['match_info']), UserInfo['puuid']))
+        UserInfo['matches'].push(await UserData.alterMatch(JSON.parse(real_matches[m]['match_info']), UserInfo['puuid'],false))
     }
     for (m in UserInfo['matches']) {
 
@@ -208,7 +215,7 @@ router.get('/user/:user/:tag', async (req, res) => {
     UserInfo['stats']['past5']['KD'] = Math.round((past5kills / past5deaths) * 100) / 100
     UserInfo['stats']['overall']['wp'] = Math.round((totalwins / (totalwins + totallosses)) * 1000) / 10
     UserInfo['stats']['past5']['wp'] = Math.round((past5wins / (past5wins + past5losses)) * 1000) / 10
-    console.log(UserInfo['stats'])
+    // console.log(UserInfo['stats'])
     end = Date.now()
     console.log(indent + `All matches retrieved and formatted (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
 
@@ -221,19 +228,18 @@ router.get('/user/:user/:tag', async (req, res) => {
 
 })
 router.get('/user/:user/:tag/:matchid', async (req, res) => {
+    let start = Date.now()
     const match = JSON.parse((await DatabaseFunctions.get_match_by_match_id(req.params.matchid))['match_info'])
     const puuid = (await UserData.getBasic(req.params.user, req.params.tag)).puuid
     match['data']['metadata']['main-username'] = req.params.user
     match['data']['metadata']['main-tag'] = req.params.tag
 
-    const matchData = await UserData.alterMatch(match,puuid)
-    // console.log(matchData['data']['metadata'])
+    const matchData = await UserData.alterMatch(match,puuid,true)
+    let end = Date.now()
+    console.log(`Match data for ${req.params.matchid} retrieved (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
     res.render('user-match',{matchData})
 })
 
-router.get('/user/mass-adjust', async (req, res) => {
-    res.render('mass-adjust')
-})
 router.post('/user/mass-adjust', async (req, res) => {
     if (req.body.pw == '123') {
         console.log('MASS ADJUST INITIATED')

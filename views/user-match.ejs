@@ -19,14 +19,14 @@
                             </span>
                     </h1>
                     <p id="match-date">
-                        <%= matchData['data']['metadata']['game_start_patched'] %>
+                        <%= matchData['data']['metadata']['game_start'] %>
                     </p>
                 </div>
                 <div class="match-info"
-                    style="background-image: url('/images/<%= matchData['data']['metadata']['map'] %>.jpg');">
+                    style="background-image: url('/images/maps/<%= matchData['data']['metadata']['map'] %>.jpg');">
                     <p id="m-info">
-                        <%= matchData['data']['metadata']['map'] %> / 
-                            <%= matchData['data']['metadata']['result'] %> / 
+                        <%= matchData['data']['metadata']['map'] %> //
+                            <%= matchData['data']['metadata']['result'] %>
                                 <% if (matchData['data']['metadata']['result']=='loss' ){ let
                                     scores=matchData['data']['metadata']['score'].split("-") %>
                                     <%= scores[1] %>-<%= scores[0] %>
@@ -49,26 +49,74 @@
         <div class="scoreboard active">
             <div class="team-section">
                 <div class="team-column">
-                    <div class="column-labels">Column labels</div>
+                    <div id="column-labels" class="player-stat">
+                        <p>
+                        </p>
+                        <p>
+                        </p>
+                        <p>Player
+                        </p>
+                        <p>ACS
+                        </p>
+                        <p>KDA
+                        </p>
+                    </div>
                     <% for (p in matchData['data']['players']['red']) { %>
                         <div class="player-stat">
+                            <img src="/images/ranks/<%= matchData['data']['players']['red'][p]['currenttier_patched'] %>_rank.png"
+                                alt="Rank Image"
+                                title="<%= matchData['data']['players']['red'][p]['currenttier_patched'] %>">
                             <img src="<%= matchData['data']['players']['red'][p]['assets']['agent']['small'] %>"
-                                alt="Player Image">
+                                alt="Player Image"
+                                title="<%= matchData['data']['players']['red'][p]['character'] %>">
+                            <p><a href="/user/<%= matchData['data']['players']['red'][p]['puuid'] %>" style="color: #000000; text-decoration: none;">
+                                <%= matchData['data']['players']['red'][p]['name'] %></a>
+                            </p>
                             <p>
-                                <%= matchData['data']['players']['red'][p]['name'] %>
+                                <%= Math.round(matchData['data']['players']['red'][p]['stats']['score']/(matchData['data']['teams']['red']['rounds_won']+matchData['data']['teams']['blue']['rounds_won']))
+                                    %>
+                            </p>
+                            <p>
+                                <%= matchData['data']['players']['red'][p]['stats']['kills'] %>/<%=
+                                        matchData['data']['players']['red'][p]['stats']['deaths'] %>/<%=
+                                            matchData['data']['players']['red'][p]['stats']['assists'] %>
                             </p>
                             <!-- Add additional stats here -->
                         </div>
                         <% } %>
                 </div>
                 <div class="team-column">
-                    <div class="column-labels">Column labels</div>
+                    <div id="column-labels" class="player-stat">
+                        <p>
+                        </p>
+                        <p>
+                        </p>
+                        <p>Player
+                        </p>
+                        <p>ACS
+                        </p>
+                        <p>KDA
+                        </p>
+                    </div>
                     <% for (p in matchData['data']['players']['blue']) { %>
                         <div class="player-stat">
+                            <img src="/images/ranks/<%= matchData['data']['players']['blue'][p]['currenttier_patched'] %>_rank.png"
+                                alt="Rank Image"
+                                title="<%= matchData['data']['players']['blue'][p]['currenttier_patched'] %>">
                             <img src="<%= matchData['data']['players']['blue'][p]['assets']['agent']['small'] %>"
-                                alt="Player Image">
+                                alt="Player Image"
+                                title="<%= matchData['data']['players']['blue'][p]['character'] %>">
+                                <p><a href="/user/<%= matchData['data']['players']['blue'][p]['puuid'] %>" style="color: #000000; text-decoration: none;">
+                                <%= matchData['data']['players']['blue'][p]['name'] %></a>
+                            </p>
                             <p>
-                                <%= matchData['data']['players']['blue'][p]['name'] %>
+                                <%= Math.round(matchData['data']['players']['blue'][p]['stats']['score']/(matchData['data']['teams']['red']['rounds_won']+matchData['data']['teams']['blue']['rounds_won']))
+                                    %>
+                            </p>
+                            <p>
+                                <%= matchData['data']['players']['blue'][p]['stats']['kills'] %>/<%=
+                                        matchData['data']['players']['blue'][p]['stats']['deaths'] %>/<%=
+                                            matchData['data']['players']['blue'][p]['stats']['assists'] %>
                             </p>
                             <!-- Add additional stats here -->
                         </div>
@@ -77,4 +125,41 @@
             </div>
         </div>
     </div>
+    <script>
+        function getTime(rawTime) {
+            // Given epoch time in GMT (milliseconds since January 1, 1970)
+            const epochTime = parseInt(rawTime) * 1000; // Example epoch time in milliseconds
+
+            // Convert the epoch time to a Date object
+            const date = new Date(epochTime);
+
+            // Specify the time zone you want to convert to (e.g., America/Vancouver)
+            const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+            // Use Intl.DateTimeFormat to format the date in the specified time zone
+            const options = {
+                timeZone,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                // second: '2-digit'
+                hour12: true
+            };
+
+            const formatter = new Intl.DateTimeFormat('en-US', options);
+            const formattedDate = formatter.format(date);
+            console.log(rawTime, formattedDate)
+
+            return formattedDate // Output: formatted date and time in the specified time zone
+
+        }
+
+        function updateTimeElements() {
+            const timeElement = document.getElementById('match-date')
+            timeElement.innerHTML = getTime(timeElement.innerHTML);
+        }
+        window.onload = updateTimeElements;
+    </script>
 </body>
