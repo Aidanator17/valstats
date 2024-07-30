@@ -163,7 +163,7 @@
   
   .player-stat {
     display: grid;
-    grid-template-columns: 20px 50px 150px auto auto;
+    grid-template-columns: 20px 50px 150px auto auto auto;
     align-items: center;
     background: #fff;
     padding: 10px;

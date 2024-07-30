@@ -27,7 +27,7 @@
                     <p id="m-info">
                         <%= matchData['data']['metadata']['map'] %> //
                             <%= matchData['data']['metadata']['result'] %>
-                                <% if (matchData['data']['metadata']['result']=='loss' ){ let
+                                <% if (matchData['data']['metadata']['result']=='Loss' ){ let
                                     scores=matchData['data']['metadata']['score'].split("-") %>
                                     <%= scores[1] %>-<%= scores[0] %>
                                             <% } else {%>
@@ -60,6 +60,8 @@
                         </p>
                         <p>KDA
                         </p>
+                        <p>HS%
+                        </p>
                     </div>
                     <% for (p in matchData['data']['players']['red']) { %>
                         <div class="player-stat">
@@ -81,6 +83,9 @@
                                         matchData['data']['players']['red'][p]['stats']['deaths'] %>/<%=
                                             matchData['data']['players']['red'][p]['stats']['assists'] %>
                             </p>
+                            <p>
+                                <%= Math.round((matchData['data']['players']['red'][p]['stats']['headshots']/(matchData['data']['players']['red'][p]['stats']['headshots']+matchData['data']['players']['red'][p]['stats']['legshots']+matchData['data']['players']['red'][p]['stats']['bodyshots']))*1000)/10 %>%
+                            </p>
                             <!-- Add additional stats here -->
                         </div>
                         <% } %>
@@ -96,6 +101,8 @@
                         <p>ACS
                         </p>
                         <p>KDA
+                        </p>
+                        <p>HS%
                         </p>
                     </div>
                     <% for (p in matchData['data']['players']['blue']) { %>
@@ -117,6 +124,9 @@
                                 <%= matchData['data']['players']['blue'][p]['stats']['kills'] %>/<%=
                                         matchData['data']['players']['blue'][p]['stats']['deaths'] %>/<%=
                                             matchData['data']['players']['blue'][p]['stats']['assists'] %>
+                            </p>
+                            <p>
+                                <%= Math.round((matchData['data']['players']['blue'][p]['stats']['headshots']/(matchData['data']['players']['blue'][p]['stats']['headshots']+matchData['data']['players']['blue'][p]['stats']['legshots']+matchData['data']['players']['blue'][p]['stats']['bodyshots']))*1000)/10 %>%
                             </p>
                             <!-- Add additional stats here -->
                         </div>

@@ -4,7 +4,7 @@
     <title>
         <%= UserInfo['username'] %>
     </title>
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/user.css">
 </head>
 
 <body>
@@ -54,6 +54,11 @@
                             </div>
                         </div>
 
+                    </div>
+                    <div class="buttons">
+                        <button class="tab active" id="scoreboard-btn">Match List</button>
+                        <button class="tab" id="button2-btn">Button 2</button>
+                        <button class="tab" id="button3-btn">Button 3</button>
                     </div>
                     <div class="matches">
                         <h3>Matches (<%= UserInfo['matches'].length %>)</h3>
