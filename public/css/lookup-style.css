@@ -54,3 +54,7 @@
     background-color: #0056b3;
   }
   
+  #not-found {
+    color: red;
+    padding-bottom: 10px;
+  }

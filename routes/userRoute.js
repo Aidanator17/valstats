@@ -4,6 +4,7 @@ const fetch = require("node-fetch")
 const UserData = require('../models/valAPI');
 const fs = require('fs');
 const DatabaseFunctions = require("../models/databaseModel");
+const { tr } = require("date-fns/locale");
 const indent = `    `
 
 async function createJSON(name, jsondata) {
@@ -24,7 +25,12 @@ router.get('/', async (req, res) => {
 })
 
 router.get('/lookup', async (req, res) => {
-    res.render('userlookup')
+    if (req.query.failed == 'true'){
+        res.render('userlookup',{failed:true})
+    }
+    else {
+    res.render('userlookup',{failed:false})
+    }
 })
 
 router.post('/lookup', async (req, res) => {
@@ -52,142 +58,147 @@ router.get('/:user/:tag', async (req, res) => {
         }
     }
     const info = await UserData.getBasic(req.params.user, req.params.tag)
-    let end = Date.now()
-    console.log(indent + `Retrieved basic data (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
-
-    let checker = await DatabaseFunctions.check_player(info.puuid)
-    let exist = checker[0]
-    let pid = checker[1]
-    if (!exist) {
-        const addplayer = await DatabaseFunctions.create_player(info.puuid)
-        console.log(indent + `Player Added To Database`)
-        checker = await DatabaseFunctions.check_player(info.puuid)
-        pid = checker[1]
+    if (info.puuid == '404_error') {
+        res.redirect('/user/lookup?failed=true')
     }
+    else {
+        let end = Date.now()
+        console.log(indent + `Retrieved basic data (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
 
-    UserInfo['puuid'] = info.puuid
-    UserInfo['img'] = info.small_card
-    UserInfo['lvl'] = info.acc_lvl
-    UserInfo['region'] = info.reg
+        let checker = await DatabaseFunctions.check_player(info.puuid)
+        let exist = checker[0]
+        let pid = checker[1]
+        if (!exist) {
+            const addplayer = await DatabaseFunctions.create_player(info.puuid)
+            console.log(indent + `Player Added To Database`)
+            checker = await DatabaseFunctions.check_player(info.puuid)
+            pid = checker[1]
+        }
 
-    start = Date.now()
-    let matchlist = await UserData.getMatchList(UserInfo['puuid'], UserInfo['region'])
-    // createJSON('matchlist.json', matchlist)
-    let rawmatchlist = matchlist
-    end = Date.now()
-    if (matchlist) {
-        console.log(indent + `Retrieved match list data (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
-    }
-    start = Date.now()
-    const playerMatches = await DatabaseFunctions.get_Player_Matches(pid)
-    let returned_matches = matchlist.length
-    let toRemove = []
-    if (playerMatches.length > 0) {
-        for (matchid in matchlist) {
-            for (playerMatch in playerMatches) {
-                if (matchlist[matchid] == playerMatches[playerMatch].matchid) {
-                    toRemove.push(matchlist[matchid])
-                }
-                else {
-                    continue
-                }
-            }
-        }
-        for (item in toRemove) {
-            const index = matchlist.indexOf(toRemove[item]);
-            if (index > -1) {
-                matchlist.splice(index, 1);
-                returned_matches--
-            }
-        }
+        UserInfo['puuid'] = info.puuid
+        UserInfo['img'] = info.small_card
+        UserInfo['lvl'] = info.acc_lvl
+        UserInfo['region'] = info.reg
+
+        start = Date.now()
+        let matchlist = await UserData.getMatchList(UserInfo['puuid'], UserInfo['region'])
+        // createJSON('matchlist.json', matchlist)
+        let rawmatchlist = matchlist
         end = Date.now()
-    }
-    console.log(indent + `${returned_matches} undocumented matches found (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
-
-    queue = 1
-    if (matchlist.length > 0) {
-        let newmatches = []
-        for (m in matchlist) {
-            start = Date.now()
-            newmatches.push(await UserData.getMatch(matchlist[m]))
-            end = Date.now()
-            console.log(indent + `retrieved match ${queue}/${returned_matches} data (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
-            queue++
+        if (matchlist) {
+            console.log(indent + `Retrieved match list data (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
         }
         start = Date.now()
-        await DatabaseFunctions.mass_add(newmatches, rawmatchlist, pid)
-        end = Date.now()
-        console.log(indent + `All ${returned_matches} matches successfully added (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
-    }
-    start = Date.now()
-    real_matches = (await DatabaseFunctions.get_matches_by_pid(pid)).sort((a, b) => b.match_starttime - a.match_starttime)
-
-    let totalkills = 0
-    let totaldeaths = 0
-    let totalheadshots = 0
-    let totalbodyshots = 0
-    let totallegshots = 0
-    let totalwins = 0
-    let totallosses = 0
-    let past5kills = 0
-    let past5deaths = 0
-    let past5headshots = 0
-    let past5bodyshots = 0
-    let past5legshots = 0
-    let past5wins = 0
-    let past5losses = 0
-    for (m in real_matches) {
-        UserInfo['matches'].push(await UserData.alterMatch(JSON.parse(real_matches[m]['match_info']), UserInfo['puuid'],false))
-    }
-    for (m in UserInfo['matches']) {
-
-        if (UserInfo['matches'][m]['data']['metadata']['mode_id'] == 'competitive') {
-            for (p in UserInfo['matches'][m]['data']['players']['all_players']) {
-                if (UserInfo['matches'][m]['data']['players']['all_players'][p]['puuid'] == UserInfo['puuid']) {
-                    totalkills = totalkills + UserInfo['matches'][m]['data']['players']['all_players'][p]['stats']['kills']
-                    totaldeaths = totaldeaths + UserInfo['matches'][m]['data']['players']['all_players'][p]['stats']['deaths']
-                    totalheadshots = totalheadshots + UserInfo['matches'][m]['data']['players']['all_players'][p]['stats']['headshots']
-                    totalbodyshots = totalbodyshots + UserInfo['matches'][m]['data']['players']['all_players'][p]['stats']['bodyshots']
-                    totallegshots = totallegshots + UserInfo['matches'][m]['data']['players']['all_players'][p]['stats']['legshots']
-                    if (m < 5) {
-                        past5kills = past5kills + UserInfo['matches'][m]['data']['players']['all_players'][p]['stats']['kills']
-                        past5deaths = past5deaths + UserInfo['matches'][m]['data']['players']['all_players'][p]['stats']['deaths']
-                        past5headshots = past5headshots + UserInfo['matches'][m]['data']['players']['all_players'][p]['stats']['headshots']
-                        past5bodyshots = past5bodyshots + UserInfo['matches'][m]['data']['players']['all_players'][p]['stats']['bodyshots']
-                        past5legshots = past5legshots + UserInfo['matches'][m]['data']['players']['all_players'][p]['stats']['legshots']
+        const playerMatches = await DatabaseFunctions.get_Player_Matches(pid)
+        let returned_matches = matchlist.length
+        let toRemove = []
+        if (playerMatches.length > 0) {
+            for (matchid in matchlist) {
+                for (playerMatch in playerMatches) {
+                    if (matchlist[matchid] == playerMatches[playerMatch].matchid) {
+                        toRemove.push(matchlist[matchid])
+                    }
+                    else {
+                        continue
                     }
                 }
             }
-            if (UserInfo['matches'][m]['data']['metadata']['result'] == 'Win') {
-                if (m < 5) {
-                    past5wins = past5wins + 1
+            for (item in toRemove) {
+                const index = matchlist.indexOf(toRemove[item]);
+                if (index > -1) {
+                    matchlist.splice(index, 1);
+                    returned_matches--
                 }
-                totalwins = totalwins + 1
             }
-            else {
-                if (m < 5) {
-                    past5losses = past5losses + 1
+            end = Date.now()
+        }
+        console.log(indent + `${returned_matches} undocumented matches found (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+
+        queue = 1
+        if (matchlist.length > 0) {
+            let newmatches = []
+            for (m in matchlist) {
+                start = Date.now()
+                newmatches.push(await UserData.getMatch(matchlist[m]))
+                end = Date.now()
+                console.log(indent + `retrieved match ${queue}/${returned_matches} data (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+                queue++
+            }
+            start = Date.now()
+            await DatabaseFunctions.mass_add(newmatches, rawmatchlist, pid)
+            end = Date.now()
+            console.log(indent + `All ${returned_matches} matches successfully added (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+        }
+        start = Date.now()
+        real_matches = (await DatabaseFunctions.get_matches_by_pid(pid)).sort((a, b) => b.match_starttime - a.match_starttime)
+
+        let totalkills = 0
+        let totaldeaths = 0
+        let totalheadshots = 0
+        let totalbodyshots = 0
+        let totallegshots = 0
+        let totalwins = 0
+        let totallosses = 0
+        let past5kills = 0
+        let past5deaths = 0
+        let past5headshots = 0
+        let past5bodyshots = 0
+        let past5legshots = 0
+        let past5wins = 0
+        let past5losses = 0
+        for (m in real_matches) {
+            UserInfo['matches'].push(await UserData.alterMatch(JSON.parse(real_matches[m]['match_info']), UserInfo['puuid'], false))
+        }
+        for (m in UserInfo['matches']) {
+
+            if (UserInfo['matches'][m]['data']['metadata']['mode_id'] == 'competitive') {
+                for (p in UserInfo['matches'][m]['data']['players']['all_players']) {
+                    if (UserInfo['matches'][m]['data']['players']['all_players'][p]['puuid'] == UserInfo['puuid']) {
+                        totalkills = totalkills + UserInfo['matches'][m]['data']['players']['all_players'][p]['stats']['kills']
+                        totaldeaths = totaldeaths + UserInfo['matches'][m]['data']['players']['all_players'][p]['stats']['deaths']
+                        totalheadshots = totalheadshots + UserInfo['matches'][m]['data']['players']['all_players'][p]['stats']['headshots']
+                        totalbodyshots = totalbodyshots + UserInfo['matches'][m]['data']['players']['all_players'][p]['stats']['bodyshots']
+                        totallegshots = totallegshots + UserInfo['matches'][m]['data']['players']['all_players'][p]['stats']['legshots']
+                        if (m < 5) {
+                            past5kills = past5kills + UserInfo['matches'][m]['data']['players']['all_players'][p]['stats']['kills']
+                            past5deaths = past5deaths + UserInfo['matches'][m]['data']['players']['all_players'][p]['stats']['deaths']
+                            past5headshots = past5headshots + UserInfo['matches'][m]['data']['players']['all_players'][p]['stats']['headshots']
+                            past5bodyshots = past5bodyshots + UserInfo['matches'][m]['data']['players']['all_players'][p]['stats']['bodyshots']
+                            past5legshots = past5legshots + UserInfo['matches'][m]['data']['players']['all_players'][p]['stats']['legshots']
+                        }
+                    }
                 }
-                totallosses = totallosses + 1
+                if (UserInfo['matches'][m]['data']['metadata']['result'] == 'Win') {
+                    if (m < 5) {
+                        past5wins = past5wins + 1
+                    }
+                    totalwins = totalwins + 1
+                }
+                else {
+                    if (m < 5) {
+                        past5losses = past5losses + 1
+                    }
+                    totallosses = totallosses + 1
+                }
             }
         }
+        UserInfo['stats']['overall']['HSP'] = Math.round((totalheadshots / (totalbodyshots + totalheadshots + totallegshots)) * 1000) / 10
+        UserInfo['stats']['past5']['HSP'] = Math.round((past5headshots / (past5bodyshots + past5headshots + past5legshots)) * 1000) / 10
+        UserInfo['stats']['overall']['KD'] = Math.round((totalkills / totaldeaths) * 100) / 100
+        UserInfo['stats']['past5']['KD'] = Math.round((past5kills / past5deaths) * 100) / 100
+        UserInfo['stats']['overall']['wp'] = Math.round((totalwins / (totalwins + totallosses)) * 1000) / 10
+        UserInfo['stats']['past5']['wp'] = Math.round((past5wins / (past5wins + past5losses)) * 1000) / 10
+        // console.log(UserInfo['stats'])
+        end = Date.now()
+        console.log(indent + `All matches retrieved and formatted (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+
+        // createJSON("test.json",UserInfo['matches'][0])
+
+        end = Date.now()
+        console.log(`Data for ${UserInfo['username']}#${UserInfo['tag']} retrieved (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
+        // console.log(Intl.DateTimeFormat().resolvedOptions().timeZone)
+        res.render('user', { UserInfo })
     }
-    UserInfo['stats']['overall']['HSP'] = Math.round((totalheadshots / (totalbodyshots + totalheadshots + totallegshots)) * 1000) / 10
-    UserInfo['stats']['past5']['HSP'] = Math.round((past5headshots / (past5bodyshots + past5headshots + past5legshots)) * 1000) / 10
-    UserInfo['stats']['overall']['KD'] = Math.round((totalkills / totaldeaths) * 100) / 100
-    UserInfo['stats']['past5']['KD'] = Math.round((past5kills / past5deaths) * 100) / 100
-    UserInfo['stats']['overall']['wp'] = Math.round((totalwins / (totalwins + totallosses)) * 1000) / 10
-    UserInfo['stats']['past5']['wp'] = Math.round((past5wins / (past5wins + past5losses)) * 1000) / 10
-    // console.log(UserInfo['stats'])
-    end = Date.now()
-    console.log(indent + `All matches retrieved and formatted (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
-
-    // createJSON("test.json",UserInfo['matches'][0])
-
-    end = Date.now()
-    console.log(`Data for ${UserInfo['username']}#${UserInfo['tag']} retrieved (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
-    // console.log(Intl.DateTimeFormat().resolvedOptions().timeZone)
-    res.render('user', { UserInfo })
 
 })
 
@@ -198,10 +209,10 @@ router.get('/:user/:tag/:matchid', async (req, res) => {
     match['data']['metadata']['main-username'] = req.params.user
     match['data']['metadata']['main-tag'] = req.params.tag
 
-    const matchData = await UserData.alterMatch(match,puuid,true)
+    const matchData = await UserData.alterMatch(match, puuid, true)
     let end = Date.now()
     console.log(`Match data for ${req.params.matchid} retrieved (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
-    res.render('user-match',{matchData})
+    res.render('user-match', { matchData })
 })
 
 module.exports = router

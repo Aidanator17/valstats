@@ -11,6 +11,9 @@
           <input name="user" placeholder="Username" class="input-field">
           <input name="tag" placeholder="Tag Line" class="input-field">
         </div>
+        <% if (failed){ %>
+          <p id="not-found">User not found</p>
+          <% } %>
         <button type="submit" class="submit-button">Submit</button>
       </form>
     </div>

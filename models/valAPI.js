@@ -14,17 +14,27 @@ function compare_score(a, b) {
 
 const UserData = {
     getBasic: async function (user, tag) {
-        const response = await fetch(`https://api.henrikdev.xyz/valorant/v1/account/${user}/${tag}` + key, {
-            method: 'GET',
-            headers: {},
-        });
-        const data = await response.json();
-        // console.log(data['data'])
-        return {
-            puuid: data['data']['puuid'],
-            small_card: data['data']['card']['small'],
-            acc_lvl: data['data']['account_level'],
-            reg: data['data']['region']
+        try {
+            const response = await fetch(`https://api.henrikdev.xyz/valorant/v1/account/${user}/${tag}` + key, {
+                method: 'GET',
+                headers: {},
+            });
+            const data = await response.json();
+            // console.log(data['data'])
+            return {
+                puuid: data['data']['puuid'],
+                small_card: data['data']['card']['small'],
+                acc_lvl: data['data']['account_level'],
+                reg: data['data']['region']
+            }
+        }
+        catch {
+            return {
+                puuid: '404_error',
+                small_card: '404_error',
+                acc_lvl: '404_error',
+                reg: '404_error'
+            }
         }
     },
     getBasic_by_puuid: async function (pid) {
