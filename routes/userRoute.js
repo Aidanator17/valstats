@@ -15,11 +15,19 @@ async function createJSON(name, jsondata) {
     });
 }
 
+function getRandomInt(max) {
+    return Math.floor(Math.random() * max);
+  }
+
 
 
 router.get('/', async (req, res) => {
     // const id = (await UserData.getBasic('Fish','4484')).puuid
     // console.log(await db.check_player(id))
+
+    // for (let i = 0; i < 10; i++){
+    //     res.render('test',{testValue:getRandomInt(500)})
+    // }
 
     res.redirect('/user/lookup')
 })
