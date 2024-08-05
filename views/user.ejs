@@ -9,119 +9,147 @@
 
 <body>
     <div class="container">
-        <% if (UserInfo && UserInfo['img'] && UserInfo['username']) { %>
-            <div class="profile">
-                <img id="playerimg" src="<%= UserInfo['img'] %>" alt="Player Image">
-                <h1 id="playername">
-                    <%= UserInfo['username'] %>
-                        <span id="playertag">
-                            <%= UserInfo['tag'] %>
-                        </span>
-                </h1>
+        <div id="usergrid">
+            <div class="usergrid-item">
+                <% if (UserInfo && UserInfo['img'] && UserInfo['username']) { %>
+                    <div class="profile">
+                        <img id="playerimg" src="<%= UserInfo['img'] %>" alt="Player Image">
+                        <h1 id="playername">
+                            <%= UserInfo['username'] %>
+                                <span id="playertag">
+                                    <%= UserInfo['tag'] %>
+                                </span>
+                        </h1>
+                    </div>
+                    <% } else { %>
+                        <p>Error: UserInfo data is missing or incomplete.</p>
+                        <% } %>
             </div>
-            <% } else { %>
-                <p>Error: UserInfo data is missing or incomplete.</p>
+            <div class="usergrid-item usergrid-rank">
+                <p>Current:</p>
+                <img id="rankimg" src="/images/ranks/<%= UserInfo['current_rank'] %>.png" alt="Player Image">
+            </div>
+            <div class="usergrid-item usergrid-rank">
+                <p>Peak (<%= UserInfo['peak_rank']['season'] %>):</p>
+                <img id="rankimg" src="/images/ranks/<%= UserInfo['peak_rank']['rank'] %>.png" alt="Player Image">
+            </div>
+        </div>
+        <div class="stats">
+            <h3>Stats (All Comp Matches)</h3>
+            <div class="statgrid">
+                <div class="statgrid-item">
+                    <p class="statgrid-element">
+                        Headshot: <%= UserInfo['stats']['overall']['HSP'] %>%
+                    </p>
+                    <p class="statgrid-element">
+                        K/D: <%= UserInfo['stats']['overall']['KD'] %>
+                    </p>
+                    <p class="statgrid-element">
+                        Win: <%= UserInfo['stats']['overall']['wp'] %>%
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="stats">
+            <h3>Stats (Past 5 Comp Matches)</h3>
+            <div class="statgrid">
+                <div class="statgrid-item">
+                    <p class="statgrid-element">
+                        Headshot: <%= UserInfo['stats']['past5']['HSP'] %>%
+                    </p>
+                    <p class="statgrid-element">
+                        K/D: <%= UserInfo['stats']['past5']['KD'] %>
+                    </p>
+                    <p class="statgrid-element">
+                        Win: <%= UserInfo['stats']['past5']['wp'] %>%
+                    </p>
+                </div>
+            </div>
+
+        </div>
+        <div class="buttons">
+            <button class="tab active" id="scoreboard-btn">Match List</button>
+            <button class="tab" id="button2-btn">Button 2</button>
+            <button class="tab" id="button3-btn">Button 3</button>
+        </div>
+        <div class="matches">
+            <h3>Matches (<%= UserInfo['matches'].length %>)</h3>
+            <div class="matchgrid">
+                <div class="matchgrid-item">
+                    <p class="matchgrid-element matchgrid-title">
+                        Date
+                    </p>
+                    <p class="matchgrid-element matchgrid-title">
+                        Map
+                    </p>
+                    <p class="matchgrid-element matchgrid-title">
+                        Gamemode
+                    </p>
+                    <p class="matchgrid-element matchgrid-title">
+                        Agent
+                    </p>
+                    <p class="matchgrid-element matchgrid-title">
+                        K/D/A (K/D)
+                    </p>
+                    <p class="matchgrid-element matchgrid-title">
+                        HS%
+                    </p>
+                    <p class="matchgrid-element matchgrid-title">
+                        Match Score
+                    </p>
+                    <p class="matchgrid-element matchgrid-title">
+
+                    </p>
+                </div>
+                <% for (match in UserInfo['matches']) { %>
+                    <div class="matchgrid-item">
+                        <p class="matchgrid-element matchgrid-date">
+                            <%= UserInfo['matches'][match]['data']['metadata']['game_start'] %>
+                        </p>
+                        <p class="matchgrid-element">
+                            <%= UserInfo['matches'][match]['data']['metadata']['map'] %>
+                        </p>
+                        <p class="matchgrid-element">
+                            <%= UserInfo['matches'][match]['data']['metadata']['mode'] %>
+                        </p>
+                        <p class="matchgrid-element">
+                            <%= UserInfo['matches'][match]['data']['metadata']['agent'] %>
+                        </p>
+                        <p class="matchgrid-element">
+                            <%= UserInfo['matches'][match]['data']['metadata']['kills'] %>/<%=
+                                    UserInfo['matches'][match]['data']['metadata']['deaths'] %>/<%=
+                                        UserInfo['matches'][match]['data']['metadata']['assists'] %> (<%=
+                                            UserInfo['matches'][match]['data']['metadata']['kd'] %>)
+                        </p>
+                        <p class="matchgrid-element">
+                            <%= UserInfo['matches'][match]['data']['metadata']['HSP'] %>
+                        </p>
+                        <p class="matchgrid-element">
+                            <%= UserInfo['matches'][match]['data']['metadata']['result'] %>
+                                <%= UserInfo['matches'][match]['data']['metadata']['score'] %>
+                        </p>
+                        <form class="matchgrid-element"
+                            action="/user/<%= UserInfo['username'] %>/<%= UserInfo['tag'] %>/<%= UserInfo['matches'][match]['data']['metadata']['matchid'] %>"
+                            method="get">
+                            <button type="submit" class="view-button">view</button>
+                        </form>
+                    </div>
+                    <% } %>
+            </div>
+        </div>
+    </div>
+    <div class="side-container">
+        <h3>Common Teammates:</h3>
+        <div id="teammate-grid">
+            <% for (tm in UserInfo.teammates){ %>
+                    <p class="teammate-grid-item">
+                        <%= UserInfo.teammates[tm].username %>#<%= UserInfo.teammates[tm].tag %>
+                    </p>
+                    <p class="teammate-grid-item">
+                        <%= UserInfo.teammates[tm].count %>
+                    </p>
                 <% } %>
-                    <div class="stats">
-                        <h3>Stats (All Comp Matches)</h3>
-                        <div class="statgrid">
-                            <div class="statgrid-item">
-                                <p class="statgrid-element">
-                                    Headshot: <%= UserInfo['stats']['overall']['HSP'] %>%
-                                </p>
-                                <p class="statgrid-element">
-                                    K/D: <%= UserInfo['stats']['overall']['KD'] %>
-                                </p>
-                                <p class="statgrid-element">
-                                    Win: <%= UserInfo['stats']['overall']['wp'] %>%
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="stats">
-                        <h3>Stats (Past 5 Comp Matches)</h3>
-                        <div class="statgrid">
-                            <div class="statgrid-item">
-                                <p class="statgrid-element">
-                                    Headshot: <%= UserInfo['stats']['past5']['HSP'] %>%
-                                </p>
-                                <p class="statgrid-element">
-                                    K/D: <%= UserInfo['stats']['past5']['KD'] %>
-                                </p>
-                                <p class="statgrid-element">
-                                    Win: <%= UserInfo['stats']['past5']['wp'] %>%
-                                </p>
-                            </div>
-                        </div>
-
-                    </div>
-                    <div class="buttons">
-                        <button class="tab active" id="scoreboard-btn">Match List</button>
-                        <button class="tab" id="button2-btn">Button 2</button>
-                        <button class="tab" id="button3-btn">Button 3</button>
-                    </div>
-                    <div class="matches">
-                        <h3>Matches (<%= UserInfo['matches'].length %>)</h3>
-                        <div class="matchgrid">
-                            <div class="matchgrid-item">
-                                <p class="matchgrid-element matchgrid-title">
-                                    Date
-                                </p>
-                                <p class="matchgrid-element matchgrid-title">
-                                    Map
-                                </p>
-                                <p class="matchgrid-element matchgrid-title">
-                                    Gamemode
-                                </p>
-                                <p class="matchgrid-element matchgrid-title">
-                                    Agent
-                                </p>
-                                <p class="matchgrid-element matchgrid-title">
-                                    K/D/A (K/D)
-                                </p>
-                                <p class="matchgrid-element matchgrid-title">
-                                    HS%
-                                </p>
-                                <p class="matchgrid-element matchgrid-title">
-                                    Match Score
-                                </p>
-                                <p class="matchgrid-element matchgrid-title">
-
-                                </p>
-                            </div>
-                            <% for (match in UserInfo['matches']) { %>
-                                <div class="matchgrid-item">
-                                    <p class="matchgrid-element matchgrid-date">
-                                        <%= UserInfo['matches'][match]['data']['metadata']['game_start'] %>
-                                    </p>
-                                    <p class="matchgrid-element">
-                                        <%= UserInfo['matches'][match]['data']['metadata']['map'] %>
-                                    </p>
-                                    <p class="matchgrid-element">
-                                        <%= UserInfo['matches'][match]['data']['metadata']['mode'] %>
-                                    </p>
-                                    <p class="matchgrid-element">
-                                        <%= UserInfo['matches'][match]['data']['metadata']['agent'] %>
-                                    </p>
-                                    <p class="matchgrid-element">
-                                        <%= UserInfo['matches'][match]['data']['metadata']['kills'] %>/<%= UserInfo['matches'][match]['data']['metadata']['deaths'] %>/<%= UserInfo['matches'][match]['data']['metadata']['assists'] %> (<%= UserInfo['matches'][match]['data']['metadata']['kd'] %>)
-                                    </p>
-                                    <p class="matchgrid-element">
-                                        <%= UserInfo['matches'][match]['data']['metadata']['HSP'] %>
-                                    </p>
-                                    <p class="matchgrid-element">
-                                        <%= UserInfo['matches'][match]['data']['metadata']['result'] %>
-                                            <%= UserInfo['matches'][match]['data']['metadata']['score'] %>
-                                    </p>
-                                    <form class="matchgrid-element"
-                                        action="/user/<%= UserInfo['username'] %>/<%= UserInfo['tag'] %>/<%= UserInfo['matches'][match]['data']['metadata']['matchid'] %>"
-                                        method="get">
-                                        <button type="submit" class="view-button">view</button>
-                                    </form>
-                                </div>
-                                <% } %>
-                        </div>
-                    </div>
+        </div>
     </div>
     <script>
         function getTime(rawTime) {

@@ -17,7 +17,16 @@ async function createJSON(name, jsondata) {
 
 function getRandomInt(max) {
     return Math.floor(Math.random() * max);
-  }
+}
+function compare_tm_count(a, b) {
+    if (a.count < b.count) {
+        return 1;
+    }
+    if (a.count > b.count) {
+        return -1;
+    }
+    return 0;
+}
 
 
 
@@ -33,11 +42,11 @@ router.get('/', async (req, res) => {
 })
 
 router.get('/lookup', async (req, res) => {
-    if (req.query.failed == 'true'){
-        res.render('userlookup',{failed:true})
+    if (req.query.failed == 'true') {
+        res.render('userlookup', { failed: true })
     }
     else {
-    res.render('userlookup',{failed:false})
+        res.render('userlookup', { failed: false })
     }
 })
 
@@ -63,10 +72,12 @@ router.get('/:user/:tag', async (req, res) => {
         stats: {
             overall: {},
             past5: {}
-        }
+        },
+        teammates: []
     }
     const info = await UserData.getBasic(req.params.user, req.params.tag)
     if (info.puuid == '404_error') {
+        console.log('User not found. Redirecting.')
         res.redirect('/user/lookup?failed=true')
     }
     else {
@@ -83,10 +94,14 @@ router.get('/:user/:tag', async (req, res) => {
             pid = checker[1]
         }
 
+        UserInfo.username = info.username
+        UserInfo.tag = info.tag
         UserInfo['puuid'] = info.puuid
         UserInfo['img'] = info.small_card
         UserInfo['lvl'] = info.acc_lvl
         UserInfo['region'] = info.reg
+        UserInfo['current_rank'] = info.current_rank
+        UserInfo['peak_rank'] = info.peak_rank
 
         start = Date.now()
         let matchlist = await UserData.getMatchList(UserInfo['puuid'], UserInfo['region'])
@@ -160,8 +175,15 @@ router.get('/:user/:tag', async (req, res) => {
         for (m in UserInfo['matches']) {
 
             if (UserInfo['matches'][m]['data']['metadata']['mode_id'] == 'competitive') {
+                let userteam = ''
                 for (p in UserInfo['matches'][m]['data']['players']['all_players']) {
                     if (UserInfo['matches'][m]['data']['players']['all_players'][p]['puuid'] == UserInfo['puuid']) {
+                        if (UserInfo['matches'][m]['data']['players']['all_players'][p]['team'] == 'Red') {
+                            userteam = 'red'
+                        }
+                        else {
+                            userteam = 'blue'
+                        }
                         totalkills = totalkills + UserInfo['matches'][m]['data']['players']['all_players'][p]['stats']['kills']
                         totaldeaths = totaldeaths + UserInfo['matches'][m]['data']['players']['all_players'][p]['stats']['deaths']
                         totalheadshots = totalheadshots + UserInfo['matches'][m]['data']['players']['all_players'][p]['stats']['headshots']
@@ -188,8 +210,46 @@ router.get('/:user/:tag', async (req, res) => {
                     }
                     totallosses = totallosses + 1
                 }
+                for (tm in UserInfo['matches'][m]['data']['players'][userteam]) {
+                    if (UserInfo['matches'][m]['data']['players'][userteam][tm]['puuid'] != UserInfo['puuid']) {
+                        if (UserInfo.teammates.length == 0) {
+                            UserInfo.teammates.push({
+                                puuid: UserInfo['matches'][m]['data']['players'][userteam][tm]['puuid'],
+                                count: 1
+                            })
+                        }
+                        else {
+                            let found = false
+                            for (pl in UserInfo.teammates) {
+                                if (UserInfo.teammates[pl].puuid == UserInfo['matches'][m]['data']['players'][userteam][tm]['puuid']) {
+                                    UserInfo.teammates[pl].count++
+                                    found = true
+                                    break
+                                }
+                            }
+                            if (!found) {
+                                UserInfo.teammates.push({
+                                    puuid: UserInfo['matches'][m]['data']['players'][userteam][tm]['puuid'],
+                                    count: 1
+                                })
+                            }
+                        }
+                    }
+                }
             }
         }
+        let reformatTeammates = []
+        for (pl in UserInfo.teammates) {
+            // console.log(UserInfo.teammates[pl].count)
+            if (UserInfo.teammates[pl].count > 1) {
+                pData = await UserData.getBasic_by_puuid(UserInfo.teammates[pl].puuid)
+                UserInfo.teammates[pl].username = pData.username
+                UserInfo.teammates[pl].tag = pData.tag
+                reformatTeammates.push(UserInfo.teammates[pl])
+            }
+        }
+        UserInfo.teammates = reformatTeammates.sort(compare_tm_count)
+        // createJSON('teammates.json', UserInfo.teammates)
         UserInfo['stats']['overall']['HSP'] = Math.round((totalheadshots / (totalbodyshots + totalheadshots + totallegshots)) * 1000) / 10
         UserInfo['stats']['past5']['HSP'] = Math.round((past5headshots / (past5bodyshots + past5headshots + past5legshots)) * 1000) / 10
         UserInfo['stats']['overall']['KD'] = Math.round((totalkills / totaldeaths) * 100) / 100
@@ -197,6 +257,18 @@ router.get('/:user/:tag', async (req, res) => {
         UserInfo['stats']['overall']['wp'] = Math.round((totalwins / (totalwins + totallosses)) * 1000) / 10
         UserInfo['stats']['past5']['wp'] = Math.round((past5wins / (past5wins + past5losses)) * 1000) / 10
         // console.log(UserInfo['stats'])
+
+
+
+
+
+
+
+
+
+
+
+
         end = Date.now()
         console.log(indent + `All matches retrieved and formatted (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
 
