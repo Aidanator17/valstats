@@ -25,13 +25,13 @@
                         <p>Error: UserInfo data is missing or incomplete.</p>
                         <% } %>
             </div>
-            <div class="usergrid-item usergrid-rank">
+            <div class="usergrid-item rank-grid">
                 <p>Current:</p>
+                <p>Peak</p>
                 <img id="rankimg" src="/images/ranks/<%= UserInfo['current_rank'] %>.png" alt="Player Image">
-            </div>
-            <div class="usergrid-item usergrid-rank">
-                <p>Peak (<%= UserInfo['peak_rank']['season'] %>):</p>
                 <img id="rankimg" src="/images/ranks/<%= UserInfo['peak_rank']['rank'] %>.png" alt="Player Image">
+                <p></p>
+                <p><%= UserInfo['peak_rank']['season'] %></p>
             </div>
         </div>
         <div class="stats">
@@ -138,17 +138,43 @@
             </div>
         </div>
     </div>
-    <div class="side-container">
-        <h3>Common Teammates:</h3>
-        <div id="teammate-grid">
-            <% for (tm in UserInfo.teammates){ %>
+    <div class="side-containers">
+        <div class="side-container">
+            <h3>Common Teammates:</h3>
+            <div id="teammate-grid">
+                <% for (tm in UserInfo.teammates){ %>
                     <p class="teammate-grid-item">
                         <%= UserInfo.teammates[tm].username %>#<%= UserInfo.teammates[tm].tag %>
                     </p>
                     <p class="teammate-grid-item">
                         <%= UserInfo.teammates[tm].count %>
                     </p>
-                <% } %>
+                    <% } %>
+            </div>
+        </div>
+        <div class="side-container">
+            <h3>Most Played Agents:</h3>
+            <div id="agent-grid">
+                <p class="agent-grid-item grid-item-title">Agent</p>
+                <p class="agent-grid-item grid-item-title">Count</p>
+                <p class="agent-grid-item grid-item-title">Win%</p>
+                <p class="agent-grid-item grid-item-title">KD</p>
+                <% for (a in UserInfo.agents){ if (a < 5){ %>
+                    <p class="agent-grid-item">
+                        <%= UserInfo.agents[a].agent %>
+                    </p>
+                    <p class="agent-grid-item">
+                        <%= UserInfo.agents[a].count %>
+                    </p>
+                    <p class="agent-grid-item">
+                        <%= Math.round((UserInfo.agents[a].wins/(UserInfo.agents[a].wins+UserInfo.agents[a].losses+UserInfo.agents[a].draws))*10000)/100
+                            %>%
+                    </p>
+                    <p class="agent-grid-item">
+                        <%= Math.round((UserInfo.agents[a].kills/UserInfo.agents[a].deaths)*100)/100 %>
+                    </p>
+                    <% }} %>
+            </div>
         </div>
     </div>
     <script>

@@ -18,7 +18,7 @@ async function createJSON(name, jsondata) {
 function getRandomInt(max) {
     return Math.floor(Math.random() * max);
 }
-function compare_tm_count(a, b) {
+function compare_count(a, b) {
     if (a.count < b.count) {
         return 1;
     }
@@ -73,7 +73,8 @@ router.get('/:user/:tag', async (req, res) => {
             overall: {},
             past5: {}
         },
-        teammates: []
+        teammates: [],
+        agents: []
     }
     const info = await UserData.getBasic(req.params.user, req.params.tag)
     if (info.puuid == '404_error') {
@@ -172,10 +173,108 @@ router.get('/:user/:tag', async (req, res) => {
         for (m in real_matches) {
             UserInfo['matches'].push(await UserData.alterMatch(JSON.parse(real_matches[m]['match_info']), UserInfo['puuid'], false))
         }
+        // createJSON('match.json', UserInfo['matches'][0])
         for (m in UserInfo['matches']) {
 
             if (UserInfo['matches'][m]['data']['metadata']['mode_id'] == 'competitive') {
                 let userteam = ''
+                if (UserInfo.agents.length == 0) {
+                    if (UserInfo['matches'][m]['data']['metadata']['result'] == "Win") {
+                        UserInfo.agents.push({
+                            agent: UserInfo['matches'][m]['data']['metadata']['agent'],
+                            count: 1,
+                            wins: 1,
+                            losses: 0,
+                            draws: 0,
+                            kills: UserInfo['matches'][m]['data']['metadata']['kills'],
+                            deaths: UserInfo['matches'][m]['data']['metadata']['deaths'],
+                            assists: UserInfo['matches'][m]['data']['metadata']['assists']
+                        })
+                    }
+                    else if (UserInfo['matches'][m]['data']['metadata']['result'] == "Loss") {
+                        UserInfo.agents.push({
+                            agent: UserInfo['matches'][m]['data']['metadata']['agent'],
+                            count: 1,
+                            wins: 0,
+                            losses: 1,
+                            draws: 0,
+                            kills: UserInfo['matches'][m]['data']['metadata']['kills'],
+                            deaths: UserInfo['matches'][m]['data']['metadata']['deaths'],
+                            assists: UserInfo['matches'][m]['data']['metadata']['assists']
+                        })
+                    }
+                    else {
+                        UserInfo.agents.push({
+                            agent: UserInfo['matches'][m]['data']['metadata']['agent'],
+                            count: 1,
+                            wins: 0,
+                            losses: 0,
+                            draws: 1,
+                            kills: UserInfo['matches'][m]['data']['metadata']['kills'],
+                            deaths: UserInfo['matches'][m]['data']['metadata']['deaths'],
+                            assists: UserInfo['matches'][m]['data']['metadata']['assists']
+                        })
+                    }
+                }
+                else {
+                    let found = false
+                    for (a in UserInfo.agents) {
+                        if (UserInfo.agents[a].agent == UserInfo['matches'][m]['data']['metadata']['agent']) {
+                            UserInfo.agents[a].count++
+                            UserInfo.agents[a].kills = UserInfo.agents[a].kills + UserInfo['matches'][m]['data']['metadata']['kills']
+                            UserInfo.agents[a].deaths = UserInfo.agents[a].deaths + UserInfo['matches'][m]['data']['metadata']['deaths']
+                            UserInfo.agents[a].assists = UserInfo.agents[a].assists + UserInfo['matches'][m]['data']['metadata']['assists']
+                            if (UserInfo['matches'][m]['data']['metadata']['result'] == "Win") {
+                                UserInfo.agents[a].wins++
+                            }
+                            else if (UserInfo['matches'][m]['data']['metadata']['result'] == "Loss") {
+                                UserInfo.agents[a].losses++
+                            }
+                            else {
+                                UserInfo.agents[a].draws++
+                            }
+                            found = true
+                        }
+                    }
+                    if (!found) {
+                        if (UserInfo['matches'][m]['data']['metadata']['result'] == "Win") {
+                            UserInfo.agents.push({
+                                agent: UserInfo['matches'][m]['data']['metadata']['agent'],
+                                count: 1,
+                                wins: 1,
+                                losses: 0,
+                                draws: 0,
+                                kills: UserInfo['matches'][m]['data']['metadata']['kills'],
+                                deaths: UserInfo['matches'][m]['data']['metadata']['deaths'],
+                                assists: UserInfo['matches'][m]['data']['metadata']['assists']
+                            })
+                        }
+                        else if (UserInfo['matches'][m]['data']['metadata']['result'] == "Loss") {
+                            UserInfo.agents.push({
+                                agent: UserInfo['matches'][m]['data']['metadata']['agent'],
+                                count: 1,
+                                wins: 0,
+                                losses: 1,
+                                draws: 0,
+                                kills: UserInfo['matches'][m]['data']['metadata']['kills'],
+                                deaths: UserInfo['matches'][m]['data']['metadata']['deaths'],
+                                assists: UserInfo['matches'][m]['data']['metadata']['assists']
+                            })
+                        }
+                        else {
+                            UserInfo.agents.push({
+                                agent: UserInfo['matches'][m]['data']['metadata']['agent'],
+                                count: 1,
+                                wins: 0,
+                                losses: 0,
+                                draws: 1,
+                                kills: UserInfo['matches'][m]['data']['metadata']['kills'],
+                                deaths: UserInfo['matches'][m]['data']['metadata']['deaths'],
+                                assists: UserInfo['matches'][m]['data']['metadata']['assists']
+                            })
+                        }
+                    }
+                }
                 for (p in UserInfo['matches'][m]['data']['players']['all_players']) {
                     if (UserInfo['matches'][m]['data']['players']['all_players'][p]['puuid'] == UserInfo['puuid']) {
                         if (UserInfo['matches'][m]['data']['players']['all_players'][p]['team'] == 'Red') {
@@ -238,6 +337,7 @@ router.get('/:user/:tag', async (req, res) => {
                 }
             }
         }
+
         let reformatTeammates = []
         for (pl in UserInfo.teammates) {
             // console.log(UserInfo.teammates[pl].count)
@@ -248,7 +348,8 @@ router.get('/:user/:tag', async (req, res) => {
                 reformatTeammates.push(UserInfo.teammates[pl])
             }
         }
-        UserInfo.teammates = reformatTeammates.sort(compare_tm_count)
+        UserInfo.teammates = reformatTeammates.sort(compare_count)
+        UserInfo.agents.sort(compare_count)
         // createJSON('teammates.json', UserInfo.teammates)
         UserInfo['stats']['overall']['HSP'] = Math.round((totalheadshots / (totalbodyshots + totalheadshots + totallegshots)) * 1000) / 10
         UserInfo['stats']['past5']['HSP'] = Math.round((past5headshots / (past5bodyshots + past5headshots + past5legshots)) * 1000) / 10
@@ -272,7 +373,9 @@ router.get('/:user/:tag', async (req, res) => {
         end = Date.now()
         console.log(indent + `All matches retrieved and formatted (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
 
-        // createJSON("test.json",UserInfo['matches'][0])
+        // let jsonUser = UserInfo
+        // jsonUser.matches = undefined
+        // createJSON("user.json", jsonUser)
 
         end = Date.now()
         console.log(`Data for ${UserInfo['username']}#${UserInfo['tag']} retrieved (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
