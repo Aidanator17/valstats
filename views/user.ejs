@@ -149,7 +149,7 @@
                     <p class="grid-item-title agents-maps-item" data-row="<%= parseInt(a)+1 %>" data-col="0">
                         <%= UserInfo['agents'][a].agent %>
                     </p>
-                    <% for (m in UserInfo['agents'][a].maps){ let fw if (UserInfo['agents'][a].maps[m]>0){
+                    <% for (m in UserInfo['agents'][a].maps){ if (UserInfo['agents'][a].maps[m]>0){
                         %>
                         <div style='font-weight: bold;' class="agents-maps-item" data-row="<%= parseInt(a)+1 %>"
                             data-col="<%= maps.indexOf(m)+1 %>">
@@ -183,7 +183,7 @@
             <div id="teammate-grid">
                 <% for (tm in UserInfo.teammates){ %>
                     <p class="teammate-grid-item">
-                        <%= UserInfo.teammates[tm].username %>#<%= UserInfo.teammates[tm].tag %>
+                        <a style="color: #000000; text-decoration: none;" href="/user/<%= UserInfo.teammates[tm].puuid %>"><%= UserInfo.teammates[tm].username %>#<%= UserInfo.teammates[tm].tag %></a>
                     </p>
                     <p class="teammate-grid-item">
                         <%= UserInfo.teammates[tm].count %>

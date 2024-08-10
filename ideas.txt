@@ -1,0 +1,9 @@
+/agents/(agent)
+    - Stats per agent
+    - Based purely on the data from the matches stored in DB
+    - no (or low amounts of) API calls which is a win
+
+3rd button on user page ?
+    - agents breakdown?
+    - weapons?
+    - roles breakdown?
