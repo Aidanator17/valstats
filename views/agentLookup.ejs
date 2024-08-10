@@ -1,0 +1,40 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/agentLookup.css">
+    <title>Agent Lookup</title>
+</head>
+<body>
+    <div class="container">
+        <form action="/agent/" method="post" class="form">
+        <% if (failed){ %>
+            <p style="color: red;">Please use an agent from the list</p>
+            <% } %>
+            <div class="input-group">
+                <select name="agent" class="input-field">
+                    <option value="Phoenix">Phoenix</option>
+                    <option value="Raze">Raze</option>
+                    <option value="Jett">Jett</option>
+                    <option value="Yoru">Yoru</option>
+                    <option value="Neon">Neon</option>
+                    <option value="Reyna">Reyna</option>
+                    <option value="Sage">Sage</option>
+                    <option value="Cypher">Cypher</option>
+                    <option value="Chamber">Chamber</option>
+                    <option value="Killjoy">Killjoy</option>
+                    <option value="Omen">Omen</option>
+                    <option value="Viper">Viper</option>
+                    <option value="Brimstone">Brimstone</option>
+                    <option value="Astra">Astra</option>
+                    <option value="Harbor">Harbor</option>
+                    <option value="Sova">Sova</option>
+                    <option value="Breach">Breach</option>
+                    <option value="Skye">Skye</option>
+                    <option value="KAY/O">KAY/O</option>
+                    <option value="Fade">Fade</option>
+                </select>
+                <button type="submit" class="submit-button">Lookup</button>
+            </div>
+        </form>
+    </div>
+</body>

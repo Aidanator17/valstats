@@ -115,8 +115,20 @@ const DatabaseFunctions = {
 
     },
     mass_retrieve: async function () {
-        const all_matches = prisma.matches.findMany()
+        const all_matches = await prisma.matches.findMany()
         return all_matches        
+    },
+    mass_retrieve_comp: async function () {
+        const raw_matches = await prisma.matches.findMany({
+            where: {
+                match_type:'competitive'
+            }
+        })
+        let matches = []
+        for (m in raw_matches){
+            matches.push(JSON.parse(raw_matches['match_info']))
+        }
+        return matches
     }
 
 };

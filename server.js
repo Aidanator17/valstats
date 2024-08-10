@@ -25,6 +25,7 @@ app.use(
 // const authRoute = require("./routes/authRoute");
 const userRoute = require("./routes/userRoute");
 const adminRoute = require("./routes/adminRoute");
+const agentRoute = require("./routes/agentRoute");
 
 // Middleware for express
 app.use(express.json());
@@ -47,6 +48,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/user", userRoute);
 app.use("/admin", adminRoute);
+app.use("/agent", agentRoute);
 // app.use("/auth", authRoute);
 
 app.get('/', async (req, res) => {

@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const fetch = require("node-fetch")
-const UserData = require('../models/valAPI');
+const apiFunctions = require('../models/valAPI');
 const fs = require('fs');
 const DatabaseFunctions = require("../models/databaseModel");
 const { tr } = require("date-fns/locale");
@@ -55,7 +55,7 @@ router.post('/lookup', async (req, res) => {
 })
 
 router.get('/:puuid', async (req, res) => {
-    let data = await UserData.getBasic_by_puuid(req.params.puuid)
+    let data = await apiFunctions.getBasic_by_puuid(req.params.puuid)
     res.redirect(`/user/${data['username']}/${data['tag']}`)
 })
 
@@ -89,7 +89,7 @@ router.get('/:user/:tag', async (req, res) => {
             "Sunset":0,
         }
     }
-    const info = await UserData.getBasic(req.params.user, req.params.tag)
+    const info = await apiFunctions.getBasic(req.params.user, req.params.tag)
     if (info.puuid == '404_error') {
         console.log('User not found. Redirecting.')
         res.redirect('/user/lookup?failed=true')
@@ -118,7 +118,7 @@ router.get('/:user/:tag', async (req, res) => {
         UserInfo['peak_rank'] = info.peak_rank
 
         start = Date.now()
-        let matchlist = await UserData.getMatchList(UserInfo['puuid'], UserInfo['region'])
+        let matchlist = await apiFunctions.getMatchList(UserInfo['puuid'], UserInfo['region'])
         // createJSON('matchlist.json', matchlist)
         let rawmatchlist = matchlist
         end = Date.now()
@@ -156,7 +156,7 @@ router.get('/:user/:tag', async (req, res) => {
             let newmatches = []
             for (m in matchlist) {
                 start = Date.now()
-                newmatches.push(await UserData.getMatch(matchlist[m]))
+                newmatches.push(await apiFunctions.getMatch(matchlist[m]))
                 end = Date.now()
                 console.log(indent + `retrieved match ${queue}/${returned_matches} data (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
                 queue++
@@ -184,7 +184,7 @@ router.get('/:user/:tag', async (req, res) => {
         let past5wins = 0
         let past5losses = 0
         for (m in real_matches) {
-            UserInfo['matches'].push(await UserData.alterMatch(JSON.parse(real_matches[m]['match_info']), UserInfo['puuid'], false))
+            UserInfo['matches'].push(await apiFunctions.alterMatch(JSON.parse(real_matches[m]['match_info']), UserInfo['puuid'], false))
         }
         // createJSON('match.json', UserInfo['matches'][0])
         for (m in UserInfo['matches']) {
@@ -457,7 +457,7 @@ router.get('/:user/:tag', async (req, res) => {
         for (pl in UserInfo.teammates) {
             // console.log(UserInfo.teammates[pl].count)
             if (UserInfo.teammates[pl].count > 1) {
-                pData = await UserData.getBasic_by_puuid(UserInfo.teammates[pl].puuid)
+                pData = await apiFunctions.getBasic_by_puuid(UserInfo.teammates[pl].puuid)
                 UserInfo.teammates[pl].username = pData.username
                 UserInfo.teammates[pl].tag = pData.tag
                 reformatTeammates.push(UserInfo.teammates[pl])
@@ -503,11 +503,11 @@ router.get('/:user/:tag', async (req, res) => {
 router.get('/:user/:tag/:matchid', async (req, res) => {
     let start = Date.now()
     const match = JSON.parse((await DatabaseFunctions.get_match_by_match_id(req.params.matchid))['match_info'])
-    const puuid = (await UserData.getBasic(req.params.user, req.params.tag)).puuid
+    const puuid = (await apiFunctions.getBasic(req.params.user, req.params.tag)).puuid
     match['data']['metadata']['main-username'] = req.params.user
     match['data']['metadata']['main-tag'] = req.params.tag
 
-    const matchData = await UserData.alterMatch(match, puuid, true)
+    const matchData = await apiFunctions.alterMatch(match, puuid, true)
     let end = Date.now()
     console.log(`Match data for ${req.params.matchid} retrieved (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
     res.render('user-match', { matchData })

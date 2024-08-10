@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const UserData = require('../models/valAPI');
+const apiFunctions = require('../models/valAPI');
 const fs = require('fs');
 const path = require('path');
 const moment = require('moment-timezone');
@@ -120,7 +120,7 @@ router.post('/test-api', async (req, res) => {
         for (let i = 0; i < 5; i++) {
             try {
                 chosenMatch = matches[getRandomInt(matches.length)].match_id
-                await UserData.getMatch(chosenMatch)
+                await apiFunctions.getMatch(chosenMatch)
             }
             catch {
                 console.log(indent + `FAILED - Attempted to find match: ${chosenMatch}`)
@@ -146,7 +146,7 @@ router.post('/test-api', async (req, res) => {
         for (let i = 0; i < 10; i++) {
             try {
                 chosenUser = users[getRandomInt(users.length)].puuid
-                const testUser = await UserData.getBasic_by_puuid(chosenUser)
+                const testUser = await apiFunctions.getBasic_by_puuid(chosenUser)
                 if (testUser.username == 'error'){
                     throw new Error()
                 }
@@ -171,7 +171,7 @@ router.post('/test-api', async (req, res) => {
             try {
                 chosenUsername = successfulUsers[u].username
                 chosenTag = successfulUsers[u].tag
-                const testUser = await UserData.getBasic(chosenUsername, chosenTag)
+                const testUser = await apiFunctions.getBasic(chosenUsername, chosenTag)
             }
             catch (err) {
                 console.log(indent + `FAILED - Attempted to find user by Username: ${chosenUsername}#${chosenTag}`)
