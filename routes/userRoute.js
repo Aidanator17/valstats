@@ -74,7 +74,20 @@ router.get('/:user/:tag', async (req, res) => {
             past5: {}
         },
         teammates: [],
-        agents: []
+        agents: [],
+        maps_played:{
+            "Abyss":0,
+            "Ascent":0,
+            "Bind":0,
+            "Breeze":0,
+            "Fracture":0,
+            "Haven":0,
+            "Icebox":0,
+            "Lotus":0,
+            "Pearl":0,
+            "Split":0,
+            "Sunset":0,
+        }
     }
     const info = await UserData.getBasic(req.params.user, req.params.tag)
     if (info.puuid == '404_error') {
@@ -180,19 +193,7 @@ router.get('/:user/:tag', async (req, res) => {
                 let userteam = ''
                 if (UserInfo.agents.length == 0) {
                     if (UserInfo['matches'][m]['data']['metadata']['result'] == "Win") {
-                        UserInfo.agents.push({
-                            agent: UserInfo['matches'][m]['data']['metadata']['agent'],
-                            count: 1,
-                            wins: 1,
-                            losses: 0,
-                            draws: 0,
-                            kills: UserInfo['matches'][m]['data']['metadata']['kills'],
-                            deaths: UserInfo['matches'][m]['data']['metadata']['deaths'],
-                            assists: UserInfo['matches'][m]['data']['metadata']['assists']
-                        })
-                    }
-                    else if (UserInfo['matches'][m]['data']['metadata']['result'] == "Loss") {
-                        UserInfo.agents.push({
+                        let input = {
                             agent: UserInfo['matches'][m]['data']['metadata']['agent'],
                             count: 1,
                             wins: 0,
@@ -200,20 +201,80 @@ router.get('/:user/:tag', async (req, res) => {
                             draws: 0,
                             kills: UserInfo['matches'][m]['data']['metadata']['kills'],
                             deaths: UserInfo['matches'][m]['data']['metadata']['deaths'],
-                            assists: UserInfo['matches'][m]['data']['metadata']['assists']
-                        })
+                            assists: UserInfo['matches'][m]['data']['metadata']['assists'],
+                            maps: {
+                                "Abyss":0,
+                                "Ascent":0,
+                                "Bind":0,
+                                "Breeze":0,
+                                "Fracture":0,
+                                "Haven":0,
+                                "Icebox":0,
+                                "Lotus":0,
+                                "Pearl":0,
+                                "Split":0,
+                                "Sunset":0,
+                            }
+                        }
+                        input.maps[UserInfo['matches'][m]['data']['metadata']['map']]++
+                        UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']]++
+                        UserInfo.agents.push(input)
                     }
-                    else {
-                        UserInfo.agents.push({
+                    else if (UserInfo['matches'][m]['data']['metadata']['result'] == "Loss") {
+                        let input = {
                             agent: UserInfo['matches'][m]['data']['metadata']['agent'],
                             count: 1,
                             wins: 0,
-                            losses: 0,
-                            draws: 1,
+                            losses: 1,
+                            draws: 0,
                             kills: UserInfo['matches'][m]['data']['metadata']['kills'],
                             deaths: UserInfo['matches'][m]['data']['metadata']['deaths'],
-                            assists: UserInfo['matches'][m]['data']['metadata']['assists']
-                        })
+                            assists: UserInfo['matches'][m]['data']['metadata']['assists'],
+                            maps: {
+                                "Abyss":0,
+                                "Ascent":0,
+                                "Bind":0,
+                                "Breeze":0,
+                                "Fracture":0,
+                                "Haven":0,
+                                "Icebox":0,
+                                "Lotus":0,
+                                "Pearl":0,
+                                "Split":0,
+                                "Sunset":0,
+                            }
+                        }
+                        input.maps[UserInfo['matches'][m]['data']['metadata']['map']]++
+                        UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']]++
+                        UserInfo.agents.push(input)
+                    }
+                    else {
+                        let input = {
+                            agent: UserInfo['matches'][m]['data']['metadata']['agent'],
+                            count: 1,
+                            wins: 0,
+                            losses: 1,
+                            draws: 0,
+                            kills: UserInfo['matches'][m]['data']['metadata']['kills'],
+                            deaths: UserInfo['matches'][m]['data']['metadata']['deaths'],
+                            assists: UserInfo['matches'][m]['data']['metadata']['assists'],
+                            maps: {
+                                "Abyss":0,
+                                "Ascent":0,
+                                "Bind":0,
+                                "Breeze":0,
+                                "Fracture":0,
+                                "Haven":0,
+                                "Icebox":0,
+                                "Lotus":0,
+                                "Pearl":0,
+                                "Split":0,
+                                "Sunset":0,
+                            }
+                        }
+                        input.maps[UserInfo['matches'][m]['data']['metadata']['map']]++
+                        UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']]++
+                        UserInfo.agents.push(input)
                     }
                 }
                 else {
@@ -226,31 +287,25 @@ router.get('/:user/:tag', async (req, res) => {
                             UserInfo.agents[a].assists = UserInfo.agents[a].assists + UserInfo['matches'][m]['data']['metadata']['assists']
                             if (UserInfo['matches'][m]['data']['metadata']['result'] == "Win") {
                                 UserInfo.agents[a].wins++
+                                UserInfo.agents[a].maps[UserInfo['matches'][m]['data']['metadata']['map']]++
+                                UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']]++
                             }
                             else if (UserInfo['matches'][m]['data']['metadata']['result'] == "Loss") {
                                 UserInfo.agents[a].losses++
+                                UserInfo.agents[a].maps[UserInfo['matches'][m]['data']['metadata']['map']]++
+                                UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']]++
                             }
                             else {
                                 UserInfo.agents[a].draws++
+                                UserInfo.agents[a].maps[UserInfo['matches'][m]['data']['metadata']['map']]++
+                                UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']]++
                             }
                             found = true
                         }
                     }
                     if (!found) {
                         if (UserInfo['matches'][m]['data']['metadata']['result'] == "Win") {
-                            UserInfo.agents.push({
-                                agent: UserInfo['matches'][m]['data']['metadata']['agent'],
-                                count: 1,
-                                wins: 1,
-                                losses: 0,
-                                draws: 0,
-                                kills: UserInfo['matches'][m]['data']['metadata']['kills'],
-                                deaths: UserInfo['matches'][m]['data']['metadata']['deaths'],
-                                assists: UserInfo['matches'][m]['data']['metadata']['assists']
-                            })
-                        }
-                        else if (UserInfo['matches'][m]['data']['metadata']['result'] == "Loss") {
-                            UserInfo.agents.push({
+                            let input = {
                                 agent: UserInfo['matches'][m]['data']['metadata']['agent'],
                                 count: 1,
                                 wins: 0,
@@ -258,20 +313,80 @@ router.get('/:user/:tag', async (req, res) => {
                                 draws: 0,
                                 kills: UserInfo['matches'][m]['data']['metadata']['kills'],
                                 deaths: UserInfo['matches'][m]['data']['metadata']['deaths'],
-                                assists: UserInfo['matches'][m]['data']['metadata']['assists']
-                            })
+                                assists: UserInfo['matches'][m]['data']['metadata']['assists'],
+                                maps: {
+                                    "Abyss":0,
+                                    "Ascent":0,
+                                    "Bind":0,
+                                    "Breeze":0,
+                                    "Fracture":0,
+                                    "Haven":0,
+                                    "Icebox":0,
+                                    "Lotus":0,
+                                    "Pearl":0,
+                                    "Split":0,
+                                    "Sunset":0,
+                                }
+                            }
+                            input.maps[UserInfo['matches'][m]['data']['metadata']['map']]++
+                            UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']]++
+                            UserInfo.agents.push(input)
                         }
-                        else {
-                            UserInfo.agents.push({
+                        else if (UserInfo['matches'][m]['data']['metadata']['result'] == "Loss") {
+                            let input = {
                                 agent: UserInfo['matches'][m]['data']['metadata']['agent'],
                                 count: 1,
                                 wins: 0,
-                                losses: 0,
-                                draws: 1,
+                                losses: 1,
+                                draws: 0,
                                 kills: UserInfo['matches'][m]['data']['metadata']['kills'],
                                 deaths: UserInfo['matches'][m]['data']['metadata']['deaths'],
-                                assists: UserInfo['matches'][m]['data']['metadata']['assists']
-                            })
+                                assists: UserInfo['matches'][m]['data']['metadata']['assists'],
+                                maps: {
+                                    "Abyss":0,
+                                    "Ascent":0,
+                                    "Bind":0,
+                                    "Breeze":0,
+                                    "Fracture":0,
+                                    "Haven":0,
+                                    "Icebox":0,
+                                    "Lotus":0,
+                                    "Pearl":0,
+                                    "Split":0,
+                                    "Sunset":0,
+                                }
+                            }
+                            input.maps[UserInfo['matches'][m]['data']['metadata']['map']]++
+                            UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']]++
+                            UserInfo.agents.push(input)
+                        }
+                        else {
+                            let input = {
+                                agent: UserInfo['matches'][m]['data']['metadata']['agent'],
+                                count: 1,
+                                wins: 0,
+                                losses: 1,
+                                draws: 0,
+                                kills: UserInfo['matches'][m]['data']['metadata']['kills'],
+                                deaths: UserInfo['matches'][m]['data']['metadata']['deaths'],
+                                assists: UserInfo['matches'][m]['data']['metadata']['assists'],
+                                maps: {
+                                    "Abyss":0,
+                                    "Ascent":0,
+                                    "Bind":0,
+                                    "Breeze":0,
+                                    "Fracture":0,
+                                    "Haven":0,
+                                    "Icebox":0,
+                                    "Lotus":0,
+                                    "Pearl":0,
+                                    "Split":0,
+                                    "Sunset":0,
+                                }
+                            }
+                            input.maps[UserInfo['matches'][m]['data']['metadata']['map']]++
+                            UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']]++
+                            UserInfo.agents.push(input)
                         }
                     }
                 }
@@ -373,7 +488,7 @@ router.get('/:user/:tag', async (req, res) => {
         end = Date.now()
         console.log(indent + `All matches retrieved and formatted (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
 
-        // let jsonUser = UserInfo
+        // let jsonUser = JSON.parse(JSON.stringify(UserInfo))
         // jsonUser.matches = undefined
         // createJSON("user.json", jsonUser)
 

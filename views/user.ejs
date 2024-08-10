@@ -31,7 +31,9 @@
                 <img id="rankimg" src="/images/ranks/<%= UserInfo['current_rank'] %>.png" alt="Player Image">
                 <img id="rankimg" src="/images/ranks/<%= UserInfo['peak_rank']['rank'] %>.png" alt="Player Image">
                 <p></p>
-                <p><%= UserInfo['peak_rank']['season'] %></p>
+                <p>
+                    <%= UserInfo['peak_rank']['season'] %>
+                </p>
             </div>
         </div>
         <div class="stats">
@@ -68,11 +70,11 @@
 
         </div>
         <div class="buttons">
-            <button class="tab active" id="scoreboard-btn">Match List</button>
-            <button class="tab" id="button2-btn">Button 2</button>
-            <button class="tab" id="button3-btn">Button 3</button>
+            <button onclick="openMatches()" class="tab active" id="matches-btn">Match List</button>
+            <button onclick="openAM()" class="tab" id="am-btn">Agents / Maps</button>
+            <button onclick="" class="tab" id="x-btn">Button 3</button>
         </div>
-        <div class="matches">
+        <div style="" id="matches" class="matches">
             <h3>Matches (<%= UserInfo['matches'].length %>)</h3>
             <div class="matchgrid">
                 <div class="matchgrid-item">
@@ -137,6 +139,43 @@
                     <% } %>
             </div>
         </div>
+        <div style="display: none;" id="agents-maps" class="agents-maps">
+            <p class="agents-maps-item blank-item" data-row="0" data-col="0"></p>
+            <% let maps=Object.keys(UserInfo['maps_played']); for (m in maps){ %>
+                <p class="grid-item-title agents-maps-item" data-row="0" data-col="<%= parseInt(m)+1 %>">
+                    <%= maps[m] %>
+                </p>
+                <% } for (a in UserInfo['agents']){ %>
+                    <p class="grid-item-title agents-maps-item" data-row="<%= parseInt(a)+1 %>" data-col="0">
+                        <%= UserInfo['agents'][a].agent %>
+                    </p>
+                    <% for (m in UserInfo['agents'][a].maps){ let fw if (UserInfo['agents'][a].maps[m]>0){
+                        %>
+                        <div style='font-weight: bold;' class="agents-maps-item" data-row="<%= parseInt(a)+1 %>"
+                            data-col="<%= maps.indexOf(m)+1 %>">
+                            <%= UserInfo['agents'][a].maps[m]+"/"+UserInfo['maps_played'][m] %><br>
+                                <% if (UserInfo['maps_played'][m]==0){ %>
+                                    N/A
+                                    <% }else{ %>
+                                        <%= Math.round((UserInfo['agents'][a].maps[m]/UserInfo['maps_played'][m])*1000)/10
+                                            %>%<% } %>
+                        </div>
+
+                        <% }else{ %>
+                            <div class="agents-maps-item" data-row="<%= parseInt(a)+1 %>"
+                                data-col="<%= maps.indexOf(m)+1 %>">
+                                <%= UserInfo['agents'][a].maps[m]+"/"+UserInfo['maps_played'][m] %><br>
+                                    <% if (UserInfo['maps_played'][m]==0){ %>
+                                        N/A
+                                        <% }else{ %>
+                                            <%= Math.round((UserInfo['agents'][a].maps[m]/UserInfo['maps_played'][m])*1000)/10
+                                                %>%<% } %>
+                            </div>
+                            <% }%>
+
+                                <% } %>
+                                    <% } %>
+        </div>
     </div>
     <div class="side-containers">
         <div class="side-container">
@@ -178,6 +217,64 @@
         </div>
     </div>
     <script>
+        document.querySelectorAll('.agents-maps-item').forEach(item => {
+            item.addEventListener('mouseover', (event) => {
+                const row = event.target.dataset.row;
+                const col = event.target.dataset.col;
+                document.querySelectorAll(`.agents-maps-item[data-row='${row}']`).forEach(el => el.classList.add('highlight-row'));
+                document.querySelectorAll(`.agents-maps-item[data-col='${col}']`).forEach(el => el.classList.add('highlight-col'));
+            });
+
+            item.addEventListener('mouseout', (event) => {
+                const row = event.target.dataset.row;
+                const col = event.target.dataset.col;
+                document.querySelectorAll(`.agents-maps-item[data-row='${row}']`).forEach(el => el.classList.remove('highlight-row'));
+                document.querySelectorAll(`.agents-maps-item[data-col='${col}']`).forEach(el => el.classList.remove('highlight-col'));
+            });
+        });
+
+        function openMatches() {
+            let amButton = document.getElementById('am-btn')
+            let am = document.getElementById('agents-maps')
+            let xButton = document.getElementById('x-btn')
+            let x = undefined
+            let matchesButton = document.getElementById('matches-btn')
+            let matches = document.getElementById('matches')
+            // console.log("am:",am.style.display+"\nmatches:",matches.style.display)
+            if (!am.style.display != 'none') {
+                am.style.display = 'none'
+                amButton.classList.remove('active')
+                matches.style.display = ''
+                matchesButton.classList.add('active')
+            }
+            else if (!x.style.display != 'none') {
+                x.style.display = 'none'
+                xButton.classList.remove('active')
+                matches.style.display = ''
+                matchesButton.classList.add('active')
+            }
+        }
+        function openAM() {
+            let amButton = document.getElementById('am-btn')
+            let am = document.getElementById('agents-maps')
+            let xButton = document.getElementById('x-btn')
+            let x = undefined
+            let matchesButton = document.getElementById('matches-btn')
+            let matches = document.getElementById('matches')
+            if (matches.style.display != 'none') {
+                matches.style.display = 'none'
+                matchesButton.classList.remove('active')
+                am.style.display = ''
+                amButton.classList.add('active')
+            }
+            else if (!x.style.display != 'none') {
+                x.style.display = 'none'
+                xButton.classList.remove('active')
+                am.style.display = ''
+                amButton.classList.add('active')
+            }
+        }
+        function openX() { }
         function getTime(rawTime) {
             // Given epoch time in GMT (milliseconds since January 1, 1970)
             const epochTime = parseInt(rawTime) * 1000; // Example epoch time in milliseconds
@@ -202,7 +299,7 @@
 
             const formatter = new Intl.DateTimeFormat('en-US', options);
             const formattedDate = formatter.format(date);
-            console.log(rawTime, formattedDate)
+            // console.log(rawTime, formattedDate)
 
             return formattedDate // Output: formatted date and time in the specified time zone
 
