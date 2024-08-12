@@ -1,66 +1,209 @@
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= agentName %> Stats</title>
-    <link rel="stylesheet" href="/css/agent.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>
+    <%= agentName %> Stats
+  </title>
+  <link rel="stylesheet" href="/css/agent.css">
 </head>
+
 <body>
-    <div class="container">
-      <div class="header">
-        <img src="<%= agentImage %>" alt="<%= agentName %> Image" class="agent-image">
-        <h1><%= agentName %> Stats</h1>
+  <div class="container">
+    <div class="header">
+      <img src="<%= agentImage %>" alt="<%= agentName %> Image" class="agent-image">
+      <h1>
+        <%= agentName %> Stats
+      </h1>
+    </div>
+
+    <div class="stats-overview">
+      <div class="stat">
+        <h2>Pick Rate</h2>
+        <p>
+          <%= ((agentData.picks / (totalPicks*2)) * 100).toFixed(2) %>%
+        </p>
       </div>
-      
-      <div class="stats-overview">
-        <div class="stat">
-          <h2>Pick Rate</h2>
-          <p><%= ((agentData.picks / (totalPicks*2)) * 100).toFixed(2) %>%</p>
-        </div>
-        <div class="stat">
-          <h2>Win Rate</h2>
-          <p><%= (agentData.wins / (agentData.wins + agentData.losses + agentData.draws)*100).toFixed(2) %>%</p>
-        </div>
-        <div class="stat">
-          <h2>KD Ratio</h2>
-          <p><%= (agentData.kills / agentData.deaths).toFixed(2) %></p>
-        </div>
-        <div class="stat">
-          <h2>KDA Ratio</h2>
-          <p><%= ((agentData.kills + agentData.assists) / agentData.deaths).toFixed(2) %></p>
-        </div>
-        <div class="stat">
-          <h2>Headshot %</h2>
-          <p><%= ((agentData.headshots / (agentData.headshots + agentData.bodyshots + agentData.legshots)) * 100).toFixed(2) %>%</p>
-        </div>
+      <div class="stat">
+        <h2>Win Rate</h2>
+        <p>
+          <%= (agentData.wins / (agentData.wins + agentData.losses + agentData.draws)).toFixed(2) %>%
+        </p>
       </div>
-  
-      <div class="maps-overview">
-        <% for (let map in agentData.maps) { %>
-          <div class="map-row">
-            <div class="map-image">
-              <img src="/images/maps/<%= map.toLowerCase() %>.jpg" alt="<%= map %>">
-            </div>
-            <div class="map-stats">
-              <h3><%= map %></h3>
-              <p>Picks: <%= agentData.maps[map].picks %></p>
-              <p>Pick Rate: 
-                <% if (agentData.maps[map].picks === 0) { %>
-                  No Data
+      <div class="stat">
+        <h2>KD Ratio</h2>
+        <p>
+          <%= (agentData.kills / agentData.deaths).toFixed(2) %>
+        </p>
+      </div>
+      <div class="stat">
+        <h2>KDA Ratio</h2>
+        <p>
+          <%= ((agentData.kills + agentData.assists) / agentData.deaths).toFixed(2) %>
+        </p>
+      </div>
+      <div class="stat">
+        <h2>Headshot %</h2>
+        <p>
+          <%= ((agentData.headshots / (agentData.headshots + agentData.bodyshots + agentData.legshots)) *
+            100).toFixed(2) %>%
+        </p>
+      </div>
+    </div>
+
+    <!-- Button to toggle between Map Stats and Rank Stats -->
+    <div class="toggle-buttons">
+      <button class="toggle-btn" onclick="showMapStats()">Map Stats</button>
+      <button class="toggle-btn" onclick="showRankStats()">Rank Stats</button>
+    </div>
+
+    <!-- Map Stats Section -->
+    <div id="map-stats" class="maps-overview">
+      <% for (let map in agentData.maps) { %>
+        <div class="map-row">
+          <div class="map-image">
+            <img src="/images/maps/<%= map.toLowerCase() %>.jpg" alt="<%= map %>">
+          </div>
+          <div class="map-stats">
+            <h3>
+              <%= map %>
+            </h3>
+            <p>Picks: <%= agentData.maps[map].picks %>
+            </p>
+            <p>Pick Rate:
+              <% if (agentData.maps[map].picks===0) { %>
+                No Data
                 <% } else { %>
                   <%= (agentData.maps[map].picks / (map_picks[map].count*2) * 100).toFixed(2) %>%
-                <% } %>
-              </p>
-              <p>Win Rate: 
-                <% if (agentData.maps[map].wins + agentData.maps[map].losses + agentData.maps[map].draws === 0) { %>
-                  No Data
+                    <% } %>
+            </p>
+            <p>Win Rate:
+              <% if (agentData.maps[map].wins + agentData.maps[map].losses + agentData.maps[map].draws===0) { %>
+                No Data
                 <% } else { %>
-                  <%= (agentData.maps[map].wins / (agentData.maps[map].wins + agentData.maps[map].losses + agentData.maps[map].draws) * 100).toFixed(2) %>%
-                <% } %>
+                  <%= (agentData.maps[map].wins / (agentData.maps[map].wins + agentData.maps[map].losses +
+                    agentData.maps[map].draws) * 100).toFixed(2) %>%
+                    <% } %>
+            </p>
+          </div>
+        </div>
+        <% } %>
+    </div>
+
+    <!-- Rank Stats Section -->
+    <!-- Rank Stats Section -->
+    <!-- Rank Stats Section -->
+    <div id="rank-stats" class="ranks-overview" style="display: none;">
+      <% const rankGroups={ 'Iron' : ['Iron 1', 'Iron 2' , 'Iron 3' ], 'Bronze' : ['Bronze 1', 'Bronze 2' , 'Bronze 3'
+        ], 'Silver' : ['Silver 1', 'Silver 2' , 'Silver 3' ], 'Gold' : ['Gold 1', 'Gold 2' , 'Gold 3' ], 'Platinum' :
+        ['Platinum 1', 'Platinum 2' , 'Platinum 3' ], 'Diamond' : ['Diamond 1', 'Diamond 2' , 'Diamond 3' ], 'Ascendant'
+        : ['Ascendant 1', 'Ascendant 2' , 'Ascendant 3' ], 'Immortal' : ['Immortal 1', 'Immortal 2' , 'Immortal 3'
+        ], 'Radiant' : ['Radiant'] }; %>
+        <% for (let group in rankGroups) { let totalPicks=0; let totalKills=0; let totalDeaths=0; let totalAssists=0;
+          let totalWins=0; let totalLosses=0; let totalDraws=0; let totalHeadshots=0; let totalBodyshots=0; let
+          totalLegshots=0; // Then, update these totals in your loop, similar to how you update other stats:
+          rankGroups[group].forEach(rank=> {
+          if (agentData.by_rank[rank]) {
+          totalPicks += agentData.by_rank[rank].picks;
+          totalKills += agentData.by_rank[rank].kills;
+          totalDeaths += agentData.by_rank[rank].deaths;
+          totalAssists += agentData.by_rank[rank].assists;
+          totalWins += agentData.by_rank[rank].wins;
+          totalLosses += agentData.by_rank[rank].losses;
+          totalDraws += agentData.by_rank[rank].draws;
+          totalHeadshots += agentData.by_rank[rank].headshots;
+          totalBodyshots += agentData.by_rank[rank].bodyshots;
+          totalLegshots += agentData.by_rank[rank].legshots;
+          }
+          });
+          %>
+          <div class="rank-group-header">
+            <%= group %>
+          </div>
+          <div class="rank-group-summary">
+            <div class="stat">
+              <h4>Picks</h4>
+              <p>
+                <%= totalPicks===0 ? "No Data" : totalPicks %>
+              </p>
+            </div>
+            <div class="stat">
+              <h4>KD Ratio</h4>
+              <p>
+                <%= totalPicks===0 ? "No Data" : (totalKills / totalDeaths).toFixed(2) %>
+              </p>
+            </div>
+            <div class="stat">
+              <h4>KDA Ratio</h4>
+              <p>
+                <%= totalPicks===0 ? "No Data" : ((totalKills + totalAssists) / totalDeaths).toFixed(2) %>
+              </p>
+            </div>
+            <div class="stat">
+              <h4>Headshot %</h4>
+              <p>
+                <%= totalPicks===0 ? "No Data" : ((totalHeadshots / (totalHeadshots + totalBodyshots + totalLegshots)) *
+                  100).toFixed(2) %>%
+              </p>
+            </div>
+            <div class="stat">
+              <h4>Win Rate</h4>
+              <p>
+                <%= totalPicks===0 ? "No Data" : (totalWins / (totalWins + totalLosses + totalDraws) * 100).toFixed(2)
+                  %>%
               </p>
             </div>
           </div>
-        <% } %>
-      </div>
+
+          <% rankGroups[group].forEach(rank=> { %>
+            <% if (agentData.by_rank[rank]) { %>
+              <div class="rank-row">
+                <div class="rank-image">
+                  <img src="/images/ranks/<%= agentData.by_rank[rank].image_name %>" alt="<%= rank %>">
+                </div>
+                <div class="rank-stats">
+                  <h3>
+                    <%= rank %>
+                  </h3>
+                  <p>Picks: <%= agentData.by_rank[rank].picks===0 ? "No Data" : agentData.by_rank[rank].picks %>
+                  </p>
+                  <p>KD Ratio: <%= agentData.by_rank[rank].picks===0 ? "No Data" : (agentData.by_rank[rank].kills /
+                      agentData.by_rank[rank].deaths).toFixed(2) %>
+                  </p>
+                  <p>KDA Ratio: <%= agentData.by_rank[rank].picks===0 ? "No Data" : ((agentData.by_rank[rank].kills +
+                      agentData.by_rank[rank].assists) / agentData.by_rank[rank].deaths).toFixed(2) %>
+                  </p>
+                  <p>Headshot %: <%= agentData.by_rank[rank].picks===0 ? "No Data" : ((agentData.by_rank[rank].headshots
+                      / (agentData.by_rank[rank].headshots + agentData.by_rank[rank].bodyshots +
+                      agentData.by_rank[rank].legshots)) * 100).toFixed(2) %>
+                  </p>
+                  <p>Win Rate:
+                    <% if (agentData.by_rank[rank].picks===0) { %>
+                      No Data
+                      <% } else { %>
+                        <%= (agentData.by_rank[rank].wins / (agentData.by_rank[rank].wins +
+                          agentData.by_rank[rank].losses + agentData.by_rank[rank].draws) * 100).toFixed(2) %>%
+                          <% } %>
+                  </p>
+                </div>
+              </div>
+              <% } %>
+                <% }) %>
+
+                  <% } %>
     </div>
-  </body>
-    
+
+
+  </div>
+
+  <script>
+    function showMapStats() {
+      document.getElementById('map-stats').style.display = 'block';
+      document.getElementById('rank-stats').style.display = 'none';
+    }
+
+    function showRankStats() {
+      document.getElementById('map-stats').style.display = 'none';
+      document.getElementById('rank-stats').style.display = 'block';
+    }
+  </script>
+</body>
