@@ -1,0 +1,66 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= agentName %> Stats</title>
+    <link rel="stylesheet" href="/css/agent.css">
+</head>
+<body>
+    <div class="container">
+      <div class="header">
+        <img src="<%= agentImage %>" alt="<%= agentName %> Image" class="agent-image">
+        <h1><%= agentName %> Stats</h1>
+      </div>
+      
+      <div class="stats-overview">
+        <div class="stat">
+          <h2>Pick Rate</h2>
+          <p><%= ((agentData.picks / totalPicks) * 100).toFixed(2) %>%</p>
+        </div>
+        <div class="stat">
+          <h2>Win Rate</h2>
+          <p><%= (agentData.wins / (agentData.wins + agentData.losses + agentData.draws)).toFixed(2) %>%</p>
+        </div>
+        <div class="stat">
+          <h2>KD Ratio</h2>
+          <p><%= (agentData.kills / agentData.deaths).toFixed(2) %></p>
+        </div>
+        <div class="stat">
+          <h2>KDA Ratio</h2>
+          <p><%= ((agentData.kills + agentData.assists) / agentData.deaths).toFixed(2) %></p>
+        </div>
+        <div class="stat">
+          <h2>Headshot %</h2>
+          <p><%= ((agentData.headshots / (agentData.headshots + agentData.bodyshots + agentData.legshots)) * 100).toFixed(2) %>%</p>
+        </div>
+      </div>
+  
+      <div class="maps-overview">
+        <% for (let map in agentData.maps) { %>
+          <div class="map-row">
+            <div class="map-image">
+              <img src="/images/maps/<%= map.toLowerCase() %>.jpg" alt="<%= map %>">
+            </div>
+            <div class="map-stats">
+              <h3><%= map %></h3>
+              <p>Picks: <%= agentData.maps[map].picks %></p>
+              <p>Pick Rate: 
+                <% if (agentData.maps[map].picks === 0) { %>
+                  No Data
+                <% } else { %>
+                  <%= (agentData.maps[map].picks / agentData.picks * 100).toFixed(2) %>%
+                <% } %>
+              </p>
+              <p>Win Rate: 
+                <% if (agentData.maps[map].wins + agentData.maps[map].losses + agentData.maps[map].draws === 0) { %>
+                  No Data
+                <% } else { %>
+                  <%= (agentData.maps[map].wins / (agentData.maps[map].wins + agentData.maps[map].losses + agentData.maps[map].draws) * 100).toFixed(2) %>%
+                <% } %>
+              </p>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </body>
+    

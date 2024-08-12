@@ -3,6 +3,7 @@ const router = express.Router();
 const apiFunctions = require('../models/valAPI');
 const DatabaseFunctions = require("../models/databaseModel");
 const indent = `    `
+const fs = require('fs');
 
 async function createJSON(name, jsondata) {
     fs.writeFile('./extra-files/' + name, JSON.stringify(jsondata), function (err) {
@@ -13,11 +14,37 @@ async function createJSON(name, jsondata) {
 }
 
 router.get('/', async (req, res) => {
+    let agentList = [
+        "Phoenix",
+        "Raze",
+        "Jett",
+        "Yoru",
+        "Neon",
+        "Reyna",
+        "Sage",
+        "Cypher",
+        "Chamber",
+        "Killjoy",
+        "Omen",
+        "Viper",
+        "Brimstone",
+        "Astra",
+        "Harbor",
+        "Sova",
+        "Breach",
+        "Skye",
+        "KAY/O",
+        "Fade",
+        "Clove",
+        "Gekko",
+        "Iso",
+        "Deadlock"
+    ]
     if (req.query.failed == 'true') {
-        res.render('agentLookup', { failed: true })
+        res.render('agentLookup', { failed: true, agents:agentList.sort()})
     }
     else {
-        res.render('agentLookup', { failed: false })
+        res.render('agentLookup', { failed: false, agents:agentList.sort() })
     }
 })
 
@@ -42,7 +69,11 @@ router.post('/', async (req, res) => {
         "Breach",
         "Skye",
         "KAY/O",
-        "Fade"
+        "Fade",
+        "Clove",
+        "Gekko",
+        "Iso",
+        "Deadlock"
     ]
     if (agentList.includes(req.body.agent)){
         res.redirect('/agent/'+req.body.agent)
@@ -53,6 +84,7 @@ router.post('/', async (req, res) => {
 })
 
 router.get('/:agent', async (req, res) => {
+    let start = Date.now()
     let agentList = [
         "Phoenix",
         "Raze",
@@ -73,94 +105,23 @@ router.get('/:agent', async (req, res) => {
         "Breach",
         "Skye",
         "KAY/O",
-        "Fade"
+        "Fade",
+        "Clove",
+        "Gekko",
+        "Iso",
+        "Deadlock"
     ]
-    let agentData = {
-        kills:0,
-        deaths:0,
-        assists:0,
-        picks:0,
-        maps:{
-            "Abyss":{
-                picks:0,
-                wins:0,
-                losses:0,
-                draws:0
-            },
-            "Ascent":{
-                picks:0,
-                wins:0,
-                losses:0,
-                draws:0
-            },
-            "Bind":{
-                picks:0,
-                wins:0,
-                losses:0,
-                draws:0
-            },
-            "Breeze":{
-                picks:0,
-                wins:0,
-                losses:0,
-                draws:0
-            },
-            "Fracture":{
-                picks:0,
-                wins:0,
-                losses:0,
-                draws:0
-            },
-            "Haven":{
-                picks:0,
-                wins:0,
-                losses:0,
-                draws:0
-            },
-            "Icebox":{
-                picks:0,
-                wins:0,
-                losses:0,
-                draws:0
-            },
-            "Lotus":{
-                picks:0,
-                wins:0,
-                losses:0,
-                draws:0
-            },
-            "Pearl":{
-                picks:0,
-                wins:0,
-                losses:0,
-                draws:0
-            },
-            "Split":{
-                picks:0,
-                wins:0,
-                losses:0,
-                draws:0
-            },
-            "Sunset":{
-                picks:0,
-                wins:0,
-                losses:0,
-                draws:0
-            },
-        },
-        wins:0,
-        losses:0,
-        draws:0,
-
-    }
     if (agentList.includes(req.params.agent)){
-        let matches = await DatabaseFunctions.mass_retrieve_comp()
-        for (m in matches){
-
-        }
-        res.render('agent')
+        let agentRaw = await DatabaseFunctions.get_agent_stats(req.params.agent)
+        let agent = agentRaw[0]
+        // createJSON('agent.json',agent)
+        let end = Date.now()
+        console.log(`Retrieved agent stats for ${req.params.agent} (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+        res.render('agent',{agentData:agent,agentName:req.params.agent,agentImage:agentRaw[2],totalPicks:agentRaw[1]})
     }
     else {
+        let end = Date.now()
+        console.log(`Failed to retrieve agent stats for ${req.params.agent} (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
         res.redirect('/agent?failed=true')
     }
 })

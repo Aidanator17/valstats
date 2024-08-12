@@ -12,26 +12,9 @@
             <% } %>
             <div class="input-group">
                 <select name="agent" class="input-field">
-                    <option value="Phoenix">Phoenix</option>
-                    <option value="Raze">Raze</option>
-                    <option value="Jett">Jett</option>
-                    <option value="Yoru">Yoru</option>
-                    <option value="Neon">Neon</option>
-                    <option value="Reyna">Reyna</option>
-                    <option value="Sage">Sage</option>
-                    <option value="Cypher">Cypher</option>
-                    <option value="Chamber">Chamber</option>
-                    <option value="Killjoy">Killjoy</option>
-                    <option value="Omen">Omen</option>
-                    <option value="Viper">Viper</option>
-                    <option value="Brimstone">Brimstone</option>
-                    <option value="Astra">Astra</option>
-                    <option value="Harbor">Harbor</option>
-                    <option value="Sova">Sova</option>
-                    <option value="Breach">Breach</option>
-                    <option value="Skye">Skye</option>
-                    <option value="KAY/O">KAY/O</option>
-                    <option value="Fade">Fade</option>
+                    <% for (a in agents){ %>
+                        <option value="<%= agents[a] %>"><%= agents[a] %></option>
+                        <% } %>
                 </select>
                 <button type="submit" class="submit-button">Lookup</button>
             </div>
