@@ -1,3 +1,9 @@
+MASS ADJUST --- 2024-08-12 12:39
+  Duration: 153.2s
+  Players table increased by 201 (2995 -> 3196)
+  Player-Matches table increased by 218 (3811 -> 4029)
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  
 MASS ADJUST --- 2024-08-09 22:18
   Duration: 106.7s
   Players table increased by 0 (2994 -> 2994)
