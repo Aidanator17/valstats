@@ -208,10 +208,16 @@ const processFunctions = {
                     // Update win/loss/draw stats immediately after confirming agent pick
                     if (rWinner) {
                         agentData.by_rank[rRank].wins++;
+                        agentData.wins++;
+                        agentData.maps[matches[m]['data']['metadata']['map']].wins++;
                     } else if (bWinner) {
                         agentData.by_rank[rRank].losses++;
+                        agentData.losses++;
+                        agentData.maps[matches[m]['data']['metadata']['map']].losses++;
                     } else {
                         agentData.by_rank[rRank].draws++;
+                        agentData.draws++;
+                        agentData.maps[matches[m]['data']['metadata']['map']].draws++;
                     }
                 }
             }
@@ -260,10 +266,16 @@ const processFunctions = {
                     // Update win/loss/draw stats immediately after confirming agent pick
                     if (bWinner) {
                         agentData.by_rank[bRank].wins++;
+                        agentData.wins++;
+                        agentData.maps[matches[m]['data']['metadata']['map']].wins++;
                     } else if (rWinner) {
                         agentData.by_rank[bRank].losses++;
+                        agentData.losses++;
+                        agentData.maps[matches[m]['data']['metadata']['map']].losses++;
                     } else {
                         agentData.by_rank[bRank].draws++;
+                        agentData.draws++;
+                        agentData.maps[matches[m]['data']['metadata']['map']].draws++;
                     }
                 }
             }
