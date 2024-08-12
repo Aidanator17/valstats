@@ -8,12 +8,14 @@ datasource db {
 }
 
 model matches {
-  id              Int    @id @default(autoincrement())
-  match_id        String @unique(map: "match_id") @db.VarChar(100)
-  match_info      String @db.LongText
-  match_type      String @db.VarChar(45)
-  match_map       String @db.VarChar(45)
-  match_starttime Int
+  id              Int     @id @default(autoincrement())
+  match_id        String? @db.VarChar(100)
+  match_info      String? @db.LongText
+  match_type      String? @db.VarChar(45)
+  match_map       String? @db.VarChar(45)
+  match_starttime Int?
+
+  @@index([match_type], map: "idx_match_type")
 }
 
 model players {

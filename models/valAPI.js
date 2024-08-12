@@ -2,16 +2,6 @@ const fetch = require("node-fetch")
 const key = "?api_key=HDEV-cbf520fc-b91f-4235-b15b-a4d663f6bc9b"
 const size = '&size=20'
 
-function compare_score(a, b) {
-    if (a['stats']['score'] < b['stats']['score']) {
-        return 1;
-    }
-    if (a['stats']['score'] > b['stats']['score']) {
-        return -1;
-    }
-    return 0;
-}
-
 
 const UserData = {
     getBasic: async function (user, tag) {
@@ -127,91 +117,7 @@ const UserData = {
         const data = await response.json();
         return data
 
-    },
-    alterMatch: async function (match, puuid, editPlayers) {
-        if (match['data']['metadata']['mode_id'] == 'deathmatch') {
-            for (player in match['data']['players']['all_players']) {
-                if (match['data']['players']['all_players'][player]['puuid'] == puuid) {
-                    match['data']['metadata']['agent'] = match['data']['players']['all_players'][player]['character']
-                }
-            }
-
-        }
-        else {
-            match['data']['players']['blue'].sort(compare_score)
-            match['data']['players']['red'].sort(compare_score)
-            let playerteam
-            for (player in match['data']['players']['all_players']) {
-                if (match['data']['players']['all_players'][player]['puuid'] == puuid) {
-                    playerteam = match['data']['players']['all_players'][player]['team']
-                    match['data']['metadata']['agent'] = match['data']['players']['all_players'][player]['character']
-                    let kills = match['data']['players']['all_players'][player]['stats']['kills']
-                    let deaths = match['data']['players']['all_players'][player]['stats']['deaths']
-                    let assists = match['data']['players']['all_players'][player]['stats']['assists']
-                    let headshots = match['data']['players']['all_players'][player]['stats']['headshots']
-                    let bodyshots = match['data']['players']['all_players'][player]['stats']['bodyshots']
-                    let legshots = match['data']['players']['all_players'][player]['stats']['legshots']
-                    match['data']['metadata']['kd'] = Math.round((kills / deaths) * 100) / 100
-                    match['data']['metadata']['kills'] = kills
-                    match['data']['metadata']['deaths'] = deaths
-                    match['data']['metadata']['assists'] = assists
-                    if ((headshots + legshots + bodyshots) == 0) {
-                        match['data']['metadata']['HSP'] = Math.round((headshots / 1) * 1000) / 10
-                    }
-                    else {
-                        match['data']['metadata']['HSP'] = Math.round((headshots / (headshots + legshots + bodyshots)) * 1000) / 10
-                    }
-                    match['data']['metadata']['user_agent_imgs'] = match['data']['players']['all_players'][player]['assets']['agent']
-                    break
-                }
-            }
-            if (editPlayers) {
-                for (p in match['data']['players']['blue']) {
-                    let words = match['data']['players']['blue'][p]['currenttier_patched'].split(' ')
-                    match['data']['players']['blue'][p]['currenttier_patched'] = words[0] + '_' + words[1]
-                    // let updateddata = await this.getBasic_by_puuid(match['data']['players']['blue'][p]['puuid'])
-                    // match['data']['players']['blue'][p]['current_name'] = updateddata['username']
-                    // match['data']['players']['blue'][p]['current_tag'] = updateddata['tag']
-                }
-                for (p in match['data']['players']['red']) {
-                    let words = match['data']['players']['red'][p]['currenttier_patched'].split(' ')
-                    match['data']['players']['red'][p]['currenttier_patched'] = words[0] + '_' + words[1]
-                    // let updateddata = await this.getBasic_by_puuid(match['data']['players']['red'][p]['puuid'])
-                    // match['data']['players']['red'][p]['current_name'] = updateddata['username']
-                    // match['data']['players']['red'][p]['current_tag'] = updateddata['tag']
-                }
-            }
-
-            let redscore = match['data']['teams']['red']['rounds_won']
-            let bluescore = match['data']['teams']['blue']['rounds_won']
-            if (redscore > bluescore) {
-                if (playerteam == 'Red') {
-                    match['data']['metadata']['result'] = 'Win'
-                    match['data']['metadata']['score'] = redscore + '-' + bluescore
-                }
-                else {
-                    match['data']['metadata']['result'] = 'Loss'
-                    match['data']['metadata']['score'] = redscore + '-' + bluescore
-                }
-            }
-            else if (bluescore > redscore) {
-                if (playerteam == 'Blue') {
-                    match['data']['metadata']['result'] = 'Win'
-                    match['data']['metadata']['score'] = bluescore + '-' + redscore
-                }
-                else {
-                    match['data']['metadata']['result'] = 'Loss'
-                    match['data']['metadata']['score'] = bluescore + '-' + redscore
-                }
-            }
-            else {
-                match['data']['metadata']['result'] = 'Draw'
-                match['data']['metadata']['score'] = bluescore + '-' + redscore
-            }
-        }
-
-        return match
-    },
+    }
 };
 
 module.exports = UserData;

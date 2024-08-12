@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const apiFunctions = require('../models/valAPI');
 const DatabaseFunctions = require("../models/databaseModel");
+const processFunctions = require("../models/processModel")
 const indent = `    `
 const fs = require('fs');
 
@@ -112,12 +113,20 @@ router.get('/:agent', async (req, res) => {
         "Deadlock"
     ]
     if (agentList.includes(req.params.agent)){
-        let agentRaw = await DatabaseFunctions.get_agent_stats(req.params.agent)
+        let matches = await DatabaseFunctions.mass_retrieve_comp()
+        let agentRaw = await processFunctions.get_agent_stats(req.params.agent,matches)
+        const map_pickrate = await processFunctions.get_map_pickrate(matches)
         let agent = agentRaw[0]
-        // createJSON('agent.json',agent)
+        createJSON('agent.json',agent)
         let end = Date.now()
         console.log(`Retrieved agent stats for ${req.params.agent} (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
-        res.render('agent',{agentData:agent,agentName:req.params.agent,agentImage:agentRaw[2],totalPicks:agentRaw[1]})
+        res.render('agent',{
+            agentData:agent,
+            agentName:req.params.agent,
+            agentImage:agentRaw[2],
+            totalPicks:agentRaw[1],
+            map_picks:map_pickrate
+        })
     }
     else {
         let end = Date.now()

@@ -4,6 +4,7 @@ const fetch = require("node-fetch")
 const apiFunctions = require('../models/valAPI');
 const fs = require('fs');
 const DatabaseFunctions = require("../models/databaseModel");
+const processFunctions = require("../models/processModel")
 const { tr } = require("date-fns/locale");
 const indent = `    `
 
@@ -184,7 +185,7 @@ router.get('/:user/:tag', async (req, res) => {
         let past5wins = 0
         let past5losses = 0
         for (m in real_matches) {
-            UserInfo['matches'].push(await apiFunctions.alterMatch(JSON.parse(real_matches[m]['match_info']), UserInfo['puuid'], false))
+            UserInfo['matches'].push(await processFunctions.alterMatch(JSON.parse(real_matches[m]['match_info']), UserInfo['puuid'], false))
         }
         // createJSON('match.json', UserInfo['matches'][0])
         for (m in UserInfo['matches']) {
@@ -507,7 +508,7 @@ router.get('/:user/:tag/:matchid', async (req, res) => {
     match['data']['metadata']['main-username'] = req.params.user
     match['data']['metadata']['main-tag'] = req.params.tag
 
-    const matchData = await apiFunctions.alterMatch(match, puuid, true)
+    const matchData = await processFunctions.alterMatch(match, puuid, true)
     let end = Date.now()
     console.log(`Match data for ${req.params.matchid} retrieved (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
     res.render('user-match', { matchData })
