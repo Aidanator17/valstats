@@ -167,6 +167,23 @@ const processFunctions = {
                 if (matches[m]['data']['players']['red'][p]['character'] === agent) {
                     rRank = matches[m]['data']['players']['red'][p]['currenttier_patched'];
 
+                    // Initialize rank in by_rank if it doesn't exist
+                    if (!agentData.by_rank[rRank]) {
+                        agentData.by_rank[rRank] = {
+                            kills: 0,
+                            deaths: 0,
+                            assists: 0,
+                            picks: 0,
+                            headshots: 0,
+                            bodyshots: 0,
+                            legshots: 0,
+                            wins: 0,
+                            losses: 0,
+                            draws: 0,
+                            image_name: `${rRank.replace(/ /g, "_")}_Rank.png`
+                        };
+                    }
+
                     // Update rank stats
                     agentData.by_rank[rRank].picks++;
                     agentData.by_rank[rRank].kills += matches[m]['data']['players']['red'][p]['stats']['kills'];
@@ -187,12 +204,38 @@ const processFunctions = {
                     agentData.bodyshots += matches[m]['data']['players']['red'][p]['stats']['bodyshots'];
                     agentData.legshots += matches[m]['data']['players']['red'][p]['stats']['legshots'];
                     agentData.maps[matches[m]['data']['metadata']['map']].picks++;
+
+                    // Update win/loss/draw stats immediately after confirming agent pick
+                    if (rWinner) {
+                        agentData.by_rank[rRank].wins++;
+                    } else if (bWinner) {
+                        agentData.by_rank[rRank].losses++;
+                    } else {
+                        agentData.by_rank[rRank].draws++;
+                    }
                 }
             }
 
             for (let p in matches[m]['data']['players']['blue']) {
                 if (matches[m]['data']['players']['blue'][p]['character'] === agent) {
                     bRank = matches[m]['data']['players']['blue'][p]['currenttier_patched'];
+
+                    // Initialize rank in by_rank if it doesn't exist
+                    if (!agentData.by_rank[bRank]) {
+                        agentData.by_rank[bRank] = {
+                            kills: 0,
+                            deaths: 0,
+                            assists: 0,
+                            picks: 0,
+                            headshots: 0,
+                            bodyshots: 0,
+                            legshots: 0,
+                            wins: 0,
+                            losses: 0,
+                            draws: 0,
+                            image_name: `${bRank.replace(/ /g, "_")}_Rank.png`
+                        };
+                    }
 
                     // Update rank stats
                     agentData.by_rank[bRank].picks++;
@@ -213,50 +256,15 @@ const processFunctions = {
                     agentData.bodyshots += matches[m]['data']['players']['blue'][p]['stats']['bodyshots'];
                     agentData.legshots += matches[m]['data']['players']['blue'][p]['stats']['legshots'];
                     agentData.maps[matches[m]['data']['metadata']['map']].picks++;
-                }
-            }
 
-            // Determine wins, losses, draws
-            if (rWinner) {
-                if (rExists) {
-                    agentData.wins++;
-                    agentData.maps[matches[m]['data']['metadata']['map']].wins++;
-                    if (bExists) {
-                        agentData.by_rank[bRank].losses++;
-                    }
-                }
-                if (bExists) {
-                    agentData.losses++;
-                    agentData.maps[matches[m]['data']['metadata']['map']].losses++;
-                    if (rExists) {
-                        agentData.by_rank[rRank].wins++;
-                    }
-                }
-            } else if (bWinner) {
-                if (bExists) {
-                    agentData.wins++;
-                    agentData.maps[matches[m]['data']['metadata']['map']].wins++;
-                    if (rExists) {
-                        agentData.by_rank[rRank].losses++;
-                    }
-                }
-                if (rExists) {
-                    agentData.losses++;
-                    agentData.maps[matches[m]['data']['metadata']['map']].losses++;
-                    if (bExists) {
+                    // Update win/loss/draw stats immediately after confirming agent pick
+                    if (bWinner) {
                         agentData.by_rank[bRank].wins++;
+                    } else if (rWinner) {
+                        agentData.by_rank[bRank].losses++;
+                    } else {
+                        agentData.by_rank[bRank].draws++;
                     }
-                }
-            } else {
-                if (rExists) {
-                    agentData.draws++;
-                    agentData.maps[matches[m]['data']['metadata']['map']].draws++;
-                    agentData.by_rank[rRank].draws++;
-                }
-                if (bExists) {
-                    agentData.draws++;
-                    agentData.maps[matches[m]['data']['metadata']['map']].draws++;
-                    agentData.by_rank[bRank].draws++;
                 }
             }
         }
