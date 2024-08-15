@@ -9,7 +9,7 @@ datasource db {
 
 model matches {
   id              Int     @id @default(autoincrement())
-  match_id        String? @db.VarChar(100)
+  match_id        String? @unique(map: "match_id") @db.VarChar(100)
   match_info      String? @db.LongText
   match_type      String? @db.VarChar(45)
   match_map       String? @db.VarChar(45)
@@ -31,4 +31,16 @@ model players_matches {
   players   players @relation(fields: [player_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "players_matches_ibfk_1")
 
   @@unique([player_id, matchid], map: "unique_playermatches")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model matches_backup {
+  id              Int     @default(0)
+  match_id        String? @db.VarChar(100)
+  match_info      String? @db.LongText
+  match_type      String? @db.VarChar(45)
+  match_map       String? @db.VarChar(45)
+  match_starttime Int?
+
+  @@ignore
 }

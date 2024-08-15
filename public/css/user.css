@@ -77,6 +77,14 @@ body, html {
 .agent-grid-item {
   padding-bottom: 10px;
 }
+#map-grid {
+  display: grid;
+  grid-template-columns: auto auto auto auto;
+  justify-items: start;
+}
+.map-grid-item {
+  padding-bottom: 10px;
+}
 
 .grid-item-title {
   font-weight: bold;

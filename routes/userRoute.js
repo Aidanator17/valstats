@@ -77,17 +77,105 @@ router.get('/:user/:tag', async (req, res) => {
         teammates: [],
         agents: [],
         maps_played:{
-            "Abyss":0,
-            "Ascent":0,
-            "Bind":0,
-            "Breeze":0,
-            "Fracture":0,
-            "Haven":0,
-            "Icebox":0,
-            "Lotus":0,
-            "Pearl":0,
-            "Split":0,
-            "Sunset":0,
+            "Abyss":{
+                count:0,
+                wins:0,
+                losses:0,
+                draws:0,
+                kills:0,
+                deaths:0,
+                assists:0
+            },
+            "Ascent":{
+                count:0,
+                wins:0,
+                losses:0,
+                draws:0,
+                kills:0,
+                deaths:0,
+                assists:0
+            },
+            "Bind":{
+                count:0,
+                wins:0,
+                losses:0,
+                draws:0,
+                kills:0,
+                deaths:0,
+                assists:0
+            },
+            "Breeze":{
+                count:0,
+                wins:0,
+                losses:0,
+                draws:0,
+                kills:0,
+                deaths:0,
+                assists:0
+            },
+            "Fracture":{
+                count:0,
+                wins:0,
+                losses:0,
+                draws:0,
+                kills:0,
+                deaths:0,
+                assists:0
+            },
+            "Haven":{
+                count:0,
+                wins:0,
+                losses:0,
+                draws:0,
+                kills:0,
+                deaths:0,
+                assists:0
+            },
+            "Icebox":{
+                count:0,
+                wins:0,
+                losses:0,
+                draws:0,
+                kills:0,
+                deaths:0,
+                assists:0
+            },
+            "Lotus":{
+                count:0,
+                wins:0,
+                losses:0,
+                draws:0,
+                kills:0,
+                deaths:0,
+                assists:0
+            },
+            "Pearl":{
+                count:0,
+                wins:0,
+                losses:0,
+                draws:0,
+                kills:0,
+                deaths:0,
+                assists:0
+            },
+            "Split":{
+                count:0,
+                wins:0,
+                losses:0,
+                draws:0,
+                kills:0,
+                deaths:0,
+                assists:0
+            },
+            "Sunset":{
+                count:0,
+                wins:0,
+                losses:0,
+                draws:0,
+                kills:0,
+                deaths:0,
+                assists:0
+            },
         }
     }
     const info = await apiFunctions.getBasic(req.params.user, req.params.tag)
@@ -197,8 +285,8 @@ router.get('/:user/:tag', async (req, res) => {
                         let input = {
                             agent: UserInfo['matches'][m]['data']['metadata']['agent'],
                             count: 1,
-                            wins: 0,
-                            losses: 1,
+                            wins: 1,
+                            losses: 0,
                             draws: 0,
                             kills: UserInfo['matches'][m]['data']['metadata']['kills'],
                             deaths: UserInfo['matches'][m]['data']['metadata']['deaths'],
@@ -218,7 +306,11 @@ router.get('/:user/:tag', async (req, res) => {
                             }
                         }
                         input.maps[UserInfo['matches'][m]['data']['metadata']['map']]++
-                        UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']]++
+                        UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].count++
+                        UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].kills += UserInfo['matches'][m]['data']['metadata']['kills']
+                        UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].deaths += UserInfo['matches'][m]['data']['metadata']['deaths']
+                        UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].assists += UserInfo['matches'][m]['data']['metadata']['assists']
+                        UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].wins++
                         UserInfo.agents.push(input)
                     }
                     else if (UserInfo['matches'][m]['data']['metadata']['result'] == "Loss") {
@@ -246,7 +338,11 @@ router.get('/:user/:tag', async (req, res) => {
                             }
                         }
                         input.maps[UserInfo['matches'][m]['data']['metadata']['map']]++
-                        UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']]++
+                        UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].count++
+                        UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].kills += UserInfo['matches'][m]['data']['metadata']['kills']
+                        UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].deaths += UserInfo['matches'][m]['data']['metadata']['deaths']
+                        UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].assists += UserInfo['matches'][m]['data']['metadata']['assists']
+                        UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].losses++
                         UserInfo.agents.push(input)
                     }
                     else {
@@ -254,8 +350,8 @@ router.get('/:user/:tag', async (req, res) => {
                             agent: UserInfo['matches'][m]['data']['metadata']['agent'],
                             count: 1,
                             wins: 0,
-                            losses: 1,
-                            draws: 0,
+                            losses: 0,
+                            draws: 1,
                             kills: UserInfo['matches'][m]['data']['metadata']['kills'],
                             deaths: UserInfo['matches'][m]['data']['metadata']['deaths'],
                             assists: UserInfo['matches'][m]['data']['metadata']['assists'],
@@ -274,7 +370,11 @@ router.get('/:user/:tag', async (req, res) => {
                             }
                         }
                         input.maps[UserInfo['matches'][m]['data']['metadata']['map']]++
-                        UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']]++
+                        UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].count++
+                        UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].kills += UserInfo['matches'][m]['data']['metadata']['kills']
+                        UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].deaths += UserInfo['matches'][m]['data']['metadata']['deaths']
+                        UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].assists += UserInfo['matches'][m]['data']['metadata']['assists']
+                        UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].draws++
                         UserInfo.agents.push(input)
                     }
                 }
@@ -289,17 +389,29 @@ router.get('/:user/:tag', async (req, res) => {
                             if (UserInfo['matches'][m]['data']['metadata']['result'] == "Win") {
                                 UserInfo.agents[a].wins++
                                 UserInfo.agents[a].maps[UserInfo['matches'][m]['data']['metadata']['map']]++
-                                UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']]++
+                                UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].count++
+                                UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].kills += UserInfo['matches'][m]['data']['metadata']['kills']
+                                UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].deaths += UserInfo['matches'][m]['data']['metadata']['deaths']
+                                UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].assists += UserInfo['matches'][m]['data']['metadata']['assists']
+                                UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].wins++
                             }
                             else if (UserInfo['matches'][m]['data']['metadata']['result'] == "Loss") {
                                 UserInfo.agents[a].losses++
                                 UserInfo.agents[a].maps[UserInfo['matches'][m]['data']['metadata']['map']]++
-                                UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']]++
+                                UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].count++
+                                UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].kills += UserInfo['matches'][m]['data']['metadata']['kills']
+                                UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].deaths += UserInfo['matches'][m]['data']['metadata']['deaths']
+                                UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].assists += UserInfo['matches'][m]['data']['metadata']['assists']
+                                UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].losses++
                             }
                             else {
                                 UserInfo.agents[a].draws++
                                 UserInfo.agents[a].maps[UserInfo['matches'][m]['data']['metadata']['map']]++
-                                UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']]++
+                                UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].count++
+                                UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].kills += UserInfo['matches'][m]['data']['metadata']['kills']
+                                UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].deaths += UserInfo['matches'][m]['data']['metadata']['deaths']
+                                UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].assists += UserInfo['matches'][m]['data']['metadata']['assists']
+                                UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].draws++
                             }
                             found = true
                         }
@@ -309,8 +421,8 @@ router.get('/:user/:tag', async (req, res) => {
                             let input = {
                                 agent: UserInfo['matches'][m]['data']['metadata']['agent'],
                                 count: 1,
-                                wins: 0,
-                                losses: 1,
+                                wins: 1,
+                                losses: 0,
                                 draws: 0,
                                 kills: UserInfo['matches'][m]['data']['metadata']['kills'],
                                 deaths: UserInfo['matches'][m]['data']['metadata']['deaths'],
@@ -330,7 +442,11 @@ router.get('/:user/:tag', async (req, res) => {
                                 }
                             }
                             input.maps[UserInfo['matches'][m]['data']['metadata']['map']]++
-                            UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']]++
+                            UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].count++
+                            UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].kills += UserInfo['matches'][m]['data']['metadata']['kills']
+                            UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].deaths += UserInfo['matches'][m]['data']['metadata']['deaths']
+                            UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].assists += UserInfo['matches'][m]['data']['metadata']['assists']
+                            UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].wins++
                             UserInfo.agents.push(input)
                         }
                         else if (UserInfo['matches'][m]['data']['metadata']['result'] == "Loss") {
@@ -358,7 +474,11 @@ router.get('/:user/:tag', async (req, res) => {
                                 }
                             }
                             input.maps[UserInfo['matches'][m]['data']['metadata']['map']]++
-                            UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']]++
+                            UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].count++
+                            UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].kills += UserInfo['matches'][m]['data']['metadata']['kills']
+                            UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].deaths += UserInfo['matches'][m]['data']['metadata']['deaths']
+                            UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].assists += UserInfo['matches'][m]['data']['metadata']['assists']
+                            UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].losses++
                             UserInfo.agents.push(input)
                         }
                         else {
@@ -366,8 +486,8 @@ router.get('/:user/:tag', async (req, res) => {
                                 agent: UserInfo['matches'][m]['data']['metadata']['agent'],
                                 count: 1,
                                 wins: 0,
-                                losses: 1,
-                                draws: 0,
+                                losses: 0,
+                                draws: 1,
                                 kills: UserInfo['matches'][m]['data']['metadata']['kills'],
                                 deaths: UserInfo['matches'][m]['data']['metadata']['deaths'],
                                 assists: UserInfo['matches'][m]['data']['metadata']['assists'],
@@ -386,7 +506,11 @@ router.get('/:user/:tag', async (req, res) => {
                                 }
                             }
                             input.maps[UserInfo['matches'][m]['data']['metadata']['map']]++
-                            UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']]++
+                            UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].count++
+                            UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].kills += UserInfo['matches'][m]['data']['metadata']['kills']
+                            UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].deaths += UserInfo['matches'][m]['data']['metadata']['deaths']
+                            UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].assists += UserInfo['matches'][m]['data']['metadata']['assists']
+                            UserInfo.maps_played[UserInfo['matches'][m]['data']['metadata']['map']].draws++
                             UserInfo.agents.push(input)
                         }
                     }
@@ -430,7 +554,9 @@ router.get('/:user/:tag', async (req, res) => {
                         if (UserInfo.teammates.length == 0) {
                             UserInfo.teammates.push({
                                 puuid: UserInfo['matches'][m]['data']['players'][userteam][tm]['puuid'],
-                                count: 1
+                                count: 1,
+                                username:UserInfo['matches'][m]['data']['players'][userteam][tm]['name'],
+                                tag:UserInfo['matches'][m]['data']['players'][userteam][tm]['tag'],
                             })
                         }
                         else {
@@ -445,7 +571,9 @@ router.get('/:user/:tag', async (req, res) => {
                             if (!found) {
                                 UserInfo.teammates.push({
                                     puuid: UserInfo['matches'][m]['data']['players'][userteam][tm]['puuid'],
-                                    count: 1
+                                    count: 1,
+                                    username:UserInfo['matches'][m]['data']['players'][userteam][tm]['name'],
+                                    tag:UserInfo['matches'][m]['data']['players'][userteam][tm]['tag'],
                                 })
                             }
                         }
@@ -458,14 +586,30 @@ router.get('/:user/:tag', async (req, res) => {
         for (pl in UserInfo.teammates) {
             // console.log(UserInfo.teammates[pl].count)
             if (UserInfo.teammates[pl].count > 1) {
-                pData = await apiFunctions.getBasic_by_puuid(UserInfo.teammates[pl].puuid)
-                UserInfo.teammates[pl].username = pData.username
-                UserInfo.teammates[pl].tag = pData.tag
+                // pData = await apiFunctions.getBasic_by_puuid(UserInfo.teammates[pl].puuid)
+                // UserInfo.teammates[pl].username = pData.username
+                // UserInfo.teammates[pl].tag = pData.tag
                 reformatTeammates.push(UserInfo.teammates[pl])
             }
         }
         UserInfo.teammates = reformatTeammates.sort(compare_count)
         UserInfo.agents.sort(compare_count)
+        let reformatMaps = []
+        for (m in UserInfo.maps_played){
+            reformatMaps.push({
+                name:m,
+                count:UserInfo.maps_played[m].count,
+                wins:UserInfo.maps_played[m].wins,
+                losses:UserInfo.maps_played[m].losses,
+                draws:UserInfo.maps_played[m].draws,
+                kills:UserInfo.maps_played[m].kills,
+                deaths:UserInfo.maps_played[m].deaths,
+                assists:UserInfo.maps_played[m].assists
+            })
+        }
+        UserInfo.maps_played = reformatMaps
+        UserInfo.maps_played.sort(compare_count)
+
         // createJSON('teammates.json', UserInfo.teammates)
         UserInfo['stats']['overall']['HSP'] = Math.round((totalheadshots / (totalbodyshots + totalheadshots + totallegshots)) * 1000) / 10
         UserInfo['stats']['past5']['HSP'] = Math.round((past5headshots / (past5bodyshots + past5headshots + past5legshots)) * 1000) / 10
