@@ -26,7 +26,7 @@
       <div class="stat">
         <h2>Win Rate</h2>
         <p>
-          <%= (agentData.wins / (agentData.wins + agentData.losses + agentData.draws)).toFixed(2) %>%
+          <%= (agentData.wins / ((agentData.wins + agentData.losses + agentData.draws))*100).toFixed(2) %>%
         </p>
       </div>
       <div class="stat">
