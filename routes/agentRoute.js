@@ -84,6 +84,32 @@ router.post('/', async (req, res) => {
     }
 })
 
+router.get('/all', async (req, res) => {
+    let start = Date.now()
+    const matches = await DatabaseFunctions.mass_retrieve_comp()
+    let agentData = await processFunctions.get_all_agent_stats(matches)
+    let totalMatches = matches.length
+    const agentsByClass = agentData.sort((a, b) => a.role.localeCompare(b.role));
+    const agentsByPickAsc = [...agentData].sort((a, b) => ((a.wins + a.losses + a.draws) / totalMatches) - ((b.wins + b.losses + b.draws) / totalMatches));
+    const agentsByPickDesc = [...agentData].sort((a, b) => ((b.wins + b.losses + b.draws) / totalMatches) - ((a.wins + a.losses + a.draws) / totalMatches));
+    const agentsByWinAsc = [...agentData].sort((a, b) => (a.wins / (a.wins + a.losses + a.draws)) - (b.wins / (b.wins + b.losses + b.draws)));
+    const agentsByWinDesc = [...agentData].sort((a, b) => (b.wins / (b.wins + b.losses + b.draws)) - (a.wins / (a.wins + a.losses + a.draws)));
+    const agentsByKDAsc = [...agentData].sort((a, b) => (a.kills / a.deaths) - (b.kills / b.deaths));
+    const agentsByKDDesc = [...agentData].sort((a, b) => (b.kills / b.deaths) - (a.kills / a.deaths));
+    let end = Date.now()
+    console.log(`Retrieved mass agent stats (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+    res.render('allAgents', {
+        agentsByClass,
+        agentsByPickAsc,
+        agentsByPickDesc,
+        agentsByWinAsc,
+        agentsByWinDesc,
+        agentsByKDAsc,
+        agentsByKDDesc,
+        totalMatches
+    });
+})
+
 router.get('/:agent', async (req, res) => {
     let start = Date.now()
     let agentList = [

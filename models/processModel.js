@@ -1,5 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
-const { tr } = require('date-fns/locale');
+const { tr, el } = require('date-fns/locale');
 const { json } = require('express');
 const prisma = new PrismaClient();
 const fs = require('fs');
@@ -20,6 +20,51 @@ async function createJSON(name, jsondata) {
             console.log(err);
         }
     });
+}
+
+function checkObject(vlue, prpt, lst) {
+    for (x in lst) {
+        if (lst[x][prpt] == vlue) {
+            // console.log(`Found ${vlue}!`)
+            return [true, x]
+        }
+    }
+    // console.log(`Didnt find ${vlue}!`)
+    return [false, null]
+}
+
+function getAgentRole(agentName) {
+    // Convert agentName to lowercase to avoid case sensitivity issues
+    agentName = agentName.toLowerCase();
+
+    const agentRoles = {
+        "brimstone": "Controller",
+        "viper": "Controller",
+        "omen": "Controller",
+        "astra": "Controller",
+        "harbor": "Controller",
+        "clove": "Controller",
+        "killjoy": "Sentinel",
+        "cypher": "Sentinel",
+        "sage": "Sentinel",
+        "chamber": "Sentinel",
+        "deadlock": "Sentinel",
+        "phoenix": "Duelist",
+        "jett": "Duelist",
+        "reyna": "Duelist",
+        "raze": "Duelist",
+        "yoru": "Duelist",
+        "neon": "Duelist",
+        "iso": "Duelist",
+        "sova": "Initiator",
+        "skye": "Initiator",
+        "breach": "Initiator",
+        "kay/o": "Initiator",
+        "fade": "Initiator",
+        "gekko": "Initiator",
+    };
+    // console.log(`${agentName} => ${agentRoles[agentName]}`)
+    return agentRoles[agentName] || "Unknown Role";
 }
 
 const processFunctions = {
@@ -281,8 +326,128 @@ const processFunctions = {
             }
         }
         return [agentData, matches.length, agentImage];
-    }
-    ,
+    },
+    get_all_agent_stats: async function (matches) {
+        let output = []
+        for (m in matches) {
+            let bWinner = false;
+            let rWinner = false;
+            let draw = false;
+
+            if (matches[m]['data']['teams']['red']['has_won']) {
+                rWinner = true;
+            } else if (matches[m]['data']['teams']['blue']['has_won']) {
+                bWinner = true;
+            } else {
+                draw = true;
+            }
+            for (p in matches[m]['data']['players']['red']) {
+                let checkList = checkObject(matches[m]['data']['players']['red'][p]["character"], 'name', output)
+                if (output.length == 0) {
+                    let newInput = {
+                        name: matches[m]['data']['players']['red'][p]["character"],
+                        role: getAgentRole(matches[m]['data']['players']['red'][p]["character"]),
+                        agentIMG: matches[m]['data']['players']['red'][p]['assets']['agent']['small'],
+                        kills: matches[m]['data']['players']['red'][p]['stats']['kills'],
+                        deaths: matches[m]['data']['players']['red'][p]['stats']['deaths'],
+                        assists: matches[m]['data']['players']['red'][p]['stats']['assists'],
+                        wins: 0,
+                        losses: 0,
+                        draws: 0
+                    }
+                    if (rWinner) {
+                        newInput.wins++
+                    }
+                    else if (bWinner) {
+                        newInput.losses++
+                    }
+                    else {
+                        newInput.draws++
+                    }
+                    output.push(newInput)
+                }
+                else if (checkList[0]) {
+                    output[checkList[1]].kills += matches[m]['data']['players']['red'][p]['stats']['kills']
+                    output[checkList[1]].deaths += matches[m]['data']['players']['red'][p]['stats']['deaths']
+                    output[checkList[1]].assists += matches[m]['data']['players']['red'][p]['stats']['assists']
+                    if (rWinner) {
+                        output[checkList[1]].wins++
+                    }
+                    else if (bWinner) {
+                        output[checkList[1]].losses++
+                    }
+                    else {
+                        output[checkList[1]].draws++
+                    }
+                }
+                else {
+                    let newInput = {
+                        name: matches[m]['data']['players']['red'][p]["character"],
+                        role: getAgentRole(matches[m]['data']['players']['red'][p]["character"]),
+                        agentIMG: matches[m]['data']['players']['red'][p]['assets']['agent']['small'],
+                        kills: matches[m]['data']['players']['red'][p]['stats']['kills'],
+                        deaths: matches[m]['data']['players']['red'][p]['stats']['deaths'],
+                        assists: matches[m]['data']['players']['red'][p]['stats']['assists'],
+                        wins: 0,
+                        losses: 0,
+                        draws: 0
+                    }
+                    if (rWinner) {
+                        newInput.wins++
+                    }
+                    else if (bWinner) {
+                        newInput.losses++
+                    }
+                    else {
+                        newInput.draws++
+                    }
+                    output.push(newInput)
+                }
+            }
+            for (p in matches[m]['data']['players']['blue']) {
+                let checkList = checkObject(matches[m]['data']['players']['blue'][p]["character"], 'name', output)
+                
+                if (checkList[0]) {
+                    output[checkList[1]].kills += matches[m]['data']['players']['blue'][p]['stats']['kills']
+                    output[checkList[1]].deaths += matches[m]['data']['players']['blue'][p]['stats']['deaths']
+                    output[checkList[1]].assists += matches[m]['data']['players']['blue'][p]['stats']['assists']
+                    if (bWinner) {
+                        output[checkList[1]].wins++
+                    }
+                    else if (rWinner) {
+                        output[checkList[1]].losses++
+                    }
+                    else {
+                        output[checkList[1]].draws++
+                    }
+                }
+                else {
+                    let newInput = {
+                        name: matches[m]['data']['players']['blue'][p]["character"],
+                        role: getAgentRole(matches[m]['data']['players']['blue'][p]["character"]),
+                        agentIMG: matches[m]['data']['players']['blue'][p]['assets']['agent']['small'],
+                        kills: matches[m]['data']['players']['blue'][p]['stats']['kills'],
+                        deaths: matches[m]['data']['players']['blue'][p]['stats']['deaths'],
+                        assists: matches[m]['data']['players']['blue'][p]['stats']['assists'],
+                        wins: 0,
+                        losses: 0,
+                        draws: 0
+                    }
+                    if (bWinner) {
+                        newInput.wins++
+                    }
+                    else if (rWinner) {
+                        newInput.losses++
+                    }
+                    else {
+                        newInput.draws++
+                    }
+                    output.push(newInput)
+                }
+            }
+        }
+        return output
+    },
     alterMatch: async function (match, puuid, editPlayers) {
         if (match['data']['metadata']['mode_id'] == 'deathmatch') {
             for (player in match['data']['players']['all_players']) {
