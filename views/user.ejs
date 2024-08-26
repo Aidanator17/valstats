@@ -2,12 +2,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
-        <%= UserInfo['username'] %>
+      <%= title %>
     </title>
-    <link rel="stylesheet" href="/css/user.css">
-</head>
-
-<body>
+    <link rel="stylesheet" href="/css/<%= sheet %>">
+  </head>
+  
+  <body>
     <div class="container">
         <div id="usergrid">
             <div class="usergrid-item">
@@ -70,11 +70,77 @@
 
         </div>
         <div class="buttons">
-            <button onclick="openMatches()" class="tab active" id="matches-btn">Match List</button>
+            <button onclick="openCompMatches()" class="tab active" id="comp-matches-btn">Comp Matches</button>
+            <button onclick="openMatches()" class="tab" id="matches-btn">All Matches</button>
             <button onclick="openAM()" class="tab" id="am-btn">Agents / Maps</button>
             <button onclick="" class="tab" id="x-btn">Button 3</button>
         </div>
-        <div id="matches" class="matches">
+        <div id="comp-matches" class="matches">
+            <h3>Matches (<%= UserInfo['comp_matches'].length %>)</h3>
+            <div class="matchgrid">
+                <div class="matchgrid-item">
+                    <p class="matchgrid-element matchgrid-title">
+                        Date
+                    </p>
+                    <p class="matchgrid-element matchgrid-title">
+                        Map
+                    </p>
+                    <p class="matchgrid-element matchgrid-title">
+                        Gamemode
+                    </p>
+                    <p class="matchgrid-element matchgrid-title">
+                        Agent
+                    </p>
+                    <p class="matchgrid-element matchgrid-title">
+                        K/D/A (K/D)
+                    </p>
+                    <p class="matchgrid-element matchgrid-title">
+                        HS%
+                    </p>
+                    <p class="matchgrid-element matchgrid-title">
+                        Match Score
+                    </p>
+                    <p class="matchgrid-element matchgrid-title">
+
+                    </p>
+                </div>
+                <% for (match in UserInfo['comp_matches']) { %>
+                    <div class="matchgrid-item">
+                        <p class="matchgrid-element matchgrid-date">
+                            <%= UserInfo['comp_matches'][match]['data']['metadata']['game_start'] %>
+                        </p>
+                        <p class="matchgrid-element">
+                            <%= UserInfo['comp_matches'][match]['data']['metadata']['map'] %>
+                        </p>
+                        <p class="matchgrid-element">
+                            <%= UserInfo['comp_matches'][match]['data']['metadata']['mode'] %>
+                        </p>
+                        <p class="matchgrid-element">
+                            <%= UserInfo['comp_matches'][match]['data']['metadata']['agent'] %>
+                        </p>
+                        <p class="matchgrid-element">
+                            <%= UserInfo['comp_matches'][match]['data']['metadata']['kills'] %>/<%=
+                                    UserInfo['comp_matches'][match]['data']['metadata']['deaths'] %>/<%=
+                                        UserInfo['comp_matches'][match]['data']['metadata']['assists'] %> (<%=
+                                            UserInfo['comp_matches'][match]['data']['metadata']['kd'] %>)
+                        </p>
+                        <p class="matchgrid-element">
+                            <%= UserInfo['comp_matches'][match]['data']['metadata']['HSP'] %>
+                        </p>
+                        <p class="matchgrid-element">
+                            <%= UserInfo['comp_matches'][match]['data']['metadata']['result'] %>
+                                <%= UserInfo['comp_matches'][match]['data']['metadata']['score'] %>
+                        </p>
+                        <form class="matchgrid-element"
+                            action="/user/<%= UserInfo['username'] %>/<%= UserInfo['tag'] %>/<%= UserInfo['comp_matches'][match]['data']['metadata']['matchid'] %>"
+                            method="get">
+                            <button type="submit" class="view-button">view</button>
+                        </form>
+                    </div>
+                    <% } %>
+            </div>
+        </div>
+        <div style="display: none;" id="matches" class="matches">
             <h3>Matches (<%= UserInfo['matches'].length %>)</h3>
             <div class="matchgrid">
                 <div class="matchgrid-item">
@@ -281,17 +347,60 @@
             });
         });
 
-        function openMatches() {
+        function openCompMatches() {
+            let cmButton = document.getElementById('comp-matches-btn')
+            let compMatches = document.getElementById('comp-matches')
+
             let amButton = document.getElementById('am-btn')
             let am = document.getElementById('agents-maps')
+
             let xButton = document.getElementById('x-btn')
             let x = undefined
+
             let matchesButton = document.getElementById('matches-btn')
             let matches = document.getElementById('matches')
-            // console.log("am:",am.style.display+"\nmatches:",matches.style.display)
-            if (!am.style.display != 'none') {
+
+            if (am.style.display != 'none') {
                 am.style.display = 'none'
                 amButton.classList.remove('active')
+                compMatches.style.display = ''
+                cmButton.classList.add('active')
+            }
+            else if (matches.style.display != 'none') {
+                matches.style.display = 'none'
+                matchesButton.classList.remove('active')
+                compMatches.style.display = ''
+                cmButton.classList.add('active')
+            }
+            else if (!x.style.display != 'none') {
+                x.style.display = 'none'
+                xButton.classList.remove('active')
+                compMatches.style.display = ''
+                cmButton.classList.add('active')
+            }
+        }
+        function openMatches() {
+            let cmButton = document.getElementById('comp-matches-btn')
+            let compMatches = document.getElementById('comp-matches')
+
+            let amButton = document.getElementById('am-btn')
+            let am = document.getElementById('agents-maps')
+
+            let xButton = document.getElementById('x-btn')
+            let x = undefined
+
+            let matchesButton = document.getElementById('matches-btn')
+            let matches = document.getElementById('matches')
+
+            if (am.style.display != 'none') {
+                am.style.display = 'none'
+                amButton.classList.remove('active')
+                matches.style.display = ''
+                matchesButton.classList.add('active')
+            }
+            else if (compMatches.style.display != 'none') {
+                compMatches.style.display = 'none'
+                cmButton.classList.remove('active')
                 matches.style.display = ''
                 matchesButton.classList.add('active')
             }
@@ -303,15 +412,27 @@
             }
         }
         function openAM() {
+            let cmButton = document.getElementById('comp-matches-btn')
+            let compMatches = document.getElementById('comp-matches')
+
             let amButton = document.getElementById('am-btn')
             let am = document.getElementById('agents-maps')
+
             let xButton = document.getElementById('x-btn')
             let x = undefined
+
             let matchesButton = document.getElementById('matches-btn')
             let matches = document.getElementById('matches')
+
             if (matches.style.display != 'none') {
                 matches.style.display = 'none'
                 matchesButton.classList.remove('active')
+                am.style.display = ''
+                amButton.classList.add('active')
+            }
+            else if (compMatches.style.display != 'none') {
+                compMatches.style.display = 'none'
+                cmButton.classList.remove('active')
                 am.style.display = ''
                 amButton.classList.add('active')
             }

@@ -1,9 +1,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Match Details</title>
-    <link rel="stylesheet" href="/css/user-match.css">
-</head>
+    <title>
+      <%= title %>
+    </title>
+    <link rel="stylesheet" href="/css/<%= sheet %>">
+  </head>
+  
+  
 
 <body>
     <div class="container">
@@ -23,7 +27,7 @@
                     </p>
                 </div>
                 <div class="match-info"
-                    style="background-image: url('/images/maps/<%= matchData['data']['metadata']['map'] %>.jpg');">
+                    style="background-image: url('/images/maps/<%=matchData['data']['metadata']['map']%>.jpg');">
                     <p id="m-info">
                         <%= matchData['data']['metadata']['map'] %> //
                             <%= matchData['data']['metadata']['result'] %>

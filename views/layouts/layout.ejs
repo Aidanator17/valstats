@@ -1,0 +1,29 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/navbar.css">
+    <link rel="stylesheet" href="/css/<%= sheet %>">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="logo">
+                <a href="/">
+                    <img src="/images/logo.png" alt="Logo" class="logo-img">
+                </a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/user/">User Lookup</a></li>
+                <li><a href="/agent/">Agents</a></li>
+                <li><a href="/maps/">Maps</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="content">
+        <%- body %>
+    </div>
+</body>

@@ -1,0 +1,44 @@
+/* Navbar Styling */
+.navbar {
+    background-color: #333;
+    padding: 15px 20px;
+    color: white;
+    width: 100%;
+}
+
+.navbar-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo-img {
+    height: 50px;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+}
+
+.nav-links li {
+    display: inline;
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    font-size: 1.1rem;
+}
+
+.nav-links a:hover {
+    text-decoration: underline;
+}
+
+/* Content Styling */
+.content {
+    padding: 20px;
+    clear: both;
+    display: block;
+}

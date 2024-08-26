@@ -1,10 +1,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/css/agentLookup.css">
-    <title>Agent Lookup</title>
-</head>
-<body>
+    <title>
+      <%= title %>
+    </title>
+    <link rel="stylesheet" href="/css/<%= sheet %>">
+  </head>
+  
+  <body>
     <div class="container">
         <form action="/agent/" method="post" class="form">
         <% if (failed){ %>

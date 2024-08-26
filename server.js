@@ -1,6 +1,7 @@
 const express = require("express");
 // const expressLayouts = require("express-ejs-layouts");
 const session = require("express-session");
+const expressLayouts = require('express-ejs-layouts');
 const path = require("path");
 const port = process.env.PORT || 8000;
 
@@ -20,17 +21,19 @@ app.use(
     },
   })
 );
+app.use(express.json());
+// app.use(expressLayouts);
+app.use(express.urlencoded({ extended: true }));
+// app.set('layout', 'layouts/layout');
 
 // const passport = require("./middleware/passport");
 // const authRoute = require("./routes/authRoute");
 const userRoute = require("./routes/userRoute");
+const userActRoute = require("./routes/userActRoute");
 const adminRoute = require("./routes/adminRoute");
 const agentRoute = require("./routes/agentRoute");
 
 // Middleware for express
-app.use(express.json());
-// app.use(expressLayouts);
-app.use(express.urlencoded({ extended: true }));
 // app.use(passport.initialize());
 // app.use(passport.session());
 
@@ -47,9 +50,11 @@ app.use(express.urlencoded({ extended: true }));
 // });
 
 app.use("/user", userRoute);
+app.use("/user-by-act", userRoute);
 app.use("/admin", adminRoute);
 app.use("/agent", agentRoute);
 // app.use("/auth", authRoute);
+
 
 app.get('/', async (req, res) => {
   // const id = (await UserData.getBasic('Fish','4484')).puuid

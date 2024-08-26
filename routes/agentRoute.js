@@ -42,10 +42,14 @@ router.get('/', async (req, res) => {
         "Deadlock"
     ]
     if (req.query.failed == 'true') {
-        res.render('agentLookup', { failed: true, agents:agentList.sort()})
+        res.render('agentLookup', { failed: true, agents: agentList.sort(),
+            title: 'Agent Lookup',
+            sheet: 'agentLookup.css' })
     }
     else {
-        res.render('agentLookup', { failed: false, agents:agentList.sort() })
+        res.render('agentLookup', { failed: false, agents: agentList.sort(),
+            title: 'Agent Lookup',
+            sheet: 'agentLookup.css' })
     }
 })
 
@@ -76,8 +80,8 @@ router.post('/', async (req, res) => {
         "Iso",
         "Deadlock"
     ]
-    if (agentList.includes(req.body.agent)){
-        res.redirect('/agent/'+req.body.agent)
+    if (agentList.includes(req.body.agent)) {
+        res.redirect('/agent/' + req.body.agent)
     }
     else {
         res.redirect('/agent?failed=true')
@@ -106,7 +110,9 @@ router.get('/all', async (req, res) => {
         agentsByWinDesc,
         agentsByKDAsc,
         agentsByKDDesc,
-        totalMatches
+        totalMatches,
+        title: 'All Agents Stats',
+        sheet: 'allAgents.css'
     });
 })
 
@@ -138,20 +144,22 @@ router.get('/:agent', async (req, res) => {
         "Iso",
         "Deadlock"
     ]
-    if (agentList.includes(req.params.agent)){
+    if (agentList.includes(req.params.agent)) {
         let matches = await DatabaseFunctions.mass_retrieve_comp()
-        let agentRaw = await processFunctions.get_agent_stats(req.params.agent,matches)
+        let agentRaw = await processFunctions.get_agent_stats(req.params.agent, matches)
         const map_pickrate = await processFunctions.get_map_pickrate(matches)
         let agent = agentRaw[0]
         // createJSON(`/agentData/${req.params.agent}-agent.json`,agent)
         let end = Date.now()
         console.log(`Retrieved agent stats for ${(req.params.agent).toLowerCase()} (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
-        res.render('agent',{
-            agentData:agent,
-            agentName:req.params.agent,
-            agentImage:agentRaw[2],
-            totalPicks:agentRaw[1],
-            map_picks:map_pickrate
+        res.render('agent', {
+            agentData: agent,
+            agentName: req.params.agent,
+            agentImage: agentRaw[2],
+            totalPicks: agentRaw[1],
+            map_picks: map_pickrate,
+            title: req.params.agent+' Stats',
+            sheet: 'agent.css'
         })
     }
     else {

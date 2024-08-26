@@ -50,7 +50,7 @@ router.get('/', async (req, res) => {
 })
 
 router.get('/mass-adjust', async (req, res) => {
-    res.render('admin-password', { key: "mass-adjust" })
+    res.render('admin-password', { key: "mass-adjust",title: 'All Agents Stats', sheet: 'mass-adjust-style.css' })
 })
 router.post('/mass-adjust', async (req, res) => {
     if (req.body.pw == '123') {
@@ -101,7 +101,7 @@ router.post('/mass-adjust', async (req, res) => {
 })
 
 router.get('/test-api', async (req, res) => {
-    res.render('admin-password', { key: "test-api" })
+    res.render('admin-password', { key: "test-api",title: 'All Agents Stats', sheet: 'mass-adjust-style.css' })
 })
 router.post('/test-api', async (req, res) => {
     if (req.body.pw == '123') {
