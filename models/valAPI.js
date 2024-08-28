@@ -2,7 +2,6 @@ const fetch = require("node-fetch")
 const key = "?api_key=HDEV-cbf520fc-b91f-4235-b15b-a4d663f6bc9b"
 const size = '&size=20'
 
-
 const UserData = {
     getBasic: async function (user, tag) {
         try {
@@ -117,6 +116,14 @@ const UserData = {
         const data = await response.json();
         return data
 
+    },
+    getData: async function () {
+    const response = await fetch('https://api.henrikdev.xyz/valorant/v1/content'+key, {
+        method: 'GET',
+        headers: {},
+    });
+    const data = await response.json();
+    return data
     }
 };
 

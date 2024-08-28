@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/Aidanator17/valstats#readme",
   "dependencies": {
+    "@ivanoliverfabra/valorant-api": "^1.0.5",
     "@prisma/client": "^5.17.0",
     "date-fns": "^3.6.0",
     "date-fns-tz": "^3.1.3",

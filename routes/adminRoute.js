@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const apiFunctions = require('../models/valAPI');
+const apiFunctions = require('../models/valAPI.js');
 const fs = require('fs');
 const path = require('path');
 const moment = require('moment-timezone');

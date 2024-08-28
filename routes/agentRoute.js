@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const apiFunctions = require('../models/valAPI');
+const apiFunctions = require('../models/valAPI.js');
 const DatabaseFunctions = require("../models/databaseModel");
 const processFunctions = require("../models/processModel")
 const indent = `    `

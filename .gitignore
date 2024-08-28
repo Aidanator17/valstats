@@ -2,3 +2,5 @@
 .env
 /extra-files/
 /views/test.ejs
+/.vscode/
+.vscode

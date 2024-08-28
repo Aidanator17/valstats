@@ -50,7 +50,7 @@ const agentRoute = require("./routes/agentRoute");
 // });
 
 app.use("/user", userRoute);
-app.use("/user-by-act", userRoute);
+app.use("/user-by-act", userActRoute);
 app.use("/admin", adminRoute);
 app.use("/agent", agentRoute);
 // app.use("/auth", authRoute);

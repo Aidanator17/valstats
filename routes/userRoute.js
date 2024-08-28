@@ -1,12 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const fetch = require("node-fetch")
-const apiFunctions = require('../models/valAPI');
+const apiFunctions = require('../models/valAPI.js');
 const fs = require('fs');
 const DatabaseFunctions = require("../models/databaseModel");
 const processFunctions = require("../models/processModel")
-const { tr } = require("date-fns/locale");
-const { userInfo } = require("os");
 const indent = `    `
 
 async function createJSON(name, jsondata) {
