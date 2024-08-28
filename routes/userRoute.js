@@ -26,6 +26,50 @@ function compare_count(a, b) {
     }
     return 0;
 }
+function winCheck(match,puuid){
+    for (p in match['data']['players']['all_players']){
+        if (match['data']['players']['all_players'][p]['puuid'] == puuid){
+            if (match['data']['players']['all_players'][p]['team'] == 'Red'){
+                if (match['data']['teams']['red']['has_won']){
+                    return true
+                }
+                else {
+                    return false
+                }
+            }
+            else {
+                if (match['data']['teams']['blue']['has_won']){
+                    return true
+                }
+                else {
+                    return false
+                }
+            }
+        }
+    }
+}
+function winCheckNum(match,puuid){
+    for (p in match['data']['players']['all_players']){
+        if (match['data']['players']['all_players'][p]['puuid'] == puuid){
+            if (match['data']['players']['all_players'][p]['team'] == 'Red'){
+                if (match['data']['teams']['red']['has_won']){
+                    return 1
+                }
+                else {
+                    return 0
+                }
+            }
+            else {
+                if (match['data']['teams']['blue']['has_won']){
+                    return 1
+                }
+                else {
+                    return 0
+                }
+            }
+        }
+    }
+}
 
 
 
@@ -561,8 +605,9 @@ router.get('/:user/:tag', async (req, res) => {
                             UserInfo.teammates.push({
                                 puuid: UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['puuid'],
                                 count: 1,
-                                username:UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['name'],
-                                tag:UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['tag'],
+                                wins:winCheckNum(UserInfo['comp_matches'][m],UserInfo['puuid']),
+                                username: UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['name'],
+                                tag: UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['tag'],
                             })
                         }
                         else {
@@ -570,6 +615,7 @@ router.get('/:user/:tag', async (req, res) => {
                             for (pl in UserInfo.teammates) {
                                 if (UserInfo.teammates[pl].puuid == UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['puuid']) {
                                     UserInfo.teammates[pl].count++
+                                    UserInfo.teammates[pl].wins += winCheckNum(UserInfo['comp_matches'][m],UserInfo['puuid'])
                                     found = true
                                     break
                                 }
@@ -578,8 +624,9 @@ router.get('/:user/:tag', async (req, res) => {
                                 UserInfo.teammates.push({
                                     puuid: UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['puuid'],
                                     count: 1,
-                                    username:UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['name'],
-                                    tag:UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['tag'],
+                                    wins:winCheckNum(UserInfo['comp_matches'][m],UserInfo['puuid']),
+                                    username: UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['name'],
+                                    tag: UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['tag'],
                                 })
                             }
                         }

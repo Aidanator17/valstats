@@ -63,7 +63,7 @@ body, html {
 }
 #teammate-grid {
   display: grid;
-  grid-template-columns: auto 20%;
+  grid-template-columns: auto 20% 20%;
   justify-items: start;
 }
 .teammate-grid-item {

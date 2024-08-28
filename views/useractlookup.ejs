@@ -14,8 +14,8 @@
           <input name="user" placeholder="Username" class="input-field">
           <input name="tag" placeholder="Tag Line" class="input-field">
           <select name="act" class="input-field">
-            <% for (ep in episodes){ if (ep<(episodes.length - 1)){ for (a in episodes[ep]['acts']){ %>
-              <option value="<%= episodes[ep]['acts'][a]['id'] %>"><%= episodes[ep]['name'] %> <%= episodes[ep]['acts'][a]['name'] %></option>
+            <% for (ep in episodes){ if (ep<(episodes.length - 1)){ for (a in episodes[ep]['acts'].reverse()){ %>
+              <option value="<%= episodes[ep]['acts'][a]['id'] %>"><%= episodes[ep]['name'] %> <%= episodes[ep]['acts'][a]['name'] %><% if (a == 0 && ep == 0){ %> (current)<% } %></option>
               <% }}else{ %>
                 <option value="<%= episodes[ep]['id'] %>"><%= episodes[ep]['name'] %></option>
               <% }} %>

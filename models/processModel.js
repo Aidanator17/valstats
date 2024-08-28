@@ -448,7 +448,7 @@ const processFunctions = {
         }
         return output
     },
-    alterMatch: async function (match, puuid, editPlayers, ifAct) {
+    alterMatch: async function (match, puuid, editPlayers) {
         if (match['data']['metadata']['mode_id'] == 'deathmatch') {
             for (player in match['data']['players']['all_players']) {
                 if (match['data']['players']['all_players'][player]['puuid'] == puuid) {

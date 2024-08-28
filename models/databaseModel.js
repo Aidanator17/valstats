@@ -84,7 +84,8 @@ const DatabaseFunctions = {
                     match_info: JSON.stringify(matches[match]),
                     match_type: matches[match]['data']['metadata']['mode_id'],
                     match_map: matches[match]['data']['metadata']['map'],
-                    match_starttime: matches[match]['data']['metadata']['game_start']
+                    match_starttime: matches[match]['data']['metadata']['game_start'],
+                    act_id:matches[match]['data']['metadata']['season_id']
                 })
             }
             const newMatches = await prisma.matches.createMany({
@@ -125,8 +126,8 @@ const DatabaseFunctions = {
             where: {
                 match_type: 'competitive'
             },
-            select:{
-                match_info:true
+            select: {
+                match_info: true
             }
         })
         let end = Date.now()
@@ -139,6 +140,24 @@ const DatabaseFunctions = {
         end = Date.now()
         // console.log(`Formatted comp matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
         return matches
+    },
+    fix_act_ids: async function () {
+        if (true) { }
+        else {
+            const matches = await this.mass_retrieve()
+            for (m in matches) {
+                let data = JSON.parse(matches[m]['match_info'])
+                const updateMatches = await prisma.matches.update({
+                    where: {
+                        match_id: matches[m].match_id
+                    },
+                    data: {
+                        act_id: data['data']['metadata']['season_id']
+                    }
+                })
+
+            }
+        }
     }
 
 };

@@ -266,6 +266,9 @@
         <div class="side-container">
             <h3>Common Teammates:</h3>
             <div id="teammate-grid">
+                <p class="grid-item-title">Player</p>
+                <p class="grid-item-title">Count</p>
+                <p class="grid-item-title">Win%</p>
                 <% for (tm in UserInfo.teammates){ %>
                     <p class="teammate-grid-item">
                         <a style="color: #000000; text-decoration: none;"
@@ -275,6 +278,9 @@
                     </p>
                     <p class="teammate-grid-item">
                         <%= UserInfo.teammates[tm].count %>
+                    </p>
+                    <p class="teammate-grid-item">
+                        <%= Math.round((UserInfo.teammates[tm].wins/UserInfo.teammates[tm].count)*10000)/100 %>%
                     </p>
                     <% } %>
             </div>
@@ -310,7 +316,7 @@
                 <p class="map-grid-item grid-item-title">Count</p>
                 <p class="map-grid-item grid-item-title">Win%</p>
                 <p class="map-grid-item grid-item-title">KD</p>
-                <% for (a in UserInfo.maps_played){ %>
+                <% for (a in UserInfo.maps_played){ if (UserInfo.maps_played[a].count > 0){ %>
                     <p class="map-grid-item">
                         <%= UserInfo.maps_played[a].name %>
                     </p>
@@ -326,7 +332,7 @@
                         <% if (UserInfo.maps_played[a].count>0){ %>
                         <%= Math.round((UserInfo.maps_played[a].kills/UserInfo.maps_played[a].deaths)*100)/100 %><% }else{ %>N/A<% } %>
                     </p>
-                    <% } %>
+                    <% }} %>
             </div>
         </div>
     </div>

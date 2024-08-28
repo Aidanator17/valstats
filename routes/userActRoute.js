@@ -4,7 +4,8 @@ const apiFunctions = require('../models/valAPI.js');
 const fs = require('fs');
 const fetch = require("node-fetch")
 const DatabaseFunctions = require("../models/databaseModel");
-const processFunctions = require("../models/processModel")
+const processFunctions = require("../models/processModel");
+const { tr } = require("date-fns/locale");
 const indent = `    `
 
 async function createJSON(name, jsondata) {
@@ -83,7 +84,50 @@ function reformatEpisodes(data) {
     return adjustLastEpisodeActs(result);
 }
 
-
+function winCheck(match,puuid){
+    for (p in match['data']['players']['all_players']){
+        if (match['data']['players']['all_players'][p]['puuid'] == puuid){
+            if (match['data']['players']['all_players'][p]['team'] == 'Red'){
+                if (match['data']['teams']['red']['has_won']){
+                    return true
+                }
+                else {
+                    return false
+                }
+            }
+            else {
+                if (match['data']['teams']['blue']['has_won']){
+                    return true
+                }
+                else {
+                    return false
+                }
+            }
+        }
+    }
+}
+function winCheckNum(match,puuid){
+    for (p in match['data']['players']['all_players']){
+        if (match['data']['players']['all_players'][p]['puuid'] == puuid){
+            if (match['data']['players']['all_players'][p]['team'] == 'Red'){
+                if (match['data']['teams']['red']['has_won']){
+                    return 1
+                }
+                else {
+                    return 0
+                }
+            }
+            else {
+                if (match['data']['teams']['blue']['has_won']){
+                    return 1
+                }
+                else {
+                    return 0
+                }
+            }
+        }
+    }
+}
 
 
 router.get('/', async (req, res) => {
@@ -104,7 +148,7 @@ router.get('/lookup', async (req, res) => {
             failed: true,
             title: 'User Lookup',
             sheet: 'lookup-style.css',
-            episodes:Eps.reverse()
+            episodes: Eps.reverse()
         })
     }
     else {
@@ -112,7 +156,7 @@ router.get('/lookup', async (req, res) => {
             failed: false,
             title: 'User Lookup',
             sheet: 'lookup-style.css',
-            episodes:Eps.reverse()
+            episodes: Eps.reverse()
         })
     }
 })
@@ -340,7 +384,9 @@ router.get('/:user/:tag/:act', async (req, res) => {
         let past5wins = 0
         let past5losses = 0
         for (m in real_matches) {
-            UserInfo['matches'].push(await processFunctions.alterMatch(JSON.parse(real_matches[m]['match_info']), UserInfo['puuid'], false, true))
+            if (real_matches[m]['act_id'] == req.params.act) {
+                UserInfo['matches'].push(await processFunctions.alterMatch(JSON.parse(real_matches[m]['match_info']), UserInfo['puuid'], false))
+            }
         }
         // createJSON('match.json', UserInfo['matches'][0])
         for (m in UserInfo['matches']) {
@@ -625,6 +671,7 @@ router.get('/:user/:tag/:act', async (req, res) => {
                         UserInfo.teammates.push({
                             puuid: UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['puuid'],
                             count: 1,
+                            wins:winCheckNum(UserInfo['comp_matches'][m],UserInfo['puuid']),
                             username: UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['name'],
                             tag: UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['tag'],
                         })
@@ -634,6 +681,7 @@ router.get('/:user/:tag/:act', async (req, res) => {
                         for (pl in UserInfo.teammates) {
                             if (UserInfo.teammates[pl].puuid == UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['puuid']) {
                                 UserInfo.teammates[pl].count++
+                                UserInfo.teammates[pl].wins += winCheckNum(UserInfo['comp_matches'][m],UserInfo['puuid'])
                                 found = true
                                 break
                             }
@@ -642,6 +690,7 @@ router.get('/:user/:tag/:act', async (req, res) => {
                             UserInfo.teammates.push({
                                 puuid: UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['puuid'],
                                 count: 1,
+                                wins:winCheckNum(UserInfo['comp_matches'][m],UserInfo['puuid']),
                                 username: UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['name'],
                                 tag: UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['tag'],
                             })
