@@ -27,6 +27,62 @@ function compare_count(a, b) {
     }
     return 0;
 }
+function adjustLastEpisodeActs(episodes) {
+    const lastEpisode = episodes[episodes.length - 1];
+
+    if (lastEpisode.acts.length > 0) {
+        // Check if Act 1 is active
+        if (lastEpisode.acts[0].isActive) {
+            // Remove Acts 2 and 3
+            lastEpisode.acts = lastEpisode.acts.slice(0, 1);
+        }
+        // Check if Act 2 is active and Act 1 is not
+        else if (lastEpisode.acts[1].isActive) {
+            // Remove Act 3
+            lastEpisode.acts = lastEpisode.acts.slice(0, 2);
+        }
+        // If Act 3 is active, we do nothing as all acts should be present
+    }
+
+    return episodes;
+}
+
+function reformatEpisodes(data) {
+    const result = [];
+    let currentEpisode = null;
+
+    // Iterate through the data
+    for (let i = data.length - 1; i >= 0; i--) {
+        if (data[i].name.startsWith("EPISODE")) {
+            currentEpisode = {
+                id: data[i].id,
+                name: data[i].name,
+                acts: []
+            };
+            result.unshift(currentEpisode);
+        } else if (data[i].name.startsWith("ACT")) {
+            if (currentEpisode) {
+                currentEpisode.acts.unshift({
+                    id: data[i].id,
+                    name: data[i].name,
+                    isActive: data[i].isActive // Preserve the original isActive property
+                });
+            }
+        } else {
+            // Handling the "Closed Beta"
+            if (data[i].name === "Closed Beta") {
+                result.unshift({
+                    id: data[i].id,
+                    name: data[i].name,
+                    acts: []
+                });
+            }
+        }
+    }
+
+    return adjustLastEpisodeActs(result);
+}
+
 
 
 
@@ -37,35 +93,41 @@ router.get('/', async (req, res) => {
     // for (let i = 0; i < 10; i++){
     //     res.render('test',{testValue:getRandomInt(500)})
     // }
-    const data = await apiFunctions.getData()
-    createJSON('data.json',data)
-    res.redirect('/user/lookup')
+    res.redirect('/user-by-act/lookup')
 })
 
 router.get('/lookup', async (req, res) => {
+    const unfEps = await apiFunctions.getData()
+    const Eps = reformatEpisodes(unfEps['acts'])
     if (req.query.failed == 'true') {
-        res.render('userlookup', { failed: true,
+        res.render('useractlookup', {
+            failed: true,
             title: 'User Lookup',
-            sheet: 'lookup-style.css'})
+            sheet: 'lookup-style.css',
+            episodes:Eps.reverse()
+        })
     }
     else {
-        res.render('userlookup', { failed: false,
+        res.render('useractlookup', {
+            failed: false,
             title: 'User Lookup',
-            sheet: 'lookup-style.css' })
+            sheet: 'lookup-style.css',
+            episodes:Eps.reverse()
+        })
     }
 })
 
 router.post('/lookup', async (req, res) => {
-    res.redirect('/user/' + req.body.user + '/' + req.body.tag)
+    res.redirect('/user-by-act/' + req.body.user + '/' + req.body.tag + '/' + req.body.act)
 })
 
-router.get('/:puuid', async (req, res) => {
-    let data = await apiFunctions.getBasic_by_puuid(req.params.puuid)
-    res.redirect(`/user/${data['username']}/${data['tag']}`)
-})
+// router.get('/:puuid', async (req, res) => {
+//     let data = await apiFunctions.getBasic_by_puuid(req.params.puuid)
+//     res.redirect(`/user-by-act/${data['username']}/${data['tag']}`)
+// })
 
-router.get('/:user/:tag', async (req, res) => {
-    console.log(`Attempting to retrieve data for ${req.params.user}#${req.params.tag}`)
+router.get('/:user/:tag/:act', async (req, res) => {
+    console.log(`Attempting to retrieve act data for ${req.params.user}#${req.params.tag}`)
 
     let start = Date.now()
     let og = Date.now()
@@ -81,112 +143,112 @@ router.get('/:user/:tag', async (req, res) => {
         },
         teammates: [],
         agents: [],
-        maps_played:{
-            "Abyss":{
-                count:0,
-                wins:0,
-                losses:0,
-                draws:0,
-                kills:0,
-                deaths:0,
-                assists:0
+        maps_played: {
+            "Abyss": {
+                count: 0,
+                wins: 0,
+                losses: 0,
+                draws: 0,
+                kills: 0,
+                deaths: 0,
+                assists: 0
             },
-            "Ascent":{
-                count:0,
-                wins:0,
-                losses:0,
-                draws:0,
-                kills:0,
-                deaths:0,
-                assists:0
+            "Ascent": {
+                count: 0,
+                wins: 0,
+                losses: 0,
+                draws: 0,
+                kills: 0,
+                deaths: 0,
+                assists: 0
             },
-            "Bind":{
-                count:0,
-                wins:0,
-                losses:0,
-                draws:0,
-                kills:0,
-                deaths:0,
-                assists:0
+            "Bind": {
+                count: 0,
+                wins: 0,
+                losses: 0,
+                draws: 0,
+                kills: 0,
+                deaths: 0,
+                assists: 0
             },
-            "Breeze":{
-                count:0,
-                wins:0,
-                losses:0,
-                draws:0,
-                kills:0,
-                deaths:0,
-                assists:0
+            "Breeze": {
+                count: 0,
+                wins: 0,
+                losses: 0,
+                draws: 0,
+                kills: 0,
+                deaths: 0,
+                assists: 0
             },
-            "Fracture":{
-                count:0,
-                wins:0,
-                losses:0,
-                draws:0,
-                kills:0,
-                deaths:0,
-                assists:0
+            "Fracture": {
+                count: 0,
+                wins: 0,
+                losses: 0,
+                draws: 0,
+                kills: 0,
+                deaths: 0,
+                assists: 0
             },
-            "Haven":{
-                count:0,
-                wins:0,
-                losses:0,
-                draws:0,
-                kills:0,
-                deaths:0,
-                assists:0
+            "Haven": {
+                count: 0,
+                wins: 0,
+                losses: 0,
+                draws: 0,
+                kills: 0,
+                deaths: 0,
+                assists: 0
             },
-            "Icebox":{
-                count:0,
-                wins:0,
-                losses:0,
-                draws:0,
-                kills:0,
-                deaths:0,
-                assists:0
+            "Icebox": {
+                count: 0,
+                wins: 0,
+                losses: 0,
+                draws: 0,
+                kills: 0,
+                deaths: 0,
+                assists: 0
             },
-            "Lotus":{
-                count:0,
-                wins:0,
-                losses:0,
-                draws:0,
-                kills:0,
-                deaths:0,
-                assists:0
+            "Lotus": {
+                count: 0,
+                wins: 0,
+                losses: 0,
+                draws: 0,
+                kills: 0,
+                deaths: 0,
+                assists: 0
             },
-            "Pearl":{
-                count:0,
-                wins:0,
-                losses:0,
-                draws:0,
-                kills:0,
-                deaths:0,
-                assists:0
+            "Pearl": {
+                count: 0,
+                wins: 0,
+                losses: 0,
+                draws: 0,
+                kills: 0,
+                deaths: 0,
+                assists: 0
             },
-            "Split":{
-                count:0,
-                wins:0,
-                losses:0,
-                draws:0,
-                kills:0,
-                deaths:0,
-                assists:0
+            "Split": {
+                count: 0,
+                wins: 0,
+                losses: 0,
+                draws: 0,
+                kills: 0,
+                deaths: 0,
+                assists: 0
             },
-            "Sunset":{
-                count:0,
-                wins:0,
-                losses:0,
-                draws:0,
-                kills:0,
-                deaths:0,
-                assists:0
+            "Sunset": {
+                count: 0,
+                wins: 0,
+                losses: 0,
+                draws: 0,
+                kills: 0,
+                deaths: 0,
+                assists: 0
             },
         }
     }
     const info = await apiFunctions.getBasic(req.params.user, req.params.tag)
     if (info.puuid == '404_error') {
         console.log('User not found. Redirecting.')
-        res.redirect('/user/lookup?failed=true')
+        res.redirect('/user-by-act/lookup?failed=true')
     }
     else {
         let end = Date.now()
@@ -278,7 +340,7 @@ router.get('/:user/:tag', async (req, res) => {
         let past5wins = 0
         let past5losses = 0
         for (m in real_matches) {
-            UserInfo['matches'].push(await processFunctions.alterMatch(JSON.parse(real_matches[m]['match_info']), UserInfo['puuid'], false))
+            UserInfo['matches'].push(await processFunctions.alterMatch(JSON.parse(real_matches[m]['match_info']), UserInfo['puuid'], false, true))
         }
         // createJSON('match.json', UserInfo['matches'][0])
         for (m in UserInfo['matches']) {
@@ -287,8 +349,144 @@ router.get('/:user/:tag', async (req, res) => {
             }
         }
         for (m in UserInfo['comp_matches']) {
-                let userteam = ''
-                if (UserInfo.agents.length == 0) {
+            let userteam = ''
+            if (UserInfo.agents.length == 0) {
+                if (UserInfo['comp_matches'][m]['data']['metadata']['result'] == "Win") {
+                    let input = {
+                        agent: UserInfo['comp_matches'][m]['data']['metadata']['agent'],
+                        count: 1,
+                        wins: 1,
+                        losses: 0,
+                        draws: 0,
+                        kills: UserInfo['comp_matches'][m]['data']['metadata']['kills'],
+                        deaths: UserInfo['comp_matches'][m]['data']['metadata']['deaths'],
+                        assists: UserInfo['comp_matches'][m]['data']['metadata']['assists'],
+                        maps: {
+                            "Abyss": 0,
+                            "Ascent": 0,
+                            "Bind": 0,
+                            "Breeze": 0,
+                            "Fracture": 0,
+                            "Haven": 0,
+                            "Icebox": 0,
+                            "Lotus": 0,
+                            "Pearl": 0,
+                            "Split": 0,
+                            "Sunset": 0,
+                        }
+                    }
+                    input.maps[UserInfo['comp_matches'][m]['data']['metadata']['map']]++
+                    UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].count++
+                    UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].kills += UserInfo['comp_matches'][m]['data']['metadata']['kills']
+                    UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].deaths += UserInfo['comp_matches'][m]['data']['metadata']['deaths']
+                    UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].assists += UserInfo['comp_matches'][m]['data']['metadata']['assists']
+                    UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].wins++
+                    UserInfo.agents.push(input)
+                }
+                else if (UserInfo['comp_matches'][m]['data']['metadata']['result'] == "Loss") {
+                    let input = {
+                        agent: UserInfo['comp_matches'][m]['data']['metadata']['agent'],
+                        count: 1,
+                        wins: 0,
+                        losses: 1,
+                        draws: 0,
+                        kills: UserInfo['comp_matches'][m]['data']['metadata']['kills'],
+                        deaths: UserInfo['comp_matches'][m]['data']['metadata']['deaths'],
+                        assists: UserInfo['comp_matches'][m]['data']['metadata']['assists'],
+                        maps: {
+                            "Abyss": 0,
+                            "Ascent": 0,
+                            "Bind": 0,
+                            "Breeze": 0,
+                            "Fracture": 0,
+                            "Haven": 0,
+                            "Icebox": 0,
+                            "Lotus": 0,
+                            "Pearl": 0,
+                            "Split": 0,
+                            "Sunset": 0,
+                        }
+                    }
+                    input.maps[UserInfo['comp_matches'][m]['data']['metadata']['map']]++
+                    UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].count++
+                    UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].kills += UserInfo['comp_matches'][m]['data']['metadata']['kills']
+                    UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].deaths += UserInfo['comp_matches'][m]['data']['metadata']['deaths']
+                    UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].assists += UserInfo['comp_matches'][m]['data']['metadata']['assists']
+                    UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].losses++
+                    UserInfo.agents.push(input)
+                }
+                else {
+                    let input = {
+                        agent: UserInfo['comp_matches'][m]['data']['metadata']['agent'],
+                        count: 1,
+                        wins: 0,
+                        losses: 0,
+                        draws: 1,
+                        kills: UserInfo['comp_matches'][m]['data']['metadata']['kills'],
+                        deaths: UserInfo['comp_matches'][m]['data']['metadata']['deaths'],
+                        assists: UserInfo['comp_matches'][m]['data']['metadata']['assists'],
+                        maps: {
+                            "Abyss": 0,
+                            "Ascent": 0,
+                            "Bind": 0,
+                            "Breeze": 0,
+                            "Fracture": 0,
+                            "Haven": 0,
+                            "Icebox": 0,
+                            "Lotus": 0,
+                            "Pearl": 0,
+                            "Split": 0,
+                            "Sunset": 0,
+                        }
+                    }
+                    input.maps[UserInfo['comp_matches'][m]['data']['metadata']['map']]++
+                    UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].count++
+                    UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].kills += UserInfo['comp_matches'][m]['data']['metadata']['kills']
+                    UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].deaths += UserInfo['comp_matches'][m]['data']['metadata']['deaths']
+                    UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].assists += UserInfo['comp_matches'][m]['data']['metadata']['assists']
+                    UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].draws++
+                    UserInfo.agents.push(input)
+                }
+            }
+            else {
+                let found = false
+                for (a in UserInfo.agents) {
+                    if (UserInfo.agents[a].agent == UserInfo['comp_matches'][m]['data']['metadata']['agent']) {
+                        UserInfo.agents[a].count++
+                        UserInfo.agents[a].kills = UserInfo.agents[a].kills + UserInfo['comp_matches'][m]['data']['metadata']['kills']
+                        UserInfo.agents[a].deaths = UserInfo.agents[a].deaths + UserInfo['comp_matches'][m]['data']['metadata']['deaths']
+                        UserInfo.agents[a].assists = UserInfo.agents[a].assists + UserInfo['comp_matches'][m]['data']['metadata']['assists']
+                        if (UserInfo['comp_matches'][m]['data']['metadata']['result'] == "Win") {
+                            UserInfo.agents[a].wins++
+                            UserInfo.agents[a].maps[UserInfo['comp_matches'][m]['data']['metadata']['map']]++
+                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].count++
+                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].kills += UserInfo['comp_matches'][m]['data']['metadata']['kills']
+                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].deaths += UserInfo['comp_matches'][m]['data']['metadata']['deaths']
+                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].assists += UserInfo['comp_matches'][m]['data']['metadata']['assists']
+                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].wins++
+                        }
+                        else if (UserInfo['comp_matches'][m]['data']['metadata']['result'] == "Loss") {
+                            UserInfo.agents[a].losses++
+                            UserInfo.agents[a].maps[UserInfo['comp_matches'][m]['data']['metadata']['map']]++
+                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].count++
+                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].kills += UserInfo['comp_matches'][m]['data']['metadata']['kills']
+                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].deaths += UserInfo['comp_matches'][m]['data']['metadata']['deaths']
+                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].assists += UserInfo['comp_matches'][m]['data']['metadata']['assists']
+                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].losses++
+                        }
+                        else {
+                            UserInfo.agents[a].draws++
+                            UserInfo.agents[a].maps[UserInfo['comp_matches'][m]['data']['metadata']['map']]++
+                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].count++
+                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].kills += UserInfo['comp_matches'][m]['data']['metadata']['kills']
+                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].deaths += UserInfo['comp_matches'][m]['data']['metadata']['deaths']
+                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].assists += UserInfo['comp_matches'][m]['data']['metadata']['assists']
+                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].draws++
+                        }
+                        found = true
+                    }
+                }
+                if (!found) {
                     if (UserInfo['comp_matches'][m]['data']['metadata']['result'] == "Win") {
                         let input = {
                             agent: UserInfo['comp_matches'][m]['data']['metadata']['agent'],
@@ -300,17 +498,17 @@ router.get('/:user/:tag', async (req, res) => {
                             deaths: UserInfo['comp_matches'][m]['data']['metadata']['deaths'],
                             assists: UserInfo['comp_matches'][m]['data']['metadata']['assists'],
                             maps: {
-                                "Abyss":0,
-                                "Ascent":0,
-                                "Bind":0,
-                                "Breeze":0,
-                                "Fracture":0,
-                                "Haven":0,
-                                "Icebox":0,
-                                "Lotus":0,
-                                "Pearl":0,
-                                "Split":0,
-                                "Sunset":0,
+                                "Abyss": 0,
+                                "Ascent": 0,
+                                "Bind": 0,
+                                "Breeze": 0,
+                                "Fracture": 0,
+                                "Haven": 0,
+                                "Icebox": 0,
+                                "Lotus": 0,
+                                "Pearl": 0,
+                                "Split": 0,
+                                "Sunset": 0,
                             }
                         }
                         input.maps[UserInfo['comp_matches'][m]['data']['metadata']['map']]++
@@ -332,17 +530,17 @@ router.get('/:user/:tag', async (req, res) => {
                             deaths: UserInfo['comp_matches'][m]['data']['metadata']['deaths'],
                             assists: UserInfo['comp_matches'][m]['data']['metadata']['assists'],
                             maps: {
-                                "Abyss":0,
-                                "Ascent":0,
-                                "Bind":0,
-                                "Breeze":0,
-                                "Fracture":0,
-                                "Haven":0,
-                                "Icebox":0,
-                                "Lotus":0,
-                                "Pearl":0,
-                                "Split":0,
-                                "Sunset":0,
+                                "Abyss": 0,
+                                "Ascent": 0,
+                                "Bind": 0,
+                                "Breeze": 0,
+                                "Fracture": 0,
+                                "Haven": 0,
+                                "Icebox": 0,
+                                "Lotus": 0,
+                                "Pearl": 0,
+                                "Split": 0,
+                                "Sunset": 0,
                             }
                         }
                         input.maps[UserInfo['comp_matches'][m]['data']['metadata']['map']]++
@@ -364,17 +562,17 @@ router.get('/:user/:tag', async (req, res) => {
                             deaths: UserInfo['comp_matches'][m]['data']['metadata']['deaths'],
                             assists: UserInfo['comp_matches'][m]['data']['metadata']['assists'],
                             maps: {
-                                "Abyss":0,
-                                "Ascent":0,
-                                "Bind":0,
-                                "Breeze":0,
-                                "Fracture":0,
-                                "Haven":0,
-                                "Icebox":0,
-                                "Lotus":0,
-                                "Pearl":0,
-                                "Split":0,
-                                "Sunset":0,
+                                "Abyss": 0,
+                                "Ascent": 0,
+                                "Bind": 0,
+                                "Breeze": 0,
+                                "Fracture": 0,
+                                "Haven": 0,
+                                "Icebox": 0,
+                                "Lotus": 0,
+                                "Pearl": 0,
+                                "Split": 0,
+                                "Sunset": 0,
                             }
                         }
                         input.maps[UserInfo['comp_matches'][m]['data']['metadata']['map']]++
@@ -386,208 +584,72 @@ router.get('/:user/:tag', async (req, res) => {
                         UserInfo.agents.push(input)
                     }
                 }
-                else {
-                    let found = false
-                    for (a in UserInfo.agents) {
-                        if (UserInfo.agents[a].agent == UserInfo['comp_matches'][m]['data']['metadata']['agent']) {
-                            UserInfo.agents[a].count++
-                            UserInfo.agents[a].kills = UserInfo.agents[a].kills + UserInfo['comp_matches'][m]['data']['metadata']['kills']
-                            UserInfo.agents[a].deaths = UserInfo.agents[a].deaths + UserInfo['comp_matches'][m]['data']['metadata']['deaths']
-                            UserInfo.agents[a].assists = UserInfo.agents[a].assists + UserInfo['comp_matches'][m]['data']['metadata']['assists']
-                            if (UserInfo['comp_matches'][m]['data']['metadata']['result'] == "Win") {
-                                UserInfo.agents[a].wins++
-                                UserInfo.agents[a].maps[UserInfo['comp_matches'][m]['data']['metadata']['map']]++
-                                UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].count++
-                                UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].kills += UserInfo['comp_matches'][m]['data']['metadata']['kills']
-                                UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].deaths += UserInfo['comp_matches'][m]['data']['metadata']['deaths']
-                                UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].assists += UserInfo['comp_matches'][m]['data']['metadata']['assists']
-                                UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].wins++
-                            }
-                            else if (UserInfo['comp_matches'][m]['data']['metadata']['result'] == "Loss") {
-                                UserInfo.agents[a].losses++
-                                UserInfo.agents[a].maps[UserInfo['comp_matches'][m]['data']['metadata']['map']]++
-                                UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].count++
-                                UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].kills += UserInfo['comp_matches'][m]['data']['metadata']['kills']
-                                UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].deaths += UserInfo['comp_matches'][m]['data']['metadata']['deaths']
-                                UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].assists += UserInfo['comp_matches'][m]['data']['metadata']['assists']
-                                UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].losses++
-                            }
-                            else {
-                                UserInfo.agents[a].draws++
-                                UserInfo.agents[a].maps[UserInfo['comp_matches'][m]['data']['metadata']['map']]++
-                                UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].count++
-                                UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].kills += UserInfo['comp_matches'][m]['data']['metadata']['kills']
-                                UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].deaths += UserInfo['comp_matches'][m]['data']['metadata']['deaths']
-                                UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].assists += UserInfo['comp_matches'][m]['data']['metadata']['assists']
-                                UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].draws++
-                            }
-                            found = true
-                        }
+            }
+            for (p in UserInfo['comp_matches'][m]['data']['players']['all_players']) {
+                if (UserInfo['comp_matches'][m]['data']['players']['all_players'][p]['puuid'] == UserInfo['puuid']) {
+                    if (UserInfo['comp_matches'][m]['data']['players']['all_players'][p]['team'] == 'Red') {
+                        userteam = 'red'
                     }
-                    if (!found) {
-                        if (UserInfo['comp_matches'][m]['data']['metadata']['result'] == "Win") {
-                            let input = {
-                                agent: UserInfo['comp_matches'][m]['data']['metadata']['agent'],
-                                count: 1,
-                                wins: 1,
-                                losses: 0,
-                                draws: 0,
-                                kills: UserInfo['comp_matches'][m]['data']['metadata']['kills'],
-                                deaths: UserInfo['comp_matches'][m]['data']['metadata']['deaths'],
-                                assists: UserInfo['comp_matches'][m]['data']['metadata']['assists'],
-                                maps: {
-                                    "Abyss":0,
-                                    "Ascent":0,
-                                    "Bind":0,
-                                    "Breeze":0,
-                                    "Fracture":0,
-                                    "Haven":0,
-                                    "Icebox":0,
-                                    "Lotus":0,
-                                    "Pearl":0,
-                                    "Split":0,
-                                    "Sunset":0,
-                                }
-                            }
-                            input.maps[UserInfo['comp_matches'][m]['data']['metadata']['map']]++
-                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].count++
-                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].kills += UserInfo['comp_matches'][m]['data']['metadata']['kills']
-                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].deaths += UserInfo['comp_matches'][m]['data']['metadata']['deaths']
-                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].assists += UserInfo['comp_matches'][m]['data']['metadata']['assists']
-                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].wins++
-                            UserInfo.agents.push(input)
-                        }
-                        else if (UserInfo['comp_matches'][m]['data']['metadata']['result'] == "Loss") {
-                            let input = {
-                                agent: UserInfo['comp_matches'][m]['data']['metadata']['agent'],
-                                count: 1,
-                                wins: 0,
-                                losses: 1,
-                                draws: 0,
-                                kills: UserInfo['comp_matches'][m]['data']['metadata']['kills'],
-                                deaths: UserInfo['comp_matches'][m]['data']['metadata']['deaths'],
-                                assists: UserInfo['comp_matches'][m]['data']['metadata']['assists'],
-                                maps: {
-                                    "Abyss":0,
-                                    "Ascent":0,
-                                    "Bind":0,
-                                    "Breeze":0,
-                                    "Fracture":0,
-                                    "Haven":0,
-                                    "Icebox":0,
-                                    "Lotus":0,
-                                    "Pearl":0,
-                                    "Split":0,
-                                    "Sunset":0,
-                                }
-                            }
-                            input.maps[UserInfo['comp_matches'][m]['data']['metadata']['map']]++
-                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].count++
-                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].kills += UserInfo['comp_matches'][m]['data']['metadata']['kills']
-                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].deaths += UserInfo['comp_matches'][m]['data']['metadata']['deaths']
-                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].assists += UserInfo['comp_matches'][m]['data']['metadata']['assists']
-                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].losses++
-                            UserInfo.agents.push(input)
-                        }
-                        else {
-                            let input = {
-                                agent: UserInfo['comp_matches'][m]['data']['metadata']['agent'],
-                                count: 1,
-                                wins: 0,
-                                losses: 0,
-                                draws: 1,
-                                kills: UserInfo['comp_matches'][m]['data']['metadata']['kills'],
-                                deaths: UserInfo['comp_matches'][m]['data']['metadata']['deaths'],
-                                assists: UserInfo['comp_matches'][m]['data']['metadata']['assists'],
-                                maps: {
-                                    "Abyss":0,
-                                    "Ascent":0,
-                                    "Bind":0,
-                                    "Breeze":0,
-                                    "Fracture":0,
-                                    "Haven":0,
-                                    "Icebox":0,
-                                    "Lotus":0,
-                                    "Pearl":0,
-                                    "Split":0,
-                                    "Sunset":0,
-                                }
-                            }
-                            input.maps[UserInfo['comp_matches'][m]['data']['metadata']['map']]++
-                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].count++
-                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].kills += UserInfo['comp_matches'][m]['data']['metadata']['kills']
-                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].deaths += UserInfo['comp_matches'][m]['data']['metadata']['deaths']
-                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].assists += UserInfo['comp_matches'][m]['data']['metadata']['assists']
-                            UserInfo.maps_played[UserInfo['comp_matches'][m]['data']['metadata']['map']].draws++
-                            UserInfo.agents.push(input)
-                        }
+                    else {
+                        userteam = 'blue'
                     }
-                }
-                for (p in UserInfo['comp_matches'][m]['data']['players']['all_players']) {
-                    if (UserInfo['comp_matches'][m]['data']['players']['all_players'][p]['puuid'] == UserInfo['puuid']) {
-                        if (UserInfo['comp_matches'][m]['data']['players']['all_players'][p]['team'] == 'Red') {
-                            userteam = 'red'
-                        }
-                        else {
-                            userteam = 'blue'
-                        }
-                        totalkills = totalkills + UserInfo['comp_matches'][m]['data']['players']['all_players'][p]['stats']['kills']
-                        totaldeaths = totaldeaths + UserInfo['comp_matches'][m]['data']['players']['all_players'][p]['stats']['deaths']
-                        totalheadshots = totalheadshots + UserInfo['comp_matches'][m]['data']['players']['all_players'][p]['stats']['headshots']
-                        totalbodyshots = totalbodyshots + UserInfo['comp_matches'][m]['data']['players']['all_players'][p]['stats']['bodyshots']
-                        totallegshots = totallegshots + UserInfo['comp_matches'][m]['data']['players']['all_players'][p]['stats']['legshots']
-                        if (m < 5) {
-                            past5kills = past5kills + UserInfo['comp_matches'][m]['data']['players']['all_players'][p]['stats']['kills']
-                            past5deaths = past5deaths + UserInfo['comp_matches'][m]['data']['players']['all_players'][p]['stats']['deaths']
-                            past5headshots = past5headshots + UserInfo['comp_matches'][m]['data']['players']['all_players'][p]['stats']['headshots']
-                            past5bodyshots = past5bodyshots + UserInfo['comp_matches'][m]['data']['players']['all_players'][p]['stats']['bodyshots']
-                            past5legshots = past5legshots + UserInfo['comp_matches'][m]['data']['players']['all_players'][p]['stats']['legshots']
-                        }
-                    }
-                }
-                if (UserInfo['comp_matches'][m]['data']['metadata']['result'] == 'Win') {
+                    totalkills = totalkills + UserInfo['comp_matches'][m]['data']['players']['all_players'][p]['stats']['kills']
+                    totaldeaths = totaldeaths + UserInfo['comp_matches'][m]['data']['players']['all_players'][p]['stats']['deaths']
+                    totalheadshots = totalheadshots + UserInfo['comp_matches'][m]['data']['players']['all_players'][p]['stats']['headshots']
+                    totalbodyshots = totalbodyshots + UserInfo['comp_matches'][m]['data']['players']['all_players'][p]['stats']['bodyshots']
+                    totallegshots = totallegshots + UserInfo['comp_matches'][m]['data']['players']['all_players'][p]['stats']['legshots']
                     if (m < 5) {
-                        past5wins = past5wins + 1
+                        past5kills = past5kills + UserInfo['comp_matches'][m]['data']['players']['all_players'][p]['stats']['kills']
+                        past5deaths = past5deaths + UserInfo['comp_matches'][m]['data']['players']['all_players'][p]['stats']['deaths']
+                        past5headshots = past5headshots + UserInfo['comp_matches'][m]['data']['players']['all_players'][p]['stats']['headshots']
+                        past5bodyshots = past5bodyshots + UserInfo['comp_matches'][m]['data']['players']['all_players'][p]['stats']['bodyshots']
+                        past5legshots = past5legshots + UserInfo['comp_matches'][m]['data']['players']['all_players'][p]['stats']['legshots']
                     }
-                    totalwins = totalwins + 1
                 }
-                else {
-                    if (m < 5) {
-                        past5losses = past5losses + 1
+            }
+            if (UserInfo['comp_matches'][m]['data']['metadata']['result'] == 'Win') {
+                if (m < 5) {
+                    past5wins = past5wins + 1
+                }
+                totalwins = totalwins + 1
+            }
+            else {
+                if (m < 5) {
+                    past5losses = past5losses + 1
+                }
+                totallosses = totallosses + 1
+            }
+            for (tm in UserInfo['comp_matches'][m]['data']['players'][userteam]) {
+                if (UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['puuid'] != UserInfo['puuid']) {
+                    if (UserInfo.teammates.length == 0) {
+                        UserInfo.teammates.push({
+                            puuid: UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['puuid'],
+                            count: 1,
+                            username: UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['name'],
+                            tag: UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['tag'],
+                        })
                     }
-                    totallosses = totallosses + 1
-                }
-                for (tm in UserInfo['comp_matches'][m]['data']['players'][userteam]) {
-                    if (UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['puuid'] != UserInfo['puuid']) {
-                        if (UserInfo.teammates.length == 0) {
+                    else {
+                        let found = false
+                        for (pl in UserInfo.teammates) {
+                            if (UserInfo.teammates[pl].puuid == UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['puuid']) {
+                                UserInfo.teammates[pl].count++
+                                found = true
+                                break
+                            }
+                        }
+                        if (!found) {
                             UserInfo.teammates.push({
                                 puuid: UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['puuid'],
                                 count: 1,
-                                username:UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['name'],
-                                tag:UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['tag'],
+                                username: UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['name'],
+                                tag: UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['tag'],
                             })
-                        }
-                        else {
-                            let found = false
-                            for (pl in UserInfo.teammates) {
-                                if (UserInfo.teammates[pl].puuid == UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['puuid']) {
-                                    UserInfo.teammates[pl].count++
-                                    found = true
-                                    break
-                                }
-                            }
-                            if (!found) {
-                                UserInfo.teammates.push({
-                                    puuid: UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['puuid'],
-                                    count: 1,
-                                    username:UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['name'],
-                                    tag:UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['tag'],
-                                })
-                            }
                         }
                     }
                 }
-            
+            }
+
         }
 
         let reformatTeammates = []
@@ -603,16 +665,16 @@ router.get('/:user/:tag', async (req, res) => {
         UserInfo.teammates = reformatTeammates.sort(compare_count)
         UserInfo.agents.sort(compare_count)
         let reformatMaps = []
-        for (m in UserInfo.maps_played){
+        for (m in UserInfo.maps_played) {
             reformatMaps.push({
-                name:m,
-                count:UserInfo.maps_played[m].count,
-                wins:UserInfo.maps_played[m].wins,
-                losses:UserInfo.maps_played[m].losses,
-                draws:UserInfo.maps_played[m].draws,
-                kills:UserInfo.maps_played[m].kills,
-                deaths:UserInfo.maps_played[m].deaths,
-                assists:UserInfo.maps_played[m].assists
+                name: m,
+                count: UserInfo.maps_played[m].count,
+                wins: UserInfo.maps_played[m].wins,
+                losses: UserInfo.maps_played[m].losses,
+                draws: UserInfo.maps_played[m].draws,
+                kills: UserInfo.maps_played[m].kills,
+                deaths: UserInfo.maps_played[m].deaths,
+                assists: UserInfo.maps_played[m].assists
             })
         }
         UserInfo.maps_played = reformatMaps
@@ -648,9 +710,11 @@ router.get('/:user/:tag', async (req, res) => {
         end = Date.now()
         console.log(`Data for ${UserInfo['username']}#${UserInfo['tag']} retrieved (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
         // console.log(Intl.DateTimeFormat().resolvedOptions().timeZone)
-        res.render('user', { UserInfo,
+        res.render('user', {
+            UserInfo,
             title: UserInfo['username'],
-            sheet: 'user.css' })
+            sheet: 'user.css'
+        })
     }
 
 })
@@ -665,9 +729,11 @@ router.get('/:user/:tag/:matchid', async (req, res) => {
     const matchData = await processFunctions.alterMatch(match, puuid, true)
     let end = Date.now()
     console.log(`Match data for ${req.params.matchid} retrieved (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
-    res.render('user-match', { matchData,
+    res.render('user-match', {
+        matchData,
         title: 'Match Details',
-        sheet: 'user-match.css' })
+        sheet: 'user-match.css'
+    })
 })
 
 module.exports = router
