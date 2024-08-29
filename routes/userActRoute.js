@@ -137,6 +137,7 @@ router.get('/', async (req, res) => {
     // for (let i = 0; i < 10; i++){
     //     res.render('test',{testValue:getRandomInt(500)})
     // }
+    await apiFunctions.activeSeason()
     res.redirect('/user-by-act/lookup')
 })
 

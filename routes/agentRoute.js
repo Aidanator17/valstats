@@ -39,7 +39,8 @@ router.get('/', async (req, res) => {
         "Clove",
         "Gekko",
         "Iso",
-        "Deadlock"
+        "Deadlock",
+        "Vyse"
     ]
     if (req.query.failed == 'true') {
         res.render('agentLookup', { failed: true, agents: agentList.sort(),
@@ -78,7 +79,8 @@ router.post('/', async (req, res) => {
         "Clove",
         "Gekko",
         "Iso",
-        "Deadlock"
+        "Deadlock",
+        "Vyse"
     ]
     if (agentList.includes(req.body.agent)) {
         res.redirect('/agent/' + req.body.agent)
@@ -90,8 +92,11 @@ router.post('/', async (req, res) => {
 
 router.get('/all', async (req, res) => {
     let start = Date.now()
+    let act = await apiFunctions.activeSeason()
     const matches = await DatabaseFunctions.mass_retrieve_comp()
     let agentData = await processFunctions.get_all_agent_stats(matches)
+    let agentActData = await processFunctions.get_all_agent_stats(matches, act[0].id)
+    //adding act data WIP
     let totalMatches = matches.length
     const agentsByClass = agentData.sort((a, b) => a.role.localeCompare(b.role));
     const agentsByPickAsc = [...agentData].sort((a, b) => ((a.wins + a.losses + a.draws) / totalMatches) - ((b.wins + b.losses + b.draws) / totalMatches));
@@ -142,22 +147,30 @@ router.get('/:agent', async (req, res) => {
         "Clove",
         "Gekko",
         "Iso",
-        "Deadlock"
+        "Deadlock",
+        "Vyse"
     ]
     if (agentList.includes(req.params.agent)) {
+        let act = await apiFunctions.activeSeason()
         let matches = await DatabaseFunctions.mass_retrieve_comp()
         let agentRaw = await processFunctions.get_agent_stats(req.params.agent, matches)
+        let agentRawACT = await processFunctions.get_agent_stats(req.params.agent, matches, act[0].id)
         const map_pickrate = await processFunctions.get_map_pickrate(matches)
+        const map_act_pickrate = await processFunctions.get_map_pickrate(matches, act[0].id)
         let agent = agentRaw[0]
+        let agentACT = agentRawACT[0]
         // createJSON(`/agentData/${req.params.agent}-agent.json`,agent)
         let end = Date.now()
         console.log(`Retrieved agent stats for ${(req.params.agent).toLowerCase()} (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
         res.render('agent', {
             agentData: agent,
+            agentActData: agentACT,
             agentName: req.params.agent,
             agentImage: agentRaw[2],
             totalPicks: agentRaw[1],
+            totalActPicks: agentRawACT[1],
             map_picks: map_pickrate,
+            map_act_picks: map_act_pickrate,
             title: req.params.agent+' Stats',
             sheet: 'agent.css'
         })

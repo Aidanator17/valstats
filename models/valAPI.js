@@ -124,6 +124,17 @@ const UserData = {
     });
     const data = await response.json();
     return data
+    },
+    activeSeason: async function () {
+     const data = await this.getData()
+     let actsList = data['acts']
+     let currentAct = []
+     for (a in actsList){
+        if (actsList[a].isActive){
+            currentAct.push(actsList[a])
+        }
+     }
+     return currentAct
     }
 };
 
