@@ -158,6 +158,28 @@ const DatabaseFunctions = {
 
             }
         }
+    },
+    get_act_comp_matches: async function (act) {
+        let start = Date.now()
+        const raw_matches = await prisma.matches.findMany({
+            where: {
+                match_type: 'competitive',
+                act_id:act
+            },
+            select: {
+                match_info: true
+            }
+        })
+        let end = Date.now()
+        // console.log(`Retrieved comp matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+        start = Date.now()
+        let matches = []
+        for (m in raw_matches) {
+            matches.push(JSON.parse(raw_matches[m]['match_info']))
+        }
+        end = Date.now()
+        // console.log(`Formatted comp matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+        return matches
     }
 
 };

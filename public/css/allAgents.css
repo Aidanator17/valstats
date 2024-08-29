@@ -48,9 +48,18 @@
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 20px;
 }
+.agent-actgrid {
+    display: none;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
 
 /* Default Grid Style */
 .agent-grid.active {
+    display: grid;
+}
+/* Default Grid Style */
+.agent-actgrid.active {
     display: grid;
 }
 

@@ -2,178 +2,369 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
-      <%= title %>
+        <%= title %>
     </title>
     <link rel="stylesheet" href="/css/<%= sheet %>">
-  </head>
-  
-  <body>
+</head>
+
+<body>
     <div class="container">
-        <div class="header">
-            <h1>All Agents Stats</h1>
-            <div class="sort-controls">
-                <label for="sort-by">Sort by:</label>
-                <div class="sort-buttons">
-                    <button onclick="showGrid('class')">Class</button>
-                    <button onclick="showGrid('pickRateAsc')">Pick % ↑</button>
-                    <button onclick="showGrid('pickRateDesc')">Pick % ↓</button>
-                    <button onclick="showGrid('winRateAsc')">Win % ↑</button>
-                    <button onclick="showGrid('winRateDesc')">Win % ↓</button>
-                    <button onclick="showGrid('kdRatioAsc')">KD Ratio ↑</button>
-                    <button onclick="showGrid('kdRatioDesc')">KD Ratio ↓</button>
-                </div>
+        <div class="sort-controls">
+            <div class="sort-buttons">
+                <button onclick="switchDisplay('allActs')">All Acts</button>
+                <button onclick="switchDisplay('currentAct')">Current Act</button>
             </div>
         </div>
-
-        <!-- Class Grid -->
-        <div id="class-grid" class="agent-grid active">
-            <% for (let role of ['Controller', 'Duelist' , 'Initiator' , 'Sentinel' ]) { %>
-                <div class="role-section">
-                    <h2 class="role-header">
-                        <%= role %>
-                    </h2>
-                    <div class="role-grid">
-                        <% for (let agent of agentsByClass.filter(agent=> agent.role === role)) { %>
-                            <div class="agent-card <%= agent.role %>">
-                                <a href="/agent/<%= agent.name %>"><img src="<%= agent.agentIMG %>" alt="<%= agent.name %>"></a>
-                                <h3>
-                                    <%= agent.name %>
-                                </h3>
-                                <p>Class: <%= agent.role %>
-                                </p>
-                                <p>Pick %: <%= ((agent.wins + agent.losses + agent.draws) / (totalMatches*2) *
-                                        100).toFixed(2) %>
-                                </p>
-                                <p>Win %: <%= (agent.wins / (agent.wins + agent.losses + agent.draws) * 100).toFixed(2)
-                                        %>
-                                </p>
-                                <p>KD Ratio: <%= (agent.kills / agent.deaths).toFixed(2) %>
-                                </p>
-                            </div>
-                            <% } %>
+        <div id="allActs" class="actDisplay">
+            <div class="header">
+                <h1>All Agents Stats</h1>
+                <div class="sort-controls">
+                    <label for="sort-by">Sort by:</label>
+                    <div class="sort-buttons">
+                        <button onclick="showGrid('class')">Class</button>
+                        <button onclick="showGrid('pickRateAsc')">Pick % ↑</button>
+                        <button onclick="showGrid('pickRateDesc')">Pick % ↓</button>
+                        <button onclick="showGrid('winRateAsc')">Win % ↑</button>
+                        <button onclick="showGrid('winRateDesc')">Win % ↓</button>
+                        <button onclick="showGrid('kdRatioAsc')">KD Ratio ↑</button>
+                        <button onclick="showGrid('kdRatioDesc')">KD Ratio ↓</button>
                     </div>
                 </div>
-                <% } %>
-        </div>
+            </div>
 
-        <!-- Pick Rate Ascending Grid -->
-        <div id="pickRateAsc-grid" class="agent-grid">
-            <% agentsByPickAsc.forEach(agent=> { %>
-                <div class="agent-card <%= agent.role %>">
-                    <a href="/agent/<%= agent.name %>"><img src="<%= agent.agentIMG %>" alt="<%= agent.name %>"></a>
-                    <h3>
-                        <%= agent.name %>
-                    </h3>
-                    <p>Class: <%= agent.role %>
-                    </p>
-                    <p>Pick %: <%= ((agent.wins + agent.losses + agent.draws) / (totalMatches*2) * 100).toFixed(2) %>
-                    </p>
-                    <p>Win %: <%= (agent.wins / (agent.wins + agent.losses + agent.draws) * 100).toFixed(2) %>
-                    </p>
-                    <p>KD Ratio: <%= (agent.kills / agent.deaths).toFixed(2) %>
-                    </p>
-                </div>
-                <% }) %>
-        </div>
+            <!-- Class Grid -->
+            <div id="class-grid" class="agent-grid active">
+                <% for (let role of ['Controller', 'Duelist' , 'Initiator' , 'Sentinel' ]) { %>
+                    <div class="role-section">
+                        <h2 class="role-header">
+                            <%= role %>
+                        </h2>
+                        <div class="role-grid">
+                            <% for (let agent of agentsByClass.filter(agent=> agent.role === role)) { %>
+                                <div class="agent-card <%= agent.role %>">
+                                    <a href="/agent/<%= agent.name %>"><img src="<%= agent.agentIMG %>"
+                                            alt="<%= agent.name %>"></a>
+                                    <h3>
+                                        <%= agent.name %>
+                                    </h3>
+                                    <p>Class: <%= agent.role %>
+                                    </p>
+                                    <p>Pick %: <%= ((agent.wins + agent.losses + agent.draws) / (totalMatches*2) *
+                                            100).toFixed(2) %>
+                                    </p>
+                                    <p>Win %: <%= (agent.wins / (agent.wins + agent.losses + agent.draws) *
+                                            100).toFixed(2) %>
+                                    </p>
+                                    <p>KD Ratio: <%= (agent.kills / agent.deaths).toFixed(2) %>
+                                    </p>
+                                </div>
+                                <% } %>
+                        </div>
+                    </div>
+                    <% } %>
+            </div>
 
-        <!-- Pick Rate Descending Grid -->
-        <div id="pickRateDesc-grid" class="agent-grid">
-            <% agentsByPickDesc.forEach(agent=> { %>
-                <div class="agent-card <%= agent.role %>">
-                    <a href="/agent/<%= agent.name %>"><img src="<%= agent.agentIMG %>" alt="<%= agent.name %>"></a>
-                    <h3>
-                        <%= agent.name %>
-                    </h3>
-                    <p>Class: <%= agent.role %>
-                    </p>
-                    <p>Pick %: <%= ((agent.wins + agent.losses + agent.draws) / (totalMatches*2) * 100).toFixed(2) %>
-                    </p>
-                    <p>Win %: <%= (agent.wins / (agent.wins + agent.losses + agent.draws) * 100).toFixed(2) %>
-                    </p>
-                    <p>KD Ratio: <%= (agent.kills / agent.deaths).toFixed(2) %>
-                    </p>
-                </div>
-                <% }) %>
-        </div>
+            <!-- Pick Rate Ascending Grid -->
+            <div id="pickRateAsc-grid" class="agent-grid">
+                <% agentsByPickAsc.forEach(agent=> { %>
+                    <div class="agent-card <%= agent.role %>">
+                        <a href="/agent/<%= agent.name %>"><img src="<%= agent.agentIMG %>" alt="<%= agent.name %>"></a>
+                        <h3>
+                            <%= agent.name %>
+                        </h3>
+                        <p>Class: <%= agent.role %>
+                        </p>
+                        <p>Pick %: <%= ((agent.wins + agent.losses + agent.draws) / (totalMatches*2) * 100).toFixed(2)
+                                %>
+                        </p>
+                        <p>Win %: <%= (agent.wins / (agent.wins + agent.losses + agent.draws) * 100).toFixed(2) %>
+                        </p>
+                        <p>KD Ratio: <%= (agent.kills / agent.deaths).toFixed(2) %>
+                        </p>
+                    </div>
+                    <% }) %>
+            </div>
 
-        <!-- Win Rate Ascending Grid -->
-        <div id="winRateAsc-grid" class="agent-grid">
-            <% agentsByWinAsc.forEach(agent=> { %>
-                <div class="agent-card <%= agent.role %>">
-                    <a href="/agent/<%= agent.name %>"><img src="<%= agent.agentIMG %>" alt="<%= agent.name %>"></a>
-                    <h3>
-                        <%= agent.name %>
-                    </h3>
-                    <p>Class: <%= agent.role %>
-                    </p>
-                    <p>Pick %: <%= ((agent.wins + agent.losses + agent.draws) / (totalMatches*2) * 100).toFixed(2) %>
-                    </p>
-                    <p>Win %: <%= (agent.wins / (agent.wins + agent.losses + agent.draws) * 100).toFixed(2) %>
-                    </p>
-                    <p>KD Ratio: <%= (agent.kills / agent.deaths).toFixed(2) %>
-                    </p>
-                </div>
-                <% }) %>
-        </div>
+            <!-- Pick Rate Descending Grid -->
+            <div id="pickRateDesc-grid" class="agent-grid">
+                <% agentsByPickDesc.forEach(agent=> { %>
+                    <div class="agent-card <%= agent.role %>">
+                        <a href="/agent/<%= agent.name %>"><img src="<%= agent.agentIMG %>" alt="<%= agent.name %>"></a>
+                        <h3>
+                            <%= agent.name %>
+                        </h3>
+                        <p>Class: <%= agent.role %>
+                        </p>
+                        <p>Pick %: <%= ((agent.wins + agent.losses + agent.draws) / (totalMatches*2) * 100).toFixed(2)
+                                %>
+                        </p>
+                        <p>Win %: <%= (agent.wins / (agent.wins + agent.losses + agent.draws) * 100).toFixed(2) %>
+                        </p>
+                        <p>KD Ratio: <%= (agent.kills / agent.deaths).toFixed(2) %>
+                        </p>
+                    </div>
+                    <% }) %>
+            </div>
 
-        <!-- Win Rate Descending Grid -->
-        <div id="winRateDesc-grid" class="agent-grid">
-            <% agentsByWinDesc.forEach(agent=> { %>
-                <div class="agent-card <%= agent.role %>">
-                    <a href="/agent/<%= agent.name %>"><img src="<%= agent.agentIMG %>" alt="<%= agent.name %>"></a>
-                    <h3>
-                        <%= agent.name %>
-                    </h3>
-                    <p>Class: <%= agent.role %>
-                    </p>
-                    <p>Pick %: <%= ((agent.wins + agent.losses + agent.draws) / (totalMatches*2) * 100).toFixed(2) %>
-                    </p>
-                    <p>Win %: <%= (agent.wins / (agent.wins + agent.losses + agent.draws) * 100).toFixed(2) %>
-                    </p>
-                    <p>KD Ratio: <%= (agent.kills / agent.deaths).toFixed(2) %>
-                    </p>
-                </div>
-                <% }) %>
-        </div>
+            <!-- Win Rate Ascending Grid -->
+            <div id="winRateAsc-grid" class="agent-grid">
+                <% agentsByWinAsc.forEach(agent=> { %>
+                    <div class="agent-card <%= agent.role %>">
+                        <a href="/agent/<%= agent.name %>"><img src="<%= agent.agentIMG %>" alt="<%= agent.name %>"></a>
+                        <h3>
+                            <%= agent.name %>
+                        </h3>
+                        <p>Class: <%= agent.role %>
+                        </p>
+                        <p>Pick %: <%= ((agent.wins + agent.losses + agent.draws) / (totalMatches*2) * 100).toFixed(2)
+                                %>
+                        </p>
+                        <p>Win %: <%= (agent.wins / (agent.wins + agent.losses + agent.draws) * 100).toFixed(2) %>
+                        </p>
+                        <p>KD Ratio: <%= (agent.kills / agent.deaths).toFixed(2) %>
+                        </p>
+                    </div>
+                    <% }) %>
+            </div>
 
-        <!-- KD Ratio Ascending Grid -->
-        <div id="kdRatioAsc-grid" class="agent-grid">
-            <% agentsByKDAsc.forEach(agent=> { %>
-                <div class="agent-card <%= agent.role %>">
-                    <a href="/agent/<%= agent.name %>"><img src="<%= agent.agentIMG %>" alt="<%= agent.name %>"></a>
-                    <h3>
-                        <%= agent.name %>
-                    </h3>
-                    <p>Class: <%= agent.role %>
-                    </p>
-                    <p>Pick %: <%= ((agent.wins + agent.losses + agent.draws) / (totalMatches*2) * 100).toFixed(2) %>
-                    </p>
-                    <p>Win %: <%= (agent.wins / (agent.wins + agent.losses + agent.draws) * 100).toFixed(2) %>
-                    </p>
-                    <p>KD Ratio: <%= (agent.kills / agent.deaths).toFixed(2) %>
-                    </p>
-                </div>
-                <% }) %>
-        </div>
+            <!-- Win Rate Descending Grid -->
+            <div id="winRateDesc-grid" class="agent-grid">
+                <% agentsByWinDesc.forEach(agent=> { %>
+                    <div class="agent-card <%= agent.role %>">
+                        <a href="/agent/<%= agent.name %>"><img src="<%= agent.agentIMG %>" alt="<%= agent.name %>"></a>
+                        <h3>
+                            <%= agent.name %>
+                        </h3>
+                        <p>Class: <%= agent.role %>
+                        </p>
+                        <p>Pick %: <%= ((agent.wins + agent.losses + agent.draws) / (totalMatches*2) * 100).toFixed(2)
+                                %>
+                        </p>
+                        <p>Win %: <%= (agent.wins / (agent.wins + agent.losses + agent.draws) * 100).toFixed(2) %>
+                        </p>
+                        <p>KD Ratio: <%= (agent.kills / agent.deaths).toFixed(2) %>
+                        </p>
+                    </div>
+                    <% }) %>
+            </div>
 
-        <!-- KD Ratio Descending Grid -->
-        <div id="kdRatioDesc-grid" class="agent-grid">
-            <% agentsByKDDesc.forEach(agent=> { %>
-                <div class="agent-card <%= agent.role %>">
-                    <a href="/agent/<%= agent.name %>"><img src="<%= agent.agentIMG %>" alt="<%= agent.name %>"></a>
-                    <h3>
-                        <%= agent.name %>
-                    </h3>
-                    <p>Class: <%= agent.role %>
-                    </p>
-                    <p>Pick %: <%= ((agent.wins + agent.losses + agent.draws) / (totalMatches*2) * 100).toFixed(2) %>
-                    </p>
-                    <p>Win %: <%= (agent.wins / (agent.wins + agent.losses + agent.draws) * 100).toFixed(2) %>
-                    </p>
-                    <p>KD Ratio: <%= (agent.kills / agent.deaths).toFixed(2) %>
-                    </p>
+            <!-- KD Ratio Ascending Grid -->
+            <div id="kdRatioAsc-grid" class="agent-grid">
+                <% agentsByKDAsc.forEach(agent=> { %>
+                    <div class="agent-card <%= agent.role %>">
+                        <a href="/agent/<%= agent.name %>"><img src="<%= agent.agentIMG %>" alt="<%= agent.name %>"></a>
+                        <h3>
+                            <%= agent.name %>
+                        </h3>
+                        <p>Class: <%= agent.role %>
+                        </p>
+                        <p>Pick %: <%= ((agent.wins + agent.losses + agent.draws) / (totalMatches*2) * 100).toFixed(2)
+                                %>
+                        </p>
+                        <p>Win %: <%= (agent.wins / (agent.wins + agent.losses + agent.draws) * 100).toFixed(2) %>
+                        </p>
+                        <p>KD Ratio: <%= (agent.kills / agent.deaths).toFixed(2) %>
+                        </p>
+                    </div>
+                    <% }) %>
+            </div>
+
+            <!-- KD Ratio Descending Grid -->
+            <div id="kdRatioDesc-grid" class="agent-grid">
+                <% agentsByKDDesc.forEach(agent=> { %>
+                    <div class="agent-card <%= agent.role %>">
+                        <a href="/agent/<%= agent.name %>"><img src="<%= agent.agentIMG %>" alt="<%= agent.name %>"></a>
+                        <h3>
+                            <%= agent.name %>
+                        </h3>
+                        <p>Class: <%= agent.role %>
+                        </p>
+                        <p>Pick %: <%= ((agent.wins + agent.losses + agent.draws) / (totalMatches*2) * 100).toFixed(2)
+                                %>
+                        </p>
+                        <p>Win %: <%= (agent.wins / (agent.wins + agent.losses + agent.draws) * 100).toFixed(2) %>
+                        </p>
+                        <p>KD Ratio: <%= (agent.kills / agent.deaths).toFixed(2) %>
+                        </p>
+                    </div>
+                    <% }) %>
+            </div>
+        </div>
+        <div id="currentAct" class="actDisplay">
+            <div class="header">
+                <h1>All Agents Stats</h1>
+                <div class="sort-controls">
+                    <label for="sort-by">Sort by:</label>
+                    <div class="sort-buttons">
+                        <button onclick="showActGrid('class')">Class</button>
+                        <button onclick="showActGrid('pickRateAsc')">Pick % ↑</button>
+                        <button onclick="showActGrid('pickRateDesc')">Pick % ↓</button>
+                        <button onclick="showActGrid('winRateAsc')">Win % ↑</button>
+                        <button onclick="showActGrid('winRateDesc')">Win % ↓</button>
+                        <button onclick="showActGrid('kdRatioAsc')">KD Ratio ↑</button>
+                        <button onclick="showActGrid('kdRatioDesc')">KD Ratio ↓</button>
+                    </div>
                 </div>
-                <% }) %>
+            </div>
+
+            <!-- Class Grid -->
+            <div id="class-actgrid" class="agent-actgrid active">
+                <% for (let role of ['Controller', 'Duelist' , 'Initiator' , 'Sentinel' ]) { %>
+                    <div class="role-section">
+                        <h2 class="role-header">
+                            <%= role %>
+                        </h2>
+                        <div class="role-grid">
+                            <% for (let agent of agentsActByClass.filter(agent=> agent.role === role)) { %>
+                                <div class="agent-card <%= agent.role %>">
+                                    <a href="/agent/<%= agent.name %>"><img src="<%= agent.agentIMG %>"
+                                            alt="<%= agent.name %>"></a>
+                                    <h3>
+                                        <%= agent.name %>
+                                    </h3>
+                                    <p>Class: <%= agent.role %>
+                                    </p>
+                                    <p>Pick %: <%= ((agent.wins + agent.losses + agent.draws) / (totalActMatches*2) *
+                                            100).toFixed(2) %>
+                                    </p>
+                                    <p>Win %: <%= (agent.wins / (agent.wins + agent.losses + agent.draws) *
+                                            100).toFixed(2) %>
+                                    </p>
+                                    <p>KD Ratio: <%= (agent.kills / agent.deaths).toFixed(2) %>
+                                    </p>
+                                </div>
+                                <% } %>
+                        </div>
+                    </div>
+                    <% } %>
+            </div>
+
+            <!-- Pick Rate Ascending Grid -->
+            <div id="pickRateAsc-actgrid" class="agent-actgrid">
+                <% agentsActByPickAsc.forEach(agent=> { %>
+                    <div class="agent-card <%= agent.role %>">
+                        <a href="/agent/<%= agent.name %>"><img src="<%= agent.agentIMG %>" alt="<%= agent.name %>"></a>
+                        <h3>
+                            <%= agent.name %>
+                        </h3>
+                        <p>Class: <%= agent.role %>
+                        </p>
+                        <p>Pick %: <%= ((agent.wins + agent.losses + agent.draws) / (totalActMatches*2) * 100).toFixed(2)
+                                %>
+                        </p>
+                        <p>Win %: <%= (agent.wins / (agent.wins + agent.losses + agent.draws) * 100).toFixed(2) %>
+                        </p>
+                        <p>KD Ratio: <%= (agent.kills / agent.deaths).toFixed(2) %>
+                        </p>
+                    </div>
+                    <% }) %>
+            </div>
+
+            <!-- Pick Rate Descending Grid -->
+            <div id="pickRateDesc-actgrid" class="agent-actgrid">
+                <% agentsActByPickDesc.forEach(agent=> { %>
+                    <div class="agent-card <%= agent.role %>">
+                        <a href="/agent/<%= agent.name %>"><img src="<%= agent.agentIMG %>" alt="<%= agent.name %>"></a>
+                        <h3>
+                            <%= agent.name %>
+                        </h3>
+                        <p>Class: <%= agent.role %>
+                        </p>
+                        <p>Pick %: <%= ((agent.wins + agent.losses + agent.draws) / (totalActMatches*2) * 100).toFixed(2)
+                                %>
+                        </p>
+                        <p>Win %: <%= (agent.wins / (agent.wins + agent.losses + agent.draws) * 100).toFixed(2) %>
+                        </p>
+                        <p>KD Ratio: <%= (agent.kills / agent.deaths).toFixed(2) %>
+                        </p>
+                    </div>
+                    <% }) %>
+            </div>
+
+            <!-- Win Rate Ascending Grid -->
+            <div id="winRateAsc-actgrid" class="agent-actgrid">
+                <% agentsActByWinAsc.forEach(agent=> { %>
+                    <div class="agent-card <%= agent.role %>">
+                        <a href="/agent/<%= agent.name %>"><img src="<%= agent.agentIMG %>" alt="<%= agent.name %>"></a>
+                        <h3>
+                            <%= agent.name %>
+                        </h3>
+                        <p>Class: <%= agent.role %>
+                        </p>
+                        <p>Pick %: <%= ((agent.wins + agent.losses + agent.draws) / (totalActMatches*2) * 100).toFixed(2)
+                                %>
+                        </p>
+                        <p>Win %: <%= (agent.wins / (agent.wins + agent.losses + agent.draws) * 100).toFixed(2) %>
+                        </p>
+                        <p>KD Ratio: <%= (agent.kills / agent.deaths).toFixed(2) %>
+                        </p>
+                    </div>
+                    <% }) %>
+            </div>
+
+            <!-- Win Rate Descending Grid -->
+            <div id="winRateDesc-actgrid" class="agent-actgrid">
+                <% agentsActByWinDesc.forEach(agent=> { %>
+                    <div class="agent-card <%= agent.role %>">
+                        <a href="/agent/<%= agent.name %>"><img src="<%= agent.agentIMG %>" alt="<%= agent.name %>"></a>
+                        <h3>
+                            <%= agent.name %>
+                        </h3>
+                        <p>Class: <%= agent.role %>
+                        </p>
+                        <p>Pick %: <%= ((agent.wins + agent.losses + agent.draws) / (totalActMatches*2) * 100).toFixed(2)
+                                %>
+                        </p>
+                        <p>Win %: <%= (agent.wins / (agent.wins + agent.losses + agent.draws) * 100).toFixed(2) %>
+                        </p>
+                        <p>KD Ratio: <%= (agent.kills / agent.deaths).toFixed(2) %>
+                        </p>
+                    </div>
+                    <% }) %>
+            </div>
+
+            <!-- KD Ratio Ascending Grid -->
+            <div id="kdRatioAsc-actgrid" class="agent-actgrid">
+                <% agentsActByKDAsc.forEach(agent=> { %>
+                    <div class="agent-card <%= agent.role %>">
+                        <a href="/agent/<%= agent.name %>"><img src="<%= agent.agentIMG %>" alt="<%= agent.name %>"></a>
+                        <h3>
+                            <%= agent.name %>
+                        </h3>
+                        <p>Class: <%= agent.role %>
+                        </p>
+                        <p>Pick %: <%= ((agent.wins + agent.losses + agent.draws) / (totalActMatches*2) * 100).toFixed(2)
+                                %>
+                        </p>
+                        <p>Win %: <%= (agent.wins / (agent.wins + agent.losses + agent.draws) * 100).toFixed(2) %>
+                        </p>
+                        <p>KD Ratio: <%= (agent.kills / agent.deaths).toFixed(2) %>
+                        </p>
+                    </div>
+                    <% }) %>
+            </div>
+
+            <!-- KD Ratio Descending Grid -->
+            <div id="kdRatioDesc-actgrid" class="agent-actgrid">
+                <% agentsActByKDDesc.forEach(agent=> { %>
+                    <div class="agent-card <%= agent.role %>">
+                        <a href="/agent/<%= agent.name %>"><img src="<%= agent.agentIMG %>" alt="<%= agent.name %>"></a>
+                        <h3>
+                            <%= agent.name %>
+                        </h3>
+                        <p>Class: <%= agent.role %>
+                        </p>
+                        <p>Pick %: <%= ((agent.wins + agent.losses + agent.draws) / (totalActMatches*2) * 100).toFixed(2)
+                                %>
+                        </p>
+                        <p>Win %: <%= (agent.wins / (agent.wins + agent.losses + agent.draws) * 100).toFixed(2) %>
+                        </p>
+                        <p>KD Ratio: <%= (agent.kills / agent.deaths).toFixed(2) %>
+                        </p>
+                    </div>
+                    <% }) %>
+            </div>
+
         </div>
     </div>
 
@@ -185,8 +376,23 @@
             });
             document.getElementById(gridId + '-grid').style.display = 'grid';
         }
+        function showActGrid(gridId) {
+            const grids = document.querySelectorAll('.agent-actgrid');
+            grids.forEach(grid => {
+                grid.style.display = 'none';
+            });
+            document.getElementById(gridId + '-actgrid').style.display = 'grid';
+        }
+        function switchDisplay(id) {
+            const acts = document.querySelectorAll('.actDisplay')
+            acts.forEach(act => {
+                act.style.display = 'none';
+            });
+            document.getElementById(id).style.display = '';
+        }
 
         // Default view
         showGrid('class');
+        showActGrid('class')
     </script>
 </body>

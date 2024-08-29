@@ -469,9 +469,11 @@ const processFunctions = {
     },
     get_all_agent_stats: async function (matches, actId) {
         let output = []
+        let actCount = 0
         if (actId) {
             for (m in matches) {
                 if (matches[m]['data']['metadata']['season_id'] == actId) {
+                    actCount++
                     let bWinner = false;
                     let rWinner = false;
                     let draw = false;
@@ -709,7 +711,12 @@ const processFunctions = {
                 }
             }
         }
-        return output
+        if (actId){
+            return [output,actCount]
+        }
+        else {
+            return output
+        }
     },
     alterMatch: async function (match, puuid, editPlayers) {
         if (match['data']['metadata']['mode_id'] == 'deathmatch') {
