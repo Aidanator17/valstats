@@ -30,6 +30,7 @@ app.use(express.urlencoded({ extended: true }));
 // const authRoute = require("./routes/authRoute");
 const userRoute = require("./routes/userRoute");
 const userActRoute = require("./routes/userActRoute");
+const userBatchRoute = require("./routes/userBatchRoute");
 const adminRoute = require("./routes/adminRoute");
 const agentRoute = require("./routes/agentRoute");
 
@@ -51,6 +52,7 @@ const agentRoute = require("./routes/agentRoute");
 
 app.use("/user", userRoute);
 app.use("/user-by-act", userActRoute);
+app.use("/userBatch", userBatchRoute)
 app.use("/admin", adminRoute);
 app.use("/agent", agentRoute);
 // app.use("/auth", authRoute);

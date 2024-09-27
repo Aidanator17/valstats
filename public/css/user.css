@@ -85,6 +85,14 @@ body, html {
 .map-grid-item {
   padding-bottom: 10px;
 }
+#role-grid {
+  display: grid;
+  grid-template-columns: auto auto auto auto auto;
+  justify-items: start;
+}
+.role-grid-item {
+  padding-bottom: 10px;
+}
 
 .grid-item-title {
   font-weight: bold;

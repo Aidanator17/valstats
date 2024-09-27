@@ -1,9 +1,11 @@
 const express = require("express");
 const router = express.Router();
+const session = require('express-session');
 const apiFunctions = require('../models/valAPI.js');
 const fs = require('fs');
 const DatabaseFunctions = require("../models/databaseModel");
-const processFunctions = require("../models/processModel")
+const processFunctions = require("../models/processModel");
+const { userInfo } = require("os");
 
 async function createJSON(name, jsondata) {
     fs.writeFile('./extra-files/' + name, JSON.stringify(jsondata), function (err) {
@@ -12,7 +14,6 @@ async function createJSON(name, jsondata) {
         }
     });
 }
-
 function getRandomInt(max) {
     return Math.floor(Math.random() * max);
 }
@@ -73,69 +74,29 @@ function winCheckNum(match, puuid) {
 
 
 router.get('/', async (req, res) => {
-    res.redirect('/user/lookup')
+    res.redirect('/userBatch/lookup')
 })
-
 router.get('/lookup', async (req, res) => {
-    if (req.query.failed == 'true') {
-        res.render('userlookup', {
-            failed: true,
-            title: 'User Lookup',
-            sheet: 'lookup-style.css'
-        })
-    }
-    else {
-        res.render('userlookup', {
-            failed: false,
-            title: 'User Lookup',
-            sheet: 'lookup-style.css'
-        })
-    }
+    res.render('userBatchLookup')
 })
-
 router.post('/lookup', async (req, res) => {
-    res.redirect('/user/' + req.body.user + '/' + req.body.tag)
+    let userCount = Object.keys(req.body).length / 2
+    let userList = []
+    for (let i = 0; i < userCount; i++) {
+        userList.push(req.body['user'+(i+1)]+'#'+req.body['tag'+(i+1)])
+      }
+    req.session.userList = userList
+    res.redirect('/userBatch/group')
 })
-
-router.get('/:puuid', async (req, res) => {
-    let data = await apiFunctions.getBasic_by_puuid(req.params.puuid)
-    res.redirect(`/user/${data['username']}/${data['tag']}`)
-})
-
-router.get('/:user/:tag', async (req, res) => {
-    const UserInfo = await processFunctions.get_user_data(req.params.user,req.params.tag,true)
-    if (UserInfo) {
-
-        // let jsonUser = JSON.parse(JSON.stringify(UserInfo))
-        // jsonUser.matches = undefined
-        // createJSON("user.json", jsonUser)
-        res.render('user', {
-            UserInfo,
-            title: UserInfo['username'],
-            sheet: 'user.css'
-        })
-    }
-    else {
-        res.redirect('/user/lookup?failed=true')
-    }
-
-})
-
-router.get('/:user/:tag/:matchid', async (req, res) => {
-    let start = Date.now()
-    const match = JSON.parse((await DatabaseFunctions.get_match_by_match_id(req.params.matchid))['match_info'])
-    const puuid = (await apiFunctions.getBasic(req.params.user, req.params.tag)).puuid
-    match['data']['metadata']['main-username'] = req.params.user
-    match['data']['metadata']['main-tag'] = req.params.tag
-
-    const matchData = await processFunctions.alterMatch(match, puuid, true)
-    let end = Date.now()
-    console.log(`Match data for ${req.params.matchid} retrieved (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
-    res.render('user-match', {
-        matchData,
-        title: 'Match Details',
-        sheet: 'user-match.css'
+router.get('/group', async (req, res) => {
+    const batch = await processFunctions.get_batch_user(req.session.userList)
+    // await createJSON('batchTestMatch.json',batch)
+    res.render('userBatch',{
+        title:'Batch Check',
+        sheet:'user.css',
+        UserInfo:batch
     })
 })
+
 
 module.exports = router

@@ -1,0 +1,59 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batch User Lookup</title>
+    <link rel="stylesheet" href="/css/userBatchLookup.css">
+</head>
+<body>
+    <div class="container">
+        <form action="/userBatch/lookup" method="post" class="form" id="user-lookup-form">
+            <div class="input-group">
+                <input placeholder="User1" name="user1" class="input-field">
+                <input placeholder="Tag1" name="tag1" class="input-field">
+            </div>
+
+            <div class="input-group">
+                <input placeholder="User2" name="user2" class="input-field">
+                <input placeholder="Tag2" name="tag2" class="input-field">
+                <button type="button" onclick="addUserField()" class="plus-button" id="add-more">+</button>
+            </div>
+
+            <button type="submit" class="submit-button">Lookup</button>
+        </form>
+    </div>
+
+    <script>
+        let count = 2;
+
+        // document.getElementById('add-more').addEventListener('click', function () {
+        //     count++;
+        //     const newInputGroup = document.createElement('div');
+        //     newInputGroup.classList.add('input-group');
+        //     newInputGroup.innerHTML = `
+        //         <input placeholder="User${count}" name="user${count}" class="input-field">
+        //         <input placeholder="Tag${count}" name="tag${count}" class="input-field">
+        //         <button type="button" class="plus-button" id="add-more">+</button>
+        //     `;
+
+        //     const form = document.getElementById('user-lookup-form');
+        //     const plusButton = document.getElementById('add-more');
+        //     plusButton.remove();
+        //     form.insertBefore(newInputGroup, form.querySelector('.submit-button'));
+        // });
+        function addUserField () {
+            count++;
+            const newInputGroup = document.createElement('div');
+            newInputGroup.classList.add('input-group');
+            newInputGroup.innerHTML = `
+                <input placeholder="User${count}" name="user${count}" class="input-field">
+                <input placeholder="Tag${count}" name="tag${count}" class="input-field">
+                <button type="button" onclick="addUserField()" class="plus-button" id="add-more">+</button>
+            `;
+
+            const form = document.getElementById('user-lookup-form');
+            const plusButton = document.getElementById('add-more');
+            plusButton.remove();
+            form.insertBefore(newInputGroup, form.querySelector('.submit-button'));
+        }
+    </script>
+</body>

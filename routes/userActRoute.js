@@ -759,6 +759,7 @@ router.get('/:user/:tag/:act', async (req, res) => {
 
         end = Date.now()
         console.log(`Data for ${UserInfo['username']}#${UserInfo['tag']} retrieved (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
+        UserInfo.role_stats = await processFunctions.get_role_stats(UserInfo.comp_matches,UserInfo.puuid)
         // console.log(Intl.DateTimeFormat().resolvedOptions().timeZone)
         res.render('user', {
             UserInfo,
