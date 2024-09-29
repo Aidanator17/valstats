@@ -52,6 +52,12 @@ const DatabaseFunctions = {
             skipDuplicates: true
         })
     },
+    mark_adjust: async function (id) {
+        const update = await prisma.matches.update({
+            where: {match_id:id},
+            data:{adjusted:1}
+        })
+    },
     get_matches_by_pid: async function (pid) {
         const playerMatches = await DatabaseFunctions.get_Player_Matches(pid)
         let ids = []
@@ -117,7 +123,29 @@ const DatabaseFunctions = {
 
     },
     mass_retrieve: async function () {
-        const all_matches = await prisma.matches.findMany()
+        const totalMatches = await prisma.matches.count({
+            where:{adjusted:0}
+        }
+        );
+        let iter = Math.ceil(totalMatches/100)
+        let s = 0
+        let all_matches = []
+        for (let step = 0; step < iter; step++) {
+            const iter_matches = await prisma.matches.findMany({
+                skip: s,
+                take:100,
+                where:{
+                    adjusted:0
+                }
+            })
+            all_matches = all_matches.concat(iter_matches)
+            console.log(`retrieved ${iter_matches.length} matches, total: ${all_matches.length}`)
+            s += 100
+          }
+
+
+
+        // await createJSON('mass_retrieve.json',all_matches)
         return all_matches
     },
     mass_retrieve_comp: async function () {

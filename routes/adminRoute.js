@@ -83,6 +83,7 @@ router.post('/mass-adjust', async (req, res) => {
                 })
             }
             await DatabaseFunctions.add_Player_Matches(data)
+            await DatabaseFunctions.mark_adjust(all_matches[m]['match_id'])
             end = Date.now()
             console.log(`${Math.round((count / all_matches.length) * 10000) / 100}%`)
             count++
