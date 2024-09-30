@@ -33,6 +33,7 @@ const userActRoute = require("./routes/userActRoute");
 const userBatchRoute = require("./routes/userBatchRoute");
 const adminRoute = require("./routes/adminRoute");
 const agentRoute = require("./routes/agentRoute");
+const mapRoute = require("./routes/mapRoute");
 
 // Middleware for express
 // app.use(passport.initialize());
@@ -55,7 +56,7 @@ app.use("/user-by-act", userActRoute);
 app.use("/userBatch", userBatchRoute)
 app.use("/admin", adminRoute);
 app.use("/agent", agentRoute);
-// app.use("/auth", authRoute);
+app.use("/map", mapRoute);
 
 
 app.get('/', async (req, res) => {

@@ -150,14 +150,30 @@ const DatabaseFunctions = {
     },
     mass_retrieve_comp: async function () {
         let start = Date.now()
-        const raw_matches = await prisma.matches.findMany({
-            where: {
-                match_type: 'competitive'
-            },
-            select: {
-                match_info: true
-            }
+        const totalMatches = await prisma.matches.count({
+            where:{match_type:'competitive'}
         })
+        let iter = Math.ceil(totalMatches/100)
+        let s = 0
+        let raw_matches = []
+        for (let step = 0; step < iter; step++) {
+            const iter_matches = await prisma.matches.findMany({
+                skip: s,
+                take:100,
+                where: {
+                    match_type: 'competitive'
+                },
+                select: {
+                    match_info: true
+                }
+            })
+            raw_matches = raw_matches.concat(iter_matches)
+            // console.log(`retrieved ${iter_matches.length} matches, total: ${all_matches.length}`)
+            s += 100
+          }
+
+
+
         let end = Date.now()
         // console.log(`Retrieved comp matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
         start = Date.now()
