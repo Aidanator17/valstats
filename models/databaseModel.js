@@ -42,6 +42,15 @@ const DatabaseFunctions = {
         })
         return playerMatches
     },
+    get_Player_Act_Matches: async function (pid, act) {
+        const playerMatches = await prisma.playerMatchesWithAct.findMany({
+            where: {
+                player_id: pid,
+                act_id: act
+            }
+        })
+        return playerMatches
+    },
     get_mass_Player_Matches: async function () {
         const playerMatches = await prisma.players_matches.findMany()
         return playerMatches
@@ -54,24 +63,42 @@ const DatabaseFunctions = {
     },
     mark_adjust: async function (id) {
         const update = await prisma.matches.update({
-            where: {match_id:id},
-            data:{adjusted:1}
+            where: { match_id: id },
+            data: { adjusted: 1 }
         })
     },
-    get_matches_by_pid: async function (pid) {
-        const playerMatches = await DatabaseFunctions.get_Player_Matches(pid)
-        let ids = []
-        for (pmatch in playerMatches) {
-            ids.push(playerMatches[pmatch].matchid)
-        }
-        const matches = await prisma.matches.findMany({
-            where: {
-                match_id: {
-                    in: ids
-                }
+    get_matches_by_pid: async function (pid, act) {
+        if (act) {
+            const playerMatches = await DatabaseFunctions.get_Player_Matches(pid)
+            let ids = []
+            for (pmatch in playerMatches) {
+                ids.push(playerMatches[pmatch].matchid)
             }
-        })
-        return matches
+            const matches = await prisma.matches.findMany({
+                where: {
+                    match_id: {
+                        in: ids
+                    },
+                    act_id: act
+                }
+            })
+            return matches
+        }
+        else {
+            const playerMatches = await DatabaseFunctions.get_Player_Matches(pid)
+            let ids = []
+            for (pmatch in playerMatches) {
+                ids.push(playerMatches[pmatch].matchid)
+            }
+            const matches = await prisma.matches.findMany({
+                where: {
+                    match_id: {
+                        in: ids
+                    }
+                }
+            })
+            return matches
+        }
     },
     get_match_by_match_id: async function (mid) {
         const match = await prisma.matches.findUnique({
@@ -91,7 +118,7 @@ const DatabaseFunctions = {
                     match_type: matches[match]['data']['metadata']['mode_id'],
                     match_map: matches[match]['data']['metadata']['map'],
                     match_starttime: matches[match]['data']['metadata']['game_start'],
-                    act_id:matches[match]['data']['metadata']['season_id']
+                    act_id: matches[match]['data']['metadata']['season_id']
                 })
             }
             const newMatches = await prisma.matches.createMany({
@@ -124,66 +151,106 @@ const DatabaseFunctions = {
     },
     mass_retrieve: async function () {
         const totalMatches = await prisma.matches.count({
-            where:{adjusted:0}
+            where: { adjusted: 0 }
         }
         );
-        let iter = Math.ceil(totalMatches/100)
+        let iter = Math.ceil(totalMatches / 100)
         let s = 0
         let all_matches = []
         for (let step = 0; step < iter; step++) {
             const iter_matches = await prisma.matches.findMany({
                 skip: s,
-                take:100,
-                where:{
-                    adjusted:0
+                take: 100,
+                where: {
+                    adjusted: 0
                 }
             })
             all_matches = all_matches.concat(iter_matches)
             console.log(`retrieved ${iter_matches.length} matches, total: ${all_matches.length}`)
             s += 100
-          }
+        }
 
 
 
         // await createJSON('mass_retrieve.json',all_matches)
         return all_matches
     },
-    mass_retrieve_comp: async function () {
-        let start = Date.now()
-        const totalMatches = await prisma.matches.count({
-            where:{match_type:'competitive'}
-        })
-        let iter = Math.ceil(totalMatches/100)
-        let s = 0
-        let raw_matches = []
-        for (let step = 0; step < iter; step++) {
-            const iter_matches = await prisma.matches.findMany({
-                skip: s,
-                take:100,
-                where: {
-                    match_type: 'competitive'
-                },
-                select: {
-                    match_info: true
-                }
+    mass_retrieve_comp: async function (id) {
+        if (id) {
+            let start = Date.now()
+            const totalMatches = await prisma.matches.count({
+                where: { match_type: 'competitive', act_id: id }
             })
-            raw_matches = raw_matches.concat(iter_matches)
-            // console.log(`retrieved ${iter_matches.length} matches, total: ${all_matches.length}`)
-            s += 100
-          }
+            let iter = Math.ceil(totalMatches / 300)
+            let s = 0
+            let raw_matches = []
+            for (let step = 0; step < iter; step++) {
+                const iter_matches = await prisma.matches.findMany({
+                    skip: s,
+                    take: 300,
+                    where: {
+                        match_type: 'competitive',
+                        act_id: id
+                    },
+                    select: {
+                        match_info: true
+                    }
+                })
+                raw_matches = raw_matches.concat(iter_matches)
+                // console.log(`retrieved ${iter_matches.length} matches, total: ${all_matches.length}`)
+                s += 300
+            }
 
 
 
-        let end = Date.now()
-        // console.log(`Retrieved comp matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
-        start = Date.now()
-        let matches = []
-        for (m in raw_matches) {
-            matches.push(JSON.parse(raw_matches[m]['match_info']))
+            let end = Date.now()
+            // console.log(`Retrieved comp matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+            start = Date.now()
+            let matches = []
+            for (m in raw_matches) {
+                matches.push(JSON.parse(raw_matches[m]['match_info']))
+            }
+            end = Date.now()
+            // console.log(`Formatted comp matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+            return matches
         }
-        end = Date.now()
-        // console.log(`Formatted comp matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
-        return matches
+        else {
+            let start = Date.now()
+            const totalMatches = await prisma.matches.count({
+                where: { match_type: 'competitive' }
+            })
+            let iter = Math.ceil(totalMatches / 300)
+            let s = 0
+            let raw_matches = []
+            for (let step = 0; step < iter; step++) {
+                const iter_matches = await prisma.matches.findMany({
+                    skip: s,
+                    take: 300,
+                    where: {
+                        match_type: 'competitive'
+                    },
+                    select: {
+                        match_info: true
+                    }
+                })
+                raw_matches = raw_matches.concat(iter_matches)
+                // console.log(`retrieved ${iter_matches.length} matches, total: ${all_matches.length}`)
+                s += 300
+            }
+
+
+
+            let end = Date.now()
+            // console.log(`Retrieved comp matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+            start = Date.now()
+            let matches = []
+            for (m in raw_matches) {
+                matches.push(JSON.parse(raw_matches[m]['match_info']))
+            }
+            end = Date.now()
+            // console.log(`Formatted comp matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+            return matches
+        }
     },
     fix_act_ids: async function () {
         if (true) { }
@@ -208,7 +275,7 @@ const DatabaseFunctions = {
         const raw_matches = await prisma.matches.findMany({
             where: {
                 match_type: 'competitive',
-                act_id:act
+                act_id: act
             },
             select: {
                 match_info: true

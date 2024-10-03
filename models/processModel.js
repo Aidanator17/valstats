@@ -353,14 +353,12 @@ function getAttkDefWins(match) {
             }
         }
         else if (r < 24) {
-            if (r < 12) {
                 if (rounds[r]['winning_team'] == "Red") {
                     defWins++
                 }
                 else {
                     attkWins++
                 }
-            }
         }
         else if (isEven(r)) {
             if (rounds[r]['winning_team'] == "Red") {
@@ -1054,6 +1052,8 @@ const processFunctions = {
                     playerteam = match['data']['players']['all_players'][player]['team']
                     match['data']['metadata']['agent'] = match['data']['players']['all_players'][player]['character']
                     match['data']['metadata']['name'] = match['data']['players']['all_players'][player]['name']
+                    let rank = match['data']['players']['all_players'][player]['currenttier_patched'].split(' ')
+                    match['data']['metadata']['player_rank'] = rank[0] + '_' + rank[1]
                     match['data']['metadata']['tag'] = match['data']['players']['all_players'][player]['tag']
                     let kills = match['data']['players']['all_players'][player]['stats']['kills']
                     let deaths = match['data']['players']['all_players'][player]['stats']['deaths']
@@ -2179,6 +2179,61 @@ const processFunctions = {
             maps[m].comps.sort(compare_count)
         }
         return maps
+    },
+    adjustLastEpisodeActs: async function(episodes) {
+        const lastEpisode = episodes[episodes.length - 1];
+    
+        if (lastEpisode.acts.length > 0) {
+            // Check if Act 1 is active
+            if (lastEpisode.acts[0].isActive) {
+                // Remove Acts 2 and 3
+                lastEpisode.acts = lastEpisode.acts.slice(0, 1);
+            }
+            // Check if Act 2 is active and Act 1 is not
+            else if (lastEpisode.acts[1].isActive) {
+                // Remove Act 3
+                lastEpisode.acts = lastEpisode.acts.slice(0, 2);
+            }
+            // If Act 3 is active, we do nothing as all acts should be present
+        }
+    
+        return episodes;
+    },
+    
+    reformatEpisodes: async function(data) {
+        const result = [];
+        let currentEpisode = null;
+    
+        // Iterate through the data
+        for (let i = data.length - 1; i >= 0; i--) {
+            if (data[i].name.startsWith("EPISODE")) {
+                currentEpisode = {
+                    id: data[i].id,
+                    name: data[i].name,
+                    acts: []
+                };
+                result.unshift(currentEpisode);
+            } else if (data[i].name.startsWith("ACT")) {
+                if (currentEpisode) {
+                    currentEpisode.acts.unshift({
+                        id: data[i].id,
+                        name: data[i].name,
+                        isActive: data[i].isActive // Preserve the original isActive property
+                    });
+                }
+            } else {
+                // Handling the "Closed Beta"
+                if (data[i].name === "Closed Beta") {
+                    result.unshift({
+                        id: data[i].id,
+                        name: data[i].name,
+                        acts: []
+                    });
+                }
+            }
+        }
+    
+        return this.adjustLastEpisodeActs(result);
     }
 };
 

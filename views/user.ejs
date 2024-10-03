@@ -79,6 +79,7 @@
             <h3>Matches (<%= UserInfo['comp_matches'].length %>)</h3>
             <div class="matchgrid">
                 <div class="matchgrid-item">
+                    <p></p>
                     <p class="matchgrid-element matchgrid-title">
                         Date
                     </p>
@@ -106,6 +107,10 @@
                 </div>
                 <% for (match in UserInfo['comp_matches']) { %>
                     <div class="matchgrid-item">
+                        <p class="matchgrid-element">
+                            
+                <img id="matchrank" src="/images/ranks/<%= UserInfo['comp_matches'][match]['data']['metadata']['player_rank'] %>_Rank.png" alt="Player Image">
+                        </p>
                         <p class="matchgrid-element matchgrid-date">
                             <%= UserInfo['comp_matches'][match]['data']['metadata']['game_start'] %>
                         </p>

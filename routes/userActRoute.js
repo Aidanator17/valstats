@@ -28,61 +28,6 @@ function compare_count(a, b) {
     }
     return 0;
 }
-function adjustLastEpisodeActs(episodes) {
-    const lastEpisode = episodes[episodes.length - 1];
-
-    if (lastEpisode.acts.length > 0) {
-        // Check if Act 1 is active
-        if (lastEpisode.acts[0].isActive) {
-            // Remove Acts 2 and 3
-            lastEpisode.acts = lastEpisode.acts.slice(0, 1);
-        }
-        // Check if Act 2 is active and Act 1 is not
-        else if (lastEpisode.acts[1].isActive) {
-            // Remove Act 3
-            lastEpisode.acts = lastEpisode.acts.slice(0, 2);
-        }
-        // If Act 3 is active, we do nothing as all acts should be present
-    }
-
-    return episodes;
-}
-
-function reformatEpisodes(data) {
-    const result = [];
-    let currentEpisode = null;
-
-    // Iterate through the data
-    for (let i = data.length - 1; i >= 0; i--) {
-        if (data[i].name.startsWith("EPISODE")) {
-            currentEpisode = {
-                id: data[i].id,
-                name: data[i].name,
-                acts: []
-            };
-            result.unshift(currentEpisode);
-        } else if (data[i].name.startsWith("ACT")) {
-            if (currentEpisode) {
-                currentEpisode.acts.unshift({
-                    id: data[i].id,
-                    name: data[i].name,
-                    isActive: data[i].isActive // Preserve the original isActive property
-                });
-            }
-        } else {
-            // Handling the "Closed Beta"
-            if (data[i].name === "Closed Beta") {
-                result.unshift({
-                    id: data[i].id,
-                    name: data[i].name,
-                    acts: []
-                });
-            }
-        }
-    }
-
-    return adjustLastEpisodeActs(result);
-}
 
 function winCheck(match,puuid){
     for (p in match['data']['players']['all_players']){
@@ -143,7 +88,7 @@ router.get('/', async (req, res) => {
 
 router.get('/lookup', async (req, res) => {
     const unfEps = await apiFunctions.getData()
-    const Eps = reformatEpisodes(unfEps['acts'])
+    const Eps = await processFunctions.reformatEpisodes(unfEps['acts'])
     if (req.query.failed == 'true') {
         res.render('useractlookup', {
             failed: true,
@@ -368,7 +313,7 @@ router.get('/:user/:tag/:act', async (req, res) => {
             console.log(indent + `All ${returned_matches} matches successfully added (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
         }
         start = Date.now()
-        real_matches = (await DatabaseFunctions.get_matches_by_pid(pid)).sort((a, b) => b.match_starttime - a.match_starttime)
+        real_matches = (await DatabaseFunctions.get_matches_by_pid(pid,req.params.act)).sort((a, b) => b.match_starttime - a.match_starttime)
 
         let totalkills = 0
         let totaldeaths = 0
