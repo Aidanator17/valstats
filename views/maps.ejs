@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="/css/maps.css">
+    <title>Valorant Map Stats</title>
+</head>
+<body>
+    <div class="container">
+        <% maps.forEach(map => { %>
+            <div class="map-container">
+                <div class="map-header">
+                    <img src="/images/maps/<%= map.name %>.jpg" alt="<%= map.name %>">
+                    <h2><%= map.name %></h2>
+                </div>
+                <div class="map-stats">
+                    <div class="win-rates">
+                        <p>Attack Win %: <%= ((map.attk_wins / (map.attk_wins + map.def_wins)) * 100).toFixed(1) %>%</p>
+                        <p>Defense Win %: <%= ((map.def_wins / (map.attk_wins + map.def_wins)) * 100).toFixed(1) %>%</p>
+                    </div>
+                    <div class="play-rate">
+                        <p>Play Rate: <%= ((map.count / totalPlayCount) * 100).toFixed(1) %>%</p>
+                    </div>
+                </div>
+                <div class="map-comps">
+                    <h3>Top 3 Team Comps</h3>
+                    <% map.comps.slice(0, 3).forEach(comp => { %>
+                        <div class="comp">
+                            <% comp.agent_imgs.forEach(img => { %>
+                                <img src="<%= img %>" alt="Agent">
+                            <% }) %>
+                            <p>x<%= comp.count %></p>
+                        </div>
+                    <% }) %>
+                </div>
+            </div>
+        <% }) %>
+    </div>
+</body>
+</html>
