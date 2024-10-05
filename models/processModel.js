@@ -2199,7 +2199,6 @@ const processFunctions = {
     
         return episodes;
     },
-    
     reformatEpisodes: async function(data) {
         const result = [];
         let currentEpisode = null;
@@ -2234,6 +2233,16 @@ const processFunctions = {
         }
     
         return this.adjustLastEpisodeActs(result);
+    },
+    getHalfStats: async function(matches) {
+        let result = []
+        for (m in matches) {
+            let match_stats = {
+                
+            }
+            result.push(rounds)
+        }
+        return result
     }
 };
 
