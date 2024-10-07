@@ -35,6 +35,7 @@ const adminRoute = require("./routes/adminRoute");
 const agentRoute = require("./routes/agentRoute");
 const mapRoute = require("./routes/mapRoute");
 const miscRoute = require("./routes/miscRoute");
+const matchRoute = require("./routes/matchRoute");
 
 
 // Middleware for express
@@ -60,13 +61,14 @@ app.use("/admin", adminRoute);
 app.use("/agent", agentRoute);
 app.use("/map", mapRoute);
 app.use("/misc", miscRoute);
+app.use("/match", matchRoute);
 
 
 app.get('/', async (req, res) => {
   // const id = (await UserData.getBasic('Fish','4484')).puuid
   // console.log(await db.check_player(id))
 
-  res.redirect('/user/lookup')
+  res.render('index')
 })
 
 app.listen(port, '0.0.0.0', () => {

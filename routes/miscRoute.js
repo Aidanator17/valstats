@@ -14,7 +14,10 @@ async function createJSON(name, jsondata) {
 }
 
 router.get('/', async (req, res) => {
-    res.render('misc')
+    let matches = await DatabaseFunctions.mass_retrieve_comp()
+    await createJSON("half_stats.json",await processFunctions.getHalfStats(matches))
+    // res.render('misc')
+    res.redirect('/')
 })
 
 module.exports = router

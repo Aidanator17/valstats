@@ -49,7 +49,7 @@ const UserData = {
                 }
             }
         }
-        catch(err){
+        catch (err) {
             // console.log(err)
             return {
                 username: '404_error',
@@ -109,33 +109,41 @@ const UserData = {
 
     },
     getMatch: async function (matchid) {
-        const response = await fetch(`https://api.henrikdev.xyz/valorant/v2/match/${matchid}` + key, {
+        try {
+            const response = await fetch(`https://api.henrikdev.xyz/valorant/v2/match/${matchid}` + key, {
+                method: 'GET',
+                headers: {},
+            });
+            const data = await response.json();
+            if (data.errors){
+                throw new Error
+            }
+            return data
+        }
+        catch {
+            return undefined
+        }
+
+    },
+    getData: async function () {
+        const response = await fetch('https://api.henrikdev.xyz/valorant/v1/content' + key, {
             method: 'GET',
             headers: {},
         });
         const data = await response.json();
         return data
-
-    },
-    getData: async function () {
-    const response = await fetch('https://api.henrikdev.xyz/valorant/v1/content'+key, {
-        method: 'GET',
-        headers: {},
-    });
-    const data = await response.json();
-    return data
     },
     activeSeason: async function () {
-     const data = await this.getData()
-     let actsList = data['acts']
-     let currentAct = []
-     for (a in actsList){
-        if (actsList[a].isActive){
-            currentAct.push(actsList[a])
+        const data = await this.getData()
+        let actsList = data['acts']
+        let currentAct = []
+        for (a in actsList) {
+            if (actsList[a].isActive) {
+                currentAct.push(actsList[a])
+            }
         }
-     }
-    //  console.log(currentAct)
-     return currentAct
+        //  console.log(currentAct)
+        return currentAct
     }
 };
 

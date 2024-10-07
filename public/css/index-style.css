@@ -1,0 +1,77 @@
+/* General reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body styling */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Container for the entire page */
+.container {
+    max-width: 1200px;
+    text-align: center;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Header */
+header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* Container for buttons */
+.button-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    padding: 20px;
+}
+
+/* Styling for the buttons */
+.button {
+    text-decoration: none;
+    background-color: #007bff;
+    color: white;
+    padding: 15px 25px;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    transition: background-color 0.3s ease;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    min-width: 200px;
+    flex-grow: 1;
+    flex-basis: calc(33.333% - 40px); /* Ensures a 3-column layout */
+    margin: 10px;
+}
+
+/* Hover effect for buttons */
+.button:hover {
+    background-color: #0056b3;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+    .button {
+        flex-basis: calc(50% - 40px); /* 2-column layout for medium screens */
+    }
+}
+
+@media (max-width: 600px) {
+    .button {
+        flex-basis: calc(100% - 40px); /* Full-width layout for small screens */
+    }
+}

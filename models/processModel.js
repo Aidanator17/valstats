@@ -2235,12 +2235,97 @@ const processFunctions = {
         return this.adjustLastEpisodeActs(result);
     },
     getHalfStats: async function(matches) {
-        let result = []
+        let raw_result = []
         for (m in matches) {
             let match_stats = {
-                
+                id:matches[m]['data']['metadata']['matchid']
             }
-            result.push(rounds)
+            if (matches[m]['data']['teams']['red']['has_won']){
+                match_stats.matchWinner = 'Red'
+            }
+            else if (matches[m]['data']['teams']['blue']['has_won']){
+                match_stats.matchWinner = 'Blue'
+            }
+            else {
+                match_stats.matchWinner = '?'
+            }
+            let blueWins = 0
+            let redWins = 0
+            for (round in matches[m]['data']['rounds']) {
+                if (round == 12) {
+                    break
+                }
+                else if (matches[m]['data']['rounds'][round]['winning_team'] == 'Blue') {
+                    blueWins++
+                }
+                else {
+                    redWins++
+                }
+            }
+            if (blueWins == redWins){
+                continue
+            }
+            else if (blueWins > redWins){
+                match_stats.halfWinner = 'Blue'
+                match_stats.score = String(blueWins)+"-"+String(redWins)
+            }
+            else {
+                match_stats.halfWinner = 'Red'
+                match_stats.score = String(redWins)+"-"+String(blueWins)
+            }
+            raw_result.push(match_stats)
+        }
+        let result = [
+            {
+                score : '7-5',
+                count:0,
+                comebacks:0,
+                comeback_matches:[]
+            },
+            {
+                score : '8-4',
+                count:0,
+                comebacks:0,
+                comeback_matches:[]
+            },
+            {
+                score : '9-3',
+                count:0,
+                comebacks:0,
+                comeback_matches:[]
+            },
+            {
+                score : '10-2',
+                count:0,
+                comebacks:0,
+                comeback_matches:[]
+            },
+            {
+                score : '11-1',
+                count:0,
+                comebacks:0,
+                comeback_matches:[]
+            },
+            {
+                score : '12-0',
+                count:0,
+                comebacks:0,
+                comeback_matches:[]
+            },
+        ]
+        for (m in raw_result){
+            for (i in result){
+                if (result[i].score == raw_result[m]['score']){
+                    result[i].count++
+                    if (raw_result[m]['matchWinner'] != raw_result[m]['halfWinner']){
+                        result[i].comebacks++
+                        result[i].comeback_matches.push(raw_result[m].id)
+                    }
+                }
+            }
+        }
+        for (i in result){
+            result[i].comeback_percentage = Math.round((result[i].comebacks/result[i].count)*10000)/100
         }
         return result
     }
