@@ -36,6 +36,11 @@
                 </p>
             </div>
         </div>
+        <% if (UserInfo.filter){ %>
+            <div class="filterbutton">
+                <a href="/user/clearFilter %>">Clear Filter</a>
+            </div>
+            <% } %>
         <div class="stats">
             <h3>Stats (All Comp Matches)</h3>
             <div class="statgrid">
@@ -212,7 +217,7 @@
         </div>
         <div style="display: none;" id="agents-maps" class="agents-maps">
             <p class="agents-maps-item blank-item" data-row="0" data-col="0"></p>
-            <% let maps=UserInfo['maps_played']; for (m in Object.keys(UserInfo['agents'][0].maps)){ %>
+            <% let maps=UserInfo['maps_played']; if (UserInfo['agents'].length>0){ for (m in Object.keys(UserInfo['agents'][0].maps)){ %>
                 <p class="grid-item-title agents-maps-item" data-row="0" data-col="<%= maps.indexOf(UserInfo['maps_played'].find(obj=>
                     {
                     return obj.name === Object.keys(UserInfo['agents'][0].maps)[m]
@@ -264,7 +269,7 @@
                             <% }%>
 
                                 <% } %>
-                                    <% } %>
+                                    <% }} %>
         </div>
     </div>
     <div class="side-containers">

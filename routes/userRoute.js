@@ -96,6 +96,12 @@ router.get('/lookup', async (req, res) => {
 router.post('/lookup', async (req, res) => {
     res.redirect('/user/' + req.body.user + '/' + req.body.tag)
 })
+router.get('/clearFilter', async (req, res) => {
+    req.session.agent = undefined
+    req.session.extraUsername = undefined
+    req.session.extraTag = undefined
+    res.redirect('/user/lookup')
+})
 
 router.get('/:puuid', async (req, res) => {
     let data = await apiFunctions.getBasic_by_puuid(req.params.puuid)
@@ -103,7 +109,7 @@ router.get('/:puuid', async (req, res) => {
 })
 
 router.get('/:user/:tag', async (req, res) => {
-    const UserInfo = await processFunctions.get_user_data(req.params.user,req.params.tag,true)
+    const UserInfo = await processFunctions.get_user_data(req.params.user,req.params.tag,true,req.session.agent,req.session.extraUsername,req.session.extraTag)
     if (UserInfo) {
 
         // let jsonUser = JSON.parse(JSON.stringify(UserInfo))

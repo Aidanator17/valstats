@@ -318,17 +318,17 @@ async function formatComp(comps, team) {
             // console.log(typeof comps[c])
             const agents1 = [...comps[c].agents].sort();
             const agents2 = [...comp].sort();
-            
+
             // Check if they have the same length and elements
             const areEqual = agents1.length === agents2.length &&
-                             agents1.every((agent, index) => agent === agents2[index]);
-        
+                agents1.every((agent, index) => agent === agents2[index]);
+
             if (areEqual) {
                 // console.log(c)
                 return parseInt(c); // Return index if the arrays are the same
             }
         }
-        
+
         return {
             agents: comp,
             agent_imgs: comp_images,
@@ -353,12 +353,12 @@ function getAttkDefWins(match) {
             }
         }
         else if (r < 24) {
-                if (rounds[r]['winning_team'] == "Red") {
-                    defWins++
-                }
-                else {
-                    attkWins++
-                }
+            if (rounds[r]['winning_team'] == "Red") {
+                defWins++
+            }
+            else {
+                attkWins++
+            }
         }
         else if (isEven(r)) {
             if (rounds[r]['winning_team'] == "Red") {
@@ -1157,7 +1157,7 @@ const processFunctions = {
         // console.log(`Retrieved pickrates (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
         return maps
     },
-    get_user_data: async function (uN, tG, ifBatch) {
+    get_user_data: async function (uN, tG, ifBatch, agentFilter, userFilter, tagFilter) {
         let indent = `    `
         let topIndent = ``
         if (ifBatch) {
@@ -1382,11 +1382,38 @@ const processFunctions = {
                 UserInfo['matches'].push(await processFunctions.alterMatch(JSON.parse(real_matches[m]['match_info']), UserInfo['puuid'], false))
             }
             // createJSON('match.json', UserInfo['matches'][0])
-            for (m in UserInfo['matches']) {
-                if (UserInfo['matches'][m]['data']['metadata']['mode_id'] == 'competitive') {
-                    UserInfo.comp_matches.push(UserInfo['matches'][m])
+            if (agentFilter) {
+                UserInfo.filter = true
+                for (m in UserInfo['matches']) {
+                    if (UserInfo['matches'][m]['data']['metadata']['mode_id'] == 'competitive') {
+                        if (UserInfo['matches'][m]['data']['metadata']['agent'] == agentFilter) {
+                            UserInfo.comp_matches.push(UserInfo['matches'][m])
+                        }
+                    }
                 }
             }
+            else {
+                for (m in UserInfo['matches']) {
+                    if (UserInfo['matches'][m]['data']['metadata']['mode_id'] == 'competitive') {
+                        UserInfo.comp_matches.push(UserInfo['matches'][m])
+                    }
+                }
+            }
+
+            if (userFilter){
+                UserInfo.filter = true
+                let new_comp = []
+                for (m in UserInfo['comp_matches']) {
+                    for (u in UserInfo['comp_matches'][m]['data']['players']['all_players']) {
+                        if (UserInfo['comp_matches'][m]['data']['players']['all_players'][u]['name'] == userFilter && UserInfo['comp_matches'][m]['data']['players']['all_players'][u]['tag'] == tagFilter) {
+                            new_comp.push(UserInfo['comp_matches'][m])
+                        }
+                    }
+                }
+                UserInfo['comp_matches'] = new_comp
+            }
+
+
             for (m in UserInfo['comp_matches']) {
                 let userteam = ''
                 if (UserInfo.agents.length == 0) {
@@ -2057,7 +2084,7 @@ const processFunctions = {
 
                             }
                         }
-                        if (notFound){
+                        if (notFound) {
                             let newmap = {
                                 name: matches[m]['data']['metadata']['map'],
                                 attk_wins: 0,
@@ -2090,7 +2117,61 @@ const processFunctions = {
         }
         else {
             for (m in matches) {
-                    if (maps.length == 0) {
+                if (maps.length == 0) {
+                    let newmap = {
+                        name: matches[m]['data']['metadata']['map'],
+                        attk_wins: 0,
+                        def_wins: 0,
+                        comps: [],
+                        count: 1,
+                    }
+                    let rounds = getAttkDefWins(matches[m])
+                    newmap.attk_wins = rounds[0]
+                    newmap.def_wins = rounds[1]
+                    let comp = await formatComp(newmap.comps, matches[m]['data']['players']['red'])
+                    if (isNumber(comp)) {
+                        newmap.comps[comp].count++
+                    }
+                    else {
+                        newmap.comps.push(comp)
+                    }
+                    comp = await formatComp(newmap.comps, matches[m]['data']['players']['blue'])
+                    if (isNumber(comp)) {
+                        newmap.comps[comp].count++
+                    }
+                    else {
+                        newmap.comps.push(comp)
+                    }
+                    maps.push(newmap)
+                }
+                else {
+                    let notFound = true
+                    for (ma in maps) {
+                        if (maps[ma].name == matches[m]['data']['metadata']['map']) {
+                            notFound = false
+                            let rounds = getAttkDefWins(matches[m])
+                            maps[ma].attk_wins += rounds[0]
+                            maps[ma].def_wins += rounds[1]
+                            maps[ma].count++
+
+                            let comp = await formatComp(maps[ma].comps, matches[m]['data']['players']['red'])
+                            if (isNumber(comp)) {
+                                maps[ma].comps[comp].count++
+                            }
+                            else {
+                                maps[ma].comps.push(comp)
+                            }
+                            comp = await formatComp(maps[ma].comps, matches[m]['data']['players']['blue'])
+                            if (isNumber(comp)) {
+                                maps[ma].comps[comp].count++
+                            }
+                            else {
+                                maps[ma].comps.push(comp)
+                            }
+
+                        }
+                    }
+                    if (notFound) {
                         let newmap = {
                             name: matches[m]['data']['metadata']['map'],
                             attk_wins: 0,
@@ -2117,72 +2198,18 @@ const processFunctions = {
                         }
                         maps.push(newmap)
                     }
-                    else {
-                        let notFound = true
-                        for (ma in maps) {
-                            if (maps[ma].name == matches[m]['data']['metadata']['map']) {
-                                notFound = false
-                                let rounds = getAttkDefWins(matches[m])
-                                maps[ma].attk_wins += rounds[0]
-                                maps[ma].def_wins += rounds[1]
-                                maps[ma].count++
-
-                                let comp = await formatComp(maps[ma].comps, matches[m]['data']['players']['red'])
-                                if (isNumber(comp)) {
-                                    maps[ma].comps[comp].count++
-                                }
-                                else {
-                                    maps[ma].comps.push(comp)
-                                }
-                                comp = await formatComp(maps[ma].comps, matches[m]['data']['players']['blue'])
-                                if (isNumber(comp)) {
-                                    maps[ma].comps[comp].count++
-                                }
-                                else {
-                                    maps[ma].comps.push(comp)
-                                }
-
-                            }
-                        }
-                        if (notFound){
-                            let newmap = {
-                                name: matches[m]['data']['metadata']['map'],
-                                attk_wins: 0,
-                                def_wins: 0,
-                                comps: [],
-                                count: 1,
-                            }
-                            let rounds = getAttkDefWins(matches[m])
-                            newmap.attk_wins = rounds[0]
-                            newmap.def_wins = rounds[1]
-                            let comp = await formatComp(newmap.comps, matches[m]['data']['players']['red'])
-                            if (isNumber(comp)) {
-                                newmap.comps[comp].count++
-                            }
-                            else {
-                                newmap.comps.push(comp)
-                            }
-                            comp = await formatComp(newmap.comps, matches[m]['data']['players']['blue'])
-                            if (isNumber(comp)) {
-                                newmap.comps[comp].count++
-                            }
-                            else {
-                                newmap.comps.push(comp)
-                            }
-                            maps.push(newmap)
-                        }
-                    }
                 }
-            
+            }
+
         }
-        for (m in maps){
+        for (m in maps) {
             maps[m].comps.sort(compare_count)
         }
         return maps
     },
-    adjustLastEpisodeActs: async function(episodes) {
+    adjustLastEpisodeActs: async function (episodes) {
         const lastEpisode = episodes[episodes.length - 1];
-    
+
         if (lastEpisode.acts.length > 0) {
             // Check if Act 1 is active
             if (lastEpisode.acts[0].isActive) {
@@ -2196,13 +2223,13 @@ const processFunctions = {
             }
             // If Act 3 is active, we do nothing as all acts should be present
         }
-    
+
         return episodes;
     },
-    reformatEpisodes: async function(data) {
+    reformatEpisodes: async function (data) {
         const result = [];
         let currentEpisode = null;
-    
+
         // Iterate through the data
         for (let i = data.length - 1; i >= 0; i--) {
             if (data[i].name.startsWith("EPISODE")) {
@@ -2231,19 +2258,19 @@ const processFunctions = {
                 }
             }
         }
-    
+
         return this.adjustLastEpisodeActs(result);
     },
-    getHalfStats: async function(matches) {
+    getHalfStats: async function (matches) {
         let raw_result = []
         for (m in matches) {
             let match_stats = {
-                id:matches[m]['data']['metadata']['matchid']
+                id: matches[m]['data']['metadata']['matchid']
             }
-            if (matches[m]['data']['teams']['red']['has_won']){
+            if (matches[m]['data']['teams']['red']['has_won']) {
                 match_stats.matchWinner = 'Red'
             }
-            else if (matches[m]['data']['teams']['blue']['has_won']){
+            else if (matches[m]['data']['teams']['blue']['has_won']) {
                 match_stats.matchWinner = 'Blue'
             }
             else {
@@ -2262,70 +2289,70 @@ const processFunctions = {
                     redWins++
                 }
             }
-            if (blueWins == redWins){
+            if (blueWins == redWins) {
                 continue
             }
-            else if (blueWins > redWins){
+            else if (blueWins > redWins) {
                 match_stats.halfWinner = 'Blue'
-                match_stats.score = String(blueWins)+"-"+String(redWins)
+                match_stats.score = String(blueWins) + "-" + String(redWins)
             }
             else {
                 match_stats.halfWinner = 'Red'
-                match_stats.score = String(redWins)+"-"+String(blueWins)
+                match_stats.score = String(redWins) + "-" + String(blueWins)
             }
             raw_result.push(match_stats)
         }
         let result = [
             {
-                score : '7-5',
-                count:0,
-                comebacks:0,
-                comeback_matches:[]
+                score: '7-5',
+                count: 0,
+                comebacks: 0,
+                comeback_matches: []
             },
             {
-                score : '8-4',
-                count:0,
-                comebacks:0,
-                comeback_matches:[]
+                score: '8-4',
+                count: 0,
+                comebacks: 0,
+                comeback_matches: []
             },
             {
-                score : '9-3',
-                count:0,
-                comebacks:0,
-                comeback_matches:[]
+                score: '9-3',
+                count: 0,
+                comebacks: 0,
+                comeback_matches: []
             },
             {
-                score : '10-2',
-                count:0,
-                comebacks:0,
-                comeback_matches:[]
+                score: '10-2',
+                count: 0,
+                comebacks: 0,
+                comeback_matches: []
             },
             {
-                score : '11-1',
-                count:0,
-                comebacks:0,
-                comeback_matches:[]
+                score: '11-1',
+                count: 0,
+                comebacks: 0,
+                comeback_matches: []
             },
             {
-                score : '12-0',
-                count:0,
-                comebacks:0,
-                comeback_matches:[]
+                score: '12-0',
+                count: 0,
+                comebacks: 0,
+                comeback_matches: []
             },
         ]
-        for (m in raw_result){
-            for (i in result){
-                if (result[i].score == raw_result[m]['score']){
+        for (m in raw_result) {
+            for (i in result) {
+                if (result[i].score == raw_result[m]['score']) {
                     result[i].count++
-                    if (raw_result[m]['matchWinner'] != raw_result[m]['halfWinner']){
+                    if (raw_result[m]['matchWinner'] != raw_result[m]['halfWinner']) {
                         result[i].comebacks++
                         result[i].comeback_matches.push(raw_result[m].id)
                     }
                 }
             }
         }
-        for (i in result){
-            result[i].comeback_percentage = Math.round((result[i].comebacks/result[i].count)*10000)/100
+        for (i in result) {
+            result[i].comeback_percentage = Math.round((result[i].comebacks / result[i].count) * 10000) / 100
         }
         return result
     }

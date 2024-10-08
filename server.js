@@ -36,6 +36,7 @@ const agentRoute = require("./routes/agentRoute");
 const mapRoute = require("./routes/mapRoute");
 const miscRoute = require("./routes/miscRoute");
 const matchRoute = require("./routes/matchRoute");
+const userMatchSearch = require("./routes/userMatchSearch");
 
 
 // Middleware for express
@@ -62,6 +63,7 @@ app.use("/agent", agentRoute);
 app.use("/map", mapRoute);
 app.use("/misc", miscRoute);
 app.use("/match", matchRoute);
+app.use("/usermatchsearch", userMatchSearch);
 
 
 app.get('/', async (req, res) => {

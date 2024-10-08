@@ -1,0 +1,57 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Matches Search</title>
+    <link rel="stylesheet" href="/css/userMatchesSearch.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Search Player's Matches</h1>
+        </header>
+        <form action="/userMatchSearch/lookup" method="post" class="search-form">
+            <div class="input-group">
+                <!-- Username and tag input for the main player -->
+                <input type="text" name="username" placeholder="Username" required>
+                <input type="text" name="tag" placeholder="Tag" required>
+            </div>
+
+            <!-- Filter by agent -->
+            <div class="filter-group">
+                <label for="agent">Filter by Agent:</label>
+                <select name="agent" id="agent">
+                    <option value="">Any</option>
+                    <!-- Add all Valorant agent options here -->
+                     <% for (agent in agents){ %>
+                    <option value="<%= agents[agent] %>"><%= agents[agent] %></option>
+                    <% } %>
+                    <!-- ... other agents ... -->
+                </select>
+            </div>
+
+            <!-- Additional players input area -->
+            <div id="additional-players-container">
+                <button type="button" id="add-player-btn">Add Another Player</button>
+            </div>
+
+            <!-- Submit button -->
+            <button type="submit" class="submit-btn">Search Matches</button>
+        </form>
+    </div>
+
+    <!-- Template for additional player inputs -->
+    <template id="additional-player-template">
+        <div class="additional-player">
+            <input type="text" name="extraUsername" placeholder="Username">
+            <input type="text" name="extraTag" placeholder="Tag">
+        </div>
+    </template>
+
+    <script>
+        let count = 0;
+        document.getElementById('add-player-btn').addEventListener('click', function() {
+            const template = document.getElementById('additional-player-template').content.cloneNode(true);
+            document.getElementById('additional-players-container').insertBefore(template, document.getElementById('add-player-btn'));
+        });
+    </script>
+</body>
