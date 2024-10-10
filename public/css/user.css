@@ -79,7 +79,7 @@ body, html {
 }
 #map-grid {
   display: grid;
-  grid-template-columns: auto auto auto auto;
+  grid-template-columns: auto auto auto auto auto;
   justify-items: start;
 }
 .map-grid-item {

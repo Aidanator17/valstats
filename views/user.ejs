@@ -324,6 +324,7 @@
             <div id="map-grid">
                 <p class="map-grid-item grid-item-title">Map</p>
                 <p class="map-grid-item grid-item-title">Count</p>
+                <p class="map-grid-item grid-item-title">W-L</p>
                 <p class="map-grid-item grid-item-title">Win%</p>
                 <p class="map-grid-item grid-item-title">KD</p>
                 <% for (a in UserInfo.maps_played){ if (UserInfo.maps_played[a].count > 0){ %>
@@ -332,6 +333,11 @@
                     </p>
                     <p class="map-grid-item">
                         <%= UserInfo.maps_played[a].count %>
+                    </p>
+                    <p class="map-grid-item">
+                        <% if (UserInfo.maps_played[a].count>0){ %>
+                            <%= UserInfo.maps_played[a].wins %>W - <%= UserInfo.maps_played[a].losses %>L
+                                <% }else{ %>N/A<% } %>
                     </p>
                     <p class="map-grid-item">
                         <% if (UserInfo.maps_played[a].count>0){ %>

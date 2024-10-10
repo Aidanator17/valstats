@@ -112,9 +112,8 @@ router.get('/:user/:tag', async (req, res) => {
     const UserInfo = await processFunctions.get_user_data(req.params.user,req.params.tag,true,req.session.agent,req.session.extraUsername,req.session.extraTag)
     if (UserInfo) {
 
-        // let jsonUser = JSON.parse(JSON.stringify(UserInfo))
-        // jsonUser.matches = undefined
-        // createJSON("user.json", jsonUser)
+        createJSON("kills.json", await processFunctions.getRoundKills(UserInfo.comp_matches,UserInfo.puuid))
+
         res.render('user', {
             UserInfo,
             title: UserInfo['username'],

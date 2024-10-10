@@ -114,6 +114,7 @@ const UserData = {
                 method: 'GET',
                 headers: {},
             });
+            // console.log(response)
             const data = await response.json();
             if (data.errors){
                 throw new Error
@@ -144,6 +145,14 @@ const UserData = {
         }
         //  console.log(currentAct)
         return currentAct
+    },
+    getStoredComp: async function (region,name,tag) {
+        const response = await fetch(`https://api.henrikdev.xyz/valorant/v1/stored-matches/${region}/${name}/${tag}` + key + "&modes_api=competitive", {
+            method: 'GET',
+            headers: {},
+        });
+        const data = await response.json();
+        return data
     }
 };
 

@@ -34,13 +34,28 @@ const DatabaseFunctions = {
         })
         return createPlayer
     },
-    get_Player_Matches: async function (pid) {
-        const playerMatches = await prisma.players_matches.findMany({
-            where: {
-                player_id: pid
-            }
-        })
-        return playerMatches
+    get_Player_Matches: async function (pid, puuid) {
+        if (puuid) {
+            const p = await prisma.players.findMany({
+                where:{
+                    puuid
+                }
+            })
+            const playerMatches = await prisma.players_matches.findMany({
+                where: {
+                    player_id: p[0].id
+                }
+            })
+            return playerMatches
+        }
+        if (pid) {
+            const playerMatches = await prisma.players_matches.findMany({
+                where: {
+                    player_id: pid
+                }
+            })
+            return playerMatches
+        }
     },
     get_Player_Act_Matches: async function (pid, act) {
         const playerMatches = await prisma.playerMatchesWithAct.findMany({
@@ -129,22 +144,24 @@ const DatabaseFunctions = {
         catch (error) {
             console.error('Error creating matches:', error);
         }
-        try {
-            let userinput = []
-            for (match in unfiltered_matches) {
-                userinput.push({
-                    player_id: pid,
-                    matchid: unfiltered_matches[match],
+        if (pid) {
+            try {
+                let userinput = []
+                for (match in unfiltered_matches) {
+                    userinput.push({
+                        player_id: pid,
+                        matchid: unfiltered_matches[match],
+                    })
+                }
+                // createJSON('userinput',userinput)
+                const newPlayersMatches = await prisma.players_matches.createMany({
+                    data: userinput,
+                    skipDuplicates: true
                 })
             }
-            // createJSON('userinput',userinput)
-            const newPlayersMatches = await prisma.players_matches.createMany({
-                data: userinput,
-                skipDuplicates: true
-            })
-        }
-        catch (error) {
-            console.error('Error creating player-matches:', error);
+            catch (error) {
+                console.error('Error creating player-matches:', error);
+            }
         }
 
 
@@ -291,6 +308,18 @@ const DatabaseFunctions = {
         end = Date.now()
         // console.log(`Formatted comp matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
         return matches
+    },
+    get_old_match_ids: async function () {
+        const all_matches = await prisma.matches.findMany({
+            select: {
+                match_id: true
+            }
+        })
+
+
+
+        // await createJSON('mass_retrieve.json',all_matches)
+        return all_matches
     }
 
 };

@@ -1400,7 +1400,7 @@ const processFunctions = {
                 }
             }
 
-            if (userFilter){
+            if (userFilter) {
                 UserInfo.filter = true
                 let new_comp = []
                 for (m in UserInfo['comp_matches']) {
@@ -2355,6 +2355,49 @@ const processFunctions = {
             result[i].comeback_percentage = Math.round((result[i].comebacks / result[i].count) * 10000) / 100
         }
         return result
+    },
+    getRoundKills: async function (matches, puuid) {
+        let kills = {
+            '3': {
+                count: 0
+            },
+            '4': {
+                count: 0
+            },
+            '5': {
+                count: 0
+            },
+            '6': {
+                count: 0
+            },
+            '7': {
+                count: 0
+            },
+        }
+
+        for (m in matches) {
+            for (r in matches[m]['data']['rounds']) {
+                for (p in matches[m]['data']['rounds'][r]['player_stats']) {
+                    if (matches[m]['data']['rounds'][r]['player_stats'][p]['player_puuid'] == puuid) {
+                        if (matches[m]['data']['rounds'][r]['player_stats'][p]['kills'] < 3) {
+                            continue
+                        }
+                        else {
+                            try {
+                                kills[String(matches[m]['data']['rounds'][r]['player_stats'][p]['kills'])].count++
+                            }
+                            catch {
+                                kills[String(matches[m]['data']['rounds'][r]['player_stats'][p]['kills'])] = {
+                                    count: 1
+                                }
+                            }
+                        }
+                        break
+                    }
+                }
+            }
+        }
+        return kills
     }
 };
 

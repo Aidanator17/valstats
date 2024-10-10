@@ -53,10 +53,12 @@ router.post('/lookup', async (req, res) => {
     let mainUser = await apiFunctions.getBasic(req.body.username,req.body.tag)
     if (req.body.agent){
         req.session.agent = req.body.agent
+        console.log(`Filter Search Agent: ${req.session.agent}`)
     }
     if (req.body.extraUsername){
         req.session.extraUsername = req.body.extraUsername
         req.session.extraTag = req.body.extraTag
+        console.log(`Filter Search User: ${req.session.extraUsername}#${req.session.extraTag}`)
     }
     res.redirect('/user/'+req.body.username+'/'+req.body.tag)
 })
