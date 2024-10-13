@@ -254,3 +254,11 @@ body, html {
 .tab:hover {
   background-color: #0056b3;
 }
+#kills-grid {
+  display: grid;
+  grid-template-columns: auto auto auto auto auto;
+  justify-items: center;
+}
+.kills-grid-item {
+  padding-bottom: 10px;
+}

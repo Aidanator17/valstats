@@ -378,6 +378,20 @@
                     <% } %>
             </div>
         </div>
+        <div class="side-container">
+            <div id="kills-grid">
+                <p class="kills-grid-item grid-item-title">3Ks</p>
+                <p class="kills-grid-item grid-item-title">4Ks</p>
+                <p class="kills-grid-item grid-item-title">5Ks</p>
+                <p class="kills-grid-item grid-item-title">6Ks</p>
+                <p class="kills-grid-item grid-item-title">7Ks</p>
+                <% for (let k = 3; k < 8; k++){ %>
+                    <p class="kills-grid-item">
+                        <%= UserInfo.roundKills[String(k)].count %>
+                    </p>
+                    <% } %>
+                </div>
+            </div>
     </div>
     <script>
         document.querySelectorAll('.agents-maps-item').forEach(item => {
