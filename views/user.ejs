@@ -392,6 +392,28 @@
                     <% } %>
                 </div>
             </div>
+            <div class="side-container">
+                <div id="actStats-grid">
+                    <p class="actStats-grid-item grid-item-title">Act</p>
+                    <p class="actStats-grid-item grid-item-title">Play Count</p>
+                    <p class="actStats-grid-item grid-item-title">Win%</p>
+                    <p class="actStats-grid-item grid-item-title">KD</p>
+                    <% for (a in UserInfo.episodeStats){ %>
+                        <p class="actStats-grid-item">
+                           <a style="color: #000000; text-decoration: none;" href="/user-by-act/<%= UserInfo.username %>%>/<%= UserInfo.tag %>/<%= UserInfo.episodeStats[a].act %>"><%= UserInfo.episodeStats[a].name %></a>
+                        </p>
+                        <p class="actStats-grid-item">
+                            <%= UserInfo.episodeStats[a].count %>
+                        </p>
+                        <p class="actStats-grid-item">
+                            <%= Math.round((UserInfo.episodeStats[a].wins/(UserInfo.episodeStats[a].wins+UserInfo.episodeStats[a].losses))*10000)/100 %>%
+                        </p>
+                        <p class="actStats-grid-item">
+                            <%= Math.round((UserInfo.episodeStats[a].kills/UserInfo.episodeStats[a].deaths)*100)/100 %>
+                        </p>
+                        <% } %>
+                    </div>
+                </div>
     </div>
     <script>
         document.querySelectorAll('.agents-maps-item').forEach(item => {

@@ -262,3 +262,10 @@ body, html {
 .kills-grid-item {
   padding-bottom: 10px;
 }
+#actStats-grid {
+  display: grid;
+  grid-template-columns: auto auto auto auto;
+}
+.actStats-grid-item {
+  padding-bottom: 10px;
+}

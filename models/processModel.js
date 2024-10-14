@@ -1304,6 +1304,10 @@ const processFunctions = {
             UserInfo.teammates = await UserFunctions.getTeammates(UserInfo['comp_matches'],UserInfo['puuid'])
             UserInfo.stats.overall = await UserFunctions.getTotalStats(UserInfo['comp_matches'],UserInfo['puuid'])
             UserInfo.stats.past5 = await UserFunctions.getHalfStats(UserInfo['comp_matches'].slice(0,5),UserInfo['puuid'])
+            const unfEps = await apiFunctions.getData()
+            const Eps = await this.reformatEpisodes(unfEps['acts'])
+            UserInfo.episodeStats = await UserFunctions.getActStats(UserInfo['comp_matches'],UserInfo['puuid'],Eps)
+            // await createJSON('actStats.json', UserInfo.episodeStats)
 
             let reformatTeammates = []
             for (pl in UserInfo.teammates) {
@@ -1328,6 +1332,7 @@ const processFunctions = {
             }
             UserInfo.maps_played = reformatMaps
             UserInfo.maps_played.sort(compare_count)
+            
 
             // createJSON('teammates.json', UserInfo.teammates)
             // console.log(past5wins,past5losses)

@@ -6,6 +6,8 @@ const fs = require('fs');
 const apiFunctions = require('./valAPI.js');
 const processFunctions = require("./processModel")
 const DatabaseFunctions = require("./databaseModel");
+const { name } = require('ejs');
+const { kill } = require('process');
 
 
 async function createJSON(name, jsondata) {
@@ -44,6 +46,28 @@ function winCheckNum(match, puuid) {
                 }
                 else {
                     return 0
+                }
+            }
+        }
+    }
+}
+function lossCheckNum(match, puuid) {
+    for (p in match['data']['players']['all_players']) {
+        if (match['data']['players']['all_players'][p]['puuid'] == puuid) {
+            if (match['data']['players']['all_players'][p]['team'] == 'Red') {
+                if (match['data']['teams']['red']['has_won']) {
+                    return 0
+                }
+                else {
+                    return 1
+                }
+            }
+            else {
+                if (match['data']['teams']['blue']['has_won']) {
+                    return 0
+                }
+                else {
+                    return 1
                 }
             }
         }
@@ -499,12 +523,100 @@ const UserFunctions = {
         }
         return teammates
     },
-    getActStats: async function (matches, puuid) {
-        const unfEps = await apiFunctions.getData()
-        console.log(processFunctions.reformatEpisodes)
-        console.log(processFunctions)
-        const Eps = await processFunctions.reformatEpisodes(unfEps['acts'])
-        await createJSON('episodes.json',Eps)
+    getActStats: async function (matches, puuid, acts) {
+        let actStats = []
+        for (m in matches) {
+            for (a in acts) {
+                if (acts[a].name == "Closed Beta") {
+                    if (matches[m]['data']['metadata']['season_id'] == acts[a]) {
+                        if (actStats.length == 0) {
+                            actStats.push({
+                                act: acts[a].id,
+                                name: acts[a].name,
+                                count: 1,
+                                wins: winCheckNum(matches[m], puuid),
+                                losses: lossCheckNum(matches[m], puuid),
+                                kills: matches[m]['data']['metadata']['kills'],
+                                deaths: matches[m]['data']['metadata']['deaths'],
+                                assists: matches[m]['data']['metadata']['assists'],
+                            })
+                        }
+                        else {
+                            let found = false
+                            for (act in actStats) {
+                                if (actStats[act].act == acts[a].id) {
+                                    actStats[act].count++
+                                    actStats[act].wins += winCheckNum(matches[m], puuid)
+                                    actStats[act].losses += lossCheckNum(matches[m], puuid)
+                                    actStats[act].kills += matches[m]['data']['metadata']['kills']
+                                    actStats[act].deaths += matches[m]['data']['metadata']['deaths']
+                                    actStats[act].assists += matches[m]['data']['metadata']['assists']
+                                    found = true
+                                    break
+                                }
+                            }
+                            if (!found) {
+                                actStats.push({
+                                    act: acts[a].id,
+                                    count: 1,
+                                    wins: winCheckNum(matches[m], puuid),
+                                    losses: lossCheckNum(matches[m], puuid),
+                                    kills: matches[m]['data']['metadata']['kills'],
+                                    deaths: matches[m]['data']['metadata']['deaths'],
+                                    assists: matches[m]['data']['metadata']['assists'],
+                                })
+                            }
+                        }
+                    }
+                }
+                else {
+                    for (act in acts[a].acts) {
+                        if (matches[m]['data']['metadata']['season_id'] == acts[a].acts[act].id) {
+                            if (actStats.length == 0) {
+                                actStats.push({
+                                    act: acts[a].acts[act].id,
+                                    name: acts[a].name + " - " + acts[a].acts[act].name,
+                                    count: 1,
+                                    wins: winCheckNum(matches[m], puuid),
+                                    losses: lossCheckNum(matches[m], puuid),
+                                    kills: matches[m]['data']['metadata']['kills'],
+                                    deaths: matches[m]['data']['metadata']['deaths'],
+                                    assists: matches[m]['data']['metadata']['assists'],
+                                })
+                            }
+                            else {
+                                let found = false
+                                for (ac in actStats) {
+                                    if (actStats[ac].act == acts[a].acts[act].id) {
+                                        actStats[ac].count++
+                                        actStats[ac].wins += winCheckNum(matches[m], puuid)
+                                        actStats[ac].losses += lossCheckNum(matches[m], puuid)
+                                        actStats[ac].kills += matches[m]['data']['metadata']['kills']
+                                        actStats[ac].deaths += matches[m]['data']['metadata']['deaths']
+                                        actStats[ac].assists += matches[m]['data']['metadata']['assists']
+                                        found = true
+                                        break
+                                    }
+                                }
+                                if (!found) {
+                                    actStats.push({
+                                        act: acts[a].acts[act].id,
+                                        name: acts[a].name + " - " + acts[a].acts[act].name,
+                                        count: 1,
+                                        wins: winCheckNum(matches[m], puuid),
+                                        losses: lossCheckNum(matches[m], puuid),
+                                        kills: matches[m]['data']['metadata']['kills'],
+                                        deaths: matches[m]['data']['metadata']['deaths'],
+                                        assists: matches[m]['data']['metadata']['assists'],
+                                    })
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return actStats
     }
 };
 
