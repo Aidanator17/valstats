@@ -4,6 +4,7 @@ const apiFunctions = require('../models/valAPI.js');
 const fs = require('fs');
 const DatabaseFunctions = require("../models/databaseModel");
 const processFunctions = require("../models/processModel")
+const UserFunctions = require("../models/userModel.js")
 
 async function createJSON(name, jsondata) {
     fs.writeFile('./extra-files/' + name, JSON.stringify(jsondata), function (err) {
@@ -73,6 +74,7 @@ function winCheckNum(match, puuid) {
 
 
 router.get('/', async (req, res) => {
+    await UserFunctions.getActStats()
     res.redirect('/user/lookup')
 })
 

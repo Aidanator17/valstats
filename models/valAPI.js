@@ -137,6 +137,7 @@ const UserData = {
     activeSeason: async function () {
         const data = await this.getData()
         let actsList = data['acts']
+        // console.log(actsList)
         let currentAct = []
         for (a in actsList) {
             if (actsList[a].isActive) {
