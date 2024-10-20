@@ -291,7 +291,7 @@ const DatabaseFunctions = {
             return matches
         }
     },
-    getCompMatchNum: async function() {
+    getCompMatchNum: async function () {
         const totalMatches = await prisma.matches.count({
             where: {
                 match_type: 'competitive'
@@ -434,7 +434,7 @@ const DatabaseFunctions = {
             console.log(indent + `Retrieved ${matches.length} matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
         }
         for (let a of agentList) {
-            console.log(indent + `Updating ${a}`)
+            // console.log(indent + `Updating ${a}`)
             start = Date.now()
             for (let e of Eps) {
                 if (e.name == "Closed Beta") {
@@ -455,7 +455,7 @@ const DatabaseFunctions = {
                             })
                         } else {
                             await DatabaseFunctions.initAgentData(a, JSON.stringify(agentData[0]), e.id)
-                            console.log(indent + 'New row added!')
+                            console.log(indent + `New row added! (${a})`)
                         }
                     }
                 } else {
@@ -477,52 +477,80 @@ const DatabaseFunctions = {
                                 })
                             } else {
                                 await DatabaseFunctions.initAgentData(a, JSON.stringify(agentData[0]), act.id)
-                                console.log(indent + 'New row added!')
+                                console.log(indent + `New row added! (${a})`)
                             }
                         }
                     }
                 }
             }
             end = Date.now()
-            console.log(indent + `Done (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+            // console.log(indent + `Done (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
         }
         end = Date.now()
         console.log(`AGENT DATA UPDATED (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
     },
-    getMassAgentData:async function (act){
-        if (act){
+    getMassAgentData: async function (act) {
+        if (act) {
             const data = await prisma.mass_agents.findUnique({
-                where:{
+                where: {
                     act
                 }
             })
             return JSON.parse(data.data)
-        }
-        else {
+        } else {
             let act = 'all'
             const data = await prisma.mass_agents.findUnique({
-                where:{
+                where: {
                     act
                 }
             })
             return JSON.parse(data.data)
         }
     },
-    updateMassAgentData:async function (matches,Eps,get_all_agent_stats){
+    updateMassAgentData: async function (matches, Eps, get_all_agent_stats) {
+        console.log('UPDATING MASS AGENT DATA')
+        let start = Date.now()
+        let og = Date.now()
+        let end
         const currentData = await prisma.mass_agents.findMany({
-            select:{
-                act:true
+            select: {
+                act: true
             }
         })
+        end = Date.now()
+        console.log(indent + `Retrieved old data (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
 
-        
+
+        start = Date.now()
         for (let e of Eps) {
             if (e.name == "Closed Beta") {
                 let agentData = await get_all_agent_stats(matches, e.id)
-                    if (currentData.some(item => item.act === e.id)) {
+                if (currentData.some(item => item.act === e.id)) {
+                    await prisma.mass_agents.update({
+                        where: {
+                            act: e.id
+                        },
+                        data: {
+                            data: JSON.stringify(agentData)
+                        }
+                    })
+                } else {
+                    await prisma.mass_agents.create({
+                        data: {
+                            data: JSON.stringify(agentData),
+                            act: e.id
+                        }
+                    })
+                    console.log(indent + 'New act added!')
+                }
+
+            } else {
+                for (let act of e.acts) {
+                    let agentData = await get_all_agent_stats(matches, act.id)
+                    if (currentData.some(item => item.act === act.id)) {
                         await prisma.mass_agents.update({
                             where: {
-                                act:e.id
+                                act: act.id
                             },
                             data: {
                                 data: JSON.stringify(agentData)
@@ -530,48 +558,33 @@ const DatabaseFunctions = {
                         })
                     } else {
                         await prisma.mass_agents.create({
-                            data:{
-                                data:JSON.stringify(agentData),
-                                act:e.id
+                            data: {
+                                data: JSON.stringify(agentData),
+                                act: act.id
                             }
                         })
                         console.log(indent + 'New act added!')
                     }
-                
-            } else {
-                for (let act of e.acts) {
-                    let agentData = await get_all_agent_stats(matches, act.id)
-                        if (currentData.some(item => item.act === act.id)) {
-                            await prisma.mass_agents.update({
-                                where: {
-                                    act:act.id
-                                },
-                                data: {
-                                    data: JSON.stringify(agentData)
-                                }
-                            })
-                        } else {
-                            await prisma.mass_agents.create({
-                                data:{
-                                    data:JSON.stringify(agentData),
-                                    act:act.id
-                                }
-                            })
-                            console.log(indent + 'New act added!')
-                        }
-                    
+
                 }
             }
         }
+        end = Date.now()
+        console.log(indent + `Updated act-specific data (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+        
+        start = Date.now()
         let agentData = await get_all_agent_stats(matches)
         await prisma.mass_agents.update({
             where: {
-                act:'all'
+                act: 'all'
             },
             data: {
                 data: JSON.stringify(agentData)
             }
         })
+        end = Date.now()
+        console.log(indent + `Updated all act data (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+        console.log(indent + `MASS AGENT DATA UPDATED (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
 
     },
     getMapPicks: async function (map) {
@@ -616,7 +629,7 @@ const DatabaseFunctions = {
             return final
         }
     },
-    getMapPicksByAct: async function (act,map) {
+    getMapPicksByAct: async function (act, map) {
         if (map) {
             const data = await prisma.map_picks.findMany({
                 where: {
@@ -679,13 +692,13 @@ const DatabaseFunctions = {
         let og = Date.now()
         let end
         const currentData = await prisma.map_picks.findMany({
-            select:{
-                map:true,
-                count:true,
-                act:true
+            select: {
+                map: true,
+                count: true,
+                act: true
             }
         })
-        for (let data of currentData){
+        for (let data of currentData) {
             data.count = 0
         }
         end = Date.now()
@@ -701,7 +714,7 @@ const DatabaseFunctions = {
                     map: match.data.metadata.map,
                     count: 1,
                     act: match.data.metadata.season_id,
-                    new:true
+                    new: true
                 })
             }
         }
@@ -709,19 +722,18 @@ const DatabaseFunctions = {
         console.log(indent + `Updated new count values (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
 
         start = Date.now()
-        for (let data of currentData){
-            if (data.new){
+        for (let data of currentData) {
+            if (data.new) {
                 delete data.new
                 await prisma.map_picks.create({
                     data
                 })
-            }
-            else {
+            } else {
                 await prisma.map_picks.update({
-                    where:{
-                        map_act:{
-                            map:data.map,
-                            act:data.act
+                    where: {
+                        map_act: {
+                            map: data.map,
+                            act: data.act
                         }
                     },
                     data
@@ -731,6 +743,183 @@ const DatabaseFunctions = {
         end = Date.now()
         console.log(indent + `Database updated (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
         console.log(`MAP PICK DATA UPDATED (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
+
+    },
+    getMapStats: async function (act, map) {
+        if (map) {
+            if (act) {
+                let final = []
+                const data = await prisma.map_stats.findMany({
+                    where: {
+                        act,
+                        map
+                    },
+                    select: {
+                        data: true
+                    }
+                })
+                for (let m of data) {
+                    final.push(JSON.parse(m.data))
+                }
+                return final
+            } else {
+                let act = 'all'
+                let final = []
+                const data = await prisma.map_stats.findMany({
+                    where: {
+                        act,
+                        map
+                    },
+                    select: {
+                        data: true
+                    }
+                })
+                for (let m of data) {
+                    final.push(JSON.parse(m.data))
+                }
+                return final
+            }
+        } else {
+            if (act) {
+                let final = []
+                const data = await prisma.map_stats.findMany({
+                    where: {
+                        act
+                    },
+                    select: {
+                        data: true
+                    }
+                })
+                for (let m of data) {
+                    final.push(JSON.parse(m.data))
+                }
+                return final
+            } else {
+                let act = 'all'
+                let final = []
+                const data = await prisma.map_stats.findMany({
+                    where: {
+                        act
+                    },
+                    select: {
+                        data: true
+                    }
+                })
+                for (let m of data) {
+                    final.push(JSON.parse(m.data))
+                }
+                return final
+            }
+        }
+    },
+    updateMapStats: async function (matches, Eps, get_map_stats) {
+        console.log('UPDATING MAP STATS DATA')
+        let start = Date.now()
+        let og = Date.now()
+        let end
+        const currentData = await prisma.map_stats.findMany({
+            select: {
+                map:true,
+                act:true
+            }
+        })
+        console.log(indent + `Retrieved old data (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+        end = Date.now()
+
+        start = Date.now()
+        for (let e of Eps) {
+            if (e.name == "Closed Beta") {
+                let mapData = await get_map_stats(matches, e.id)
+                if (mapData.length > 0) {
+                    for (let map of mapData) {
+                        if (currentData.some(item => item.map === map.name && item.act === e.id)) {
+                            await prisma.map_stats.update({
+                                where: {
+                                    map_act: {
+                                        map: map.name,
+                                        act: e.id
+                                    }
+                                },
+                                data: {
+                                    data: JSON.stringify(map)
+                                }
+                            })
+                        } else {
+                            await prisma.map_stats.create({
+                                data:{
+                                    map:map.name,
+                                    data:JSON.stringify(map),
+                                    act:e.id
+                                }
+                            })
+                            console.log(indent + 'New row added!')
+                        }
+                    }
+                }
+            } else {
+                for (let act of e.acts) {
+                    let mapData = await get_map_stats(matches, act.id)
+                    if (mapData.length > 0) {
+                        for (let map of mapData) {
+                            if (currentData.some(item => item.map === map.name && item.act === act.id)) {
+                                await prisma.map_stats.update({
+                                    where: {
+                                        map_act: {
+                                            map: map.name,
+                                            act: act.id
+                                        }
+                                    },
+                                    data: {
+                                        data: JSON.stringify(map)
+                                    }
+                                })
+                            } else {
+                                await prisma.map_stats.create({
+                                    data:{
+                                        map:map.name,
+                                        data:JSON.stringify(map),
+                                        act:act.id
+                                    }
+                                })
+                                console.log(indent + 'New row added!')
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        end = Date.now()
+        console.log(indent + `Updated act-specific data (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+
+        start = Date.now()
+        let mapData = await get_map_stats(matches)
+        for (let map of mapData) {
+            if (currentData.some(item => item.map === map.name && item.act === 'all')) {
+                await prisma.map_stats.update({
+                    where: {
+                        map_act: {
+                            map: map.name,
+                            act: 'all'
+                        }
+                    },
+                    data: {
+                        data: JSON.stringify(map)
+                    }
+                })
+            } else {
+                await prisma.map_stats.create({
+                    data:{
+                        map:map.name,
+                        data:JSON.stringify(map),
+                        act:'all'
+                    }
+                })
+                console.log(indent + 'New row added!')
+            }
+        }
+        end = Date.now()
+        console.log(indent + `Updated all act data (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+        console.log(indent + `MASS AGENT STATS UPDATED (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
 
     }
 };

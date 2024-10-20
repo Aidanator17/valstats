@@ -70,3 +70,12 @@ model mass_agents {
   data           String @db.MediumText
   act            String @unique(map: "act_UNIQUE") @db.VarChar(200)
 }
+
+model map_stats {
+  map_stats_id Int     @id @default(autoincrement())
+  map          String? @db.VarChar(45)
+  data         String? @db.MediumText
+  act          String? @db.VarChar(45)
+
+  @@unique([map, act], map: "map_act")
+}

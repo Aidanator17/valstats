@@ -2017,6 +2017,7 @@ const processFunctions = {
         await DatabaseFunctions.updateAgentData(matches,Eps,this.get_agent_stats)
         await DatabaseFunctions.updateMassAgentData(matches,Eps,this.get_all_agent_stats)
         await DatabaseFunctions.updateMapPicks(matches)
+        await DatabaseFunctions.updateMapStats(matches,Eps,this.get_map_stats)
 
 
         
