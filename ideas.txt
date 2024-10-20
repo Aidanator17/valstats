@@ -1,7 +1,14 @@
 3rd button on user page ?
     - agents breakdown?
     - weapons?
-    - roles breakdown?
 
 New version of player-matches in MySQL
     - has all of the /user/[username]/[tag] match list information. would increase speeds by an insane amount. 
+    - this wont work without a separate user page existing, one without sidebar stats (quickUser.ejs?)
+
+Winrate per time of day
+
+admin route to update friends matches
+    - mass adjust after?
+
+teammates k/d and your k/d

@@ -114,7 +114,7 @@ router.get('/:user/:tag', async (req, res) => {
     const UserInfo = await processFunctions.get_user_data(req.params.user,req.params.tag,true,req.session.agent,req.session.extraUsername,req.session.extraTag)
     if (UserInfo) {
         UserInfo.roundKills = await processFunctions.getRoundKills(UserInfo.comp_matches,UserInfo.puuid)
-        createJSON("kills.json", UserInfo.roundKills)
+        // createJSON("kills.json", UserInfo.roundKills)
 
         res.render('user', {
             UserInfo,

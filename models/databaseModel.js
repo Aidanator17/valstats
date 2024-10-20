@@ -1,8 +1,16 @@
-const { PrismaClient } = require('@prisma/client');
-const { tr } = require('date-fns/locale');
-const { json } = require('express');
+const {
+    PrismaClient
+} = require('@prisma/client');
+const {
+    tr,
+    fi
+} = require('date-fns/locale');
+const {
+    json
+} = require('express');
 const prisma = new PrismaClient();
 const fs = require('fs');
+let indent = `    `
 
 
 async function createJSON(name, jsondata) {
@@ -29,15 +37,16 @@ const DatabaseFunctions = {
     },
     create_player: async function (puuid) {
         const createPlayer = prisma.players.create({
-            data:
-                { puuid }
+            data: {
+                puuid
+            }
         })
         return createPlayer
     },
     get_Player_Matches: async function (pid, puuid) {
         if (puuid) {
             const p = await prisma.players.findMany({
-                where:{
+                where: {
                     puuid
                 }
             })
@@ -78,8 +87,12 @@ const DatabaseFunctions = {
     },
     mark_adjust: async function (id) {
         const update = await prisma.matches.update({
-            where: { match_id: id },
-            data: { adjusted: 1 }
+            where: {
+                match_id: id
+            },
+            data: {
+                adjusted: 1
+            }
         })
     },
     get_matches_by_pid: async function (pid, act) {
@@ -98,8 +111,7 @@ const DatabaseFunctions = {
                 }
             })
             return matches
-        }
-        else {
+        } else {
             const playerMatches = await DatabaseFunctions.get_Player_Matches(pid)
             let ids = []
             for (pmatch in playerMatches) {
@@ -140,8 +152,7 @@ const DatabaseFunctions = {
                 data: matchinput,
                 skipDuplicates: true
             })
-        }
-        catch (error) {
+        } catch (error) {
             console.error('Error creating matches:', error);
         }
         if (pid) {
@@ -158,8 +169,7 @@ const DatabaseFunctions = {
                     data: userinput,
                     skipDuplicates: true
                 })
-            }
-            catch (error) {
+            } catch (error) {
                 console.error('Error creating player-matches:', error);
             }
         }
@@ -168,9 +178,10 @@ const DatabaseFunctions = {
     },
     mass_retrieve: async function () {
         const totalMatches = await prisma.matches.count({
-            where: { adjusted: 0 }
-        }
-        );
+            where: {
+                adjusted: 0
+            }
+        });
         let iter = Math.ceil(totalMatches / 100)
         let s = 0
         let all_matches = []
@@ -196,7 +207,10 @@ const DatabaseFunctions = {
         if (id) {
             let start = Date.now()
             const totalMatches = await prisma.matches.count({
-                where: { match_type: 'competitive', act_id: id }
+                where: {
+                    match_type: 'competitive',
+                    act_id: id
+                }
             })
             let iter = Math.ceil(totalMatches / 300)
             let s = 0
@@ -213,7 +227,8 @@ const DatabaseFunctions = {
                         match_info: true
                     }
                 })
-                raw_matches = raw_matches.concat(iter_matches)
+                raw_matches.push(...iter_matches);
+
                 // console.log(`retrieved ${iter_matches.length} matches, total: ${all_matches.length}`)
                 s += 300
             }
@@ -230,19 +245,25 @@ const DatabaseFunctions = {
             end = Date.now()
             // console.log(`Formatted comp matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
             return matches
-        }
-        else {
+        } else {
             let start = Date.now()
+            let og = Date.now()
             const totalMatches = await prisma.matches.count({
-                where: { match_type: 'competitive' }
+                where: {
+                    match_type: 'competitive'
+                }
             })
-            let iter = Math.ceil(totalMatches / 300)
+            let end = Date.now()
+            // console.log(`Retrieved comp match count (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+            iterTake = 100
+            let iter = Math.ceil(totalMatches / iterTake)
             let s = 0
             let raw_matches = []
             for (let step = 0; step < iter; step++) {
+                start = Date.now()
                 const iter_matches = await prisma.matches.findMany({
                     skip: s,
-                    take: 300,
+                    take: iterTake,
                     where: {
                         match_type: 'competitive'
                     },
@@ -250,15 +271,16 @@ const DatabaseFunctions = {
                         match_info: true
                     }
                 })
-                raw_matches = raw_matches.concat(iter_matches)
-                // console.log(`retrieved ${iter_matches.length} matches, total: ${all_matches.length}`)
-                s += 300
+                raw_matches.push(...iter_matches);
+                s += iterTake
+                end = Date.now()
+                // console.log(`retrieved ${iter_matches.length} matches, total: ${totalMatches} (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
             }
 
 
 
-            let end = Date.now()
-            // console.log(`Retrieved comp matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+            end = Date.now()
+            // console.log(`Retrieved comp matches (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
             start = Date.now()
             let matches = []
             for (m in raw_matches) {
@@ -269,9 +291,16 @@ const DatabaseFunctions = {
             return matches
         }
     },
+    getCompMatchNum: async function() {
+        const totalMatches = await prisma.matches.count({
+            where: {
+                match_type: 'competitive'
+            }
+        })
+        return totalMatches
+    },
     fix_act_ids: async function () {
-        if (true) { }
-        else {
+        if (true) {} else {
             const matches = await this.mass_retrieve()
             for (m in matches) {
                 let data = JSON.parse(matches[m]['match_info'])
@@ -320,8 +349,390 @@ const DatabaseFunctions = {
 
         // await createJSON('mass_retrieve.json',all_matches)
         return all_matches
-    }
+    },
+    getAgentData: async function (agentName, actId) {
+        if (actId) {
+            const aData = await prisma.agents.findMany({
+                where: {
+                    name: agentName,
+                    act: actId
+                },
+                select: {
+                    data: true
+                }
+            })
+            for (let d of aData) {
+                return JSON.parse(d.data)
+            }
+        } else {
+            let result = []
+            const aData = await prisma.agents.findMany({
+                where: {
+                    name: agentName
+                },
+                select: {
+                    data: true
+                }
+            })
+            for (let d of aData) {
+                result.push(JSON.parse(d.data))
+            }
+            return result
+        }
+    },
+    initAgentData: async function (name, data, act) {
+        const agent = await prisma.agents.create({
+            data: {
+                name,
+                data,
+                act
+            }
+        })
+        return
+    },
+    updateAgentData: async function (matches, Eps, get_agent_stats) {
+        let agentList = [
+            "Phoenix",
+            "Raze",
+            "Jett",
+            "Yoru",
+            "Neon",
+            "Reyna",
+            "Sage",
+            "Cypher",
+            "Chamber",
+            "Killjoy",
+            "Omen",
+            "Viper",
+            "Brimstone",
+            "Astra",
+            "Harbor",
+            "Sova",
+            "Breach",
+            "Skye",
+            "KAY/O",
+            "Fade",
+            "Clove",
+            "Gekko",
+            "Iso",
+            "Deadlock",
+            "Vyse"
+        ]
+        console.log('UPDATING AGENT DATA')
+        let start = Date.now()
+        let og = Date.now()
+        let end
+        const currentData = await prisma.agents.findMany({
+            select: {
+                name: true,
+                act: true
+            }
+        })
+        if (!matches) {
+            matches = await this.mass_retrieve_comp()
+            end = Date.now()
+            console.log(indent + `Retrieved ${matches.length} matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+        }
+        for (let a of agentList) {
+            console.log(indent + `Updating ${a}`)
+            start = Date.now()
+            for (let e of Eps) {
+                if (e.name == "Closed Beta") {
+                    let agentData = await get_agent_stats(a, matches, e.id)
+                    if (agentData[0].picks > 0) {
+                        agentData[0].img = agentData[2]
+                        if (currentData.some(item => item.name === a && item.act === e.id)) {
+                            await prisma.agents.update({
+                                where: {
+                                    name_act: {
+                                        name: a,
+                                        act: e.id
+                                    }
+                                },
+                                data: {
+                                    data: JSON.stringify(agentData[0])
+                                }
+                            })
+                        } else {
+                            await DatabaseFunctions.initAgentData(a, JSON.stringify(agentData[0]), e.id)
+                            console.log(indent + 'New row added!')
+                        }
+                    }
+                } else {
+                    for (let act of e.acts) {
+                        let agentData = await get_agent_stats(a, matches, act.id)
+                        if (agentData[0].picks > 0) {
+                            agentData[0].img = agentData[2]
+                            if (currentData.some(item => item.name === a && item.act === act.id)) {
+                                await prisma.agents.update({
+                                    where: {
+                                        name_act: {
+                                            name: a,
+                                            act: act.id
+                                        }
+                                    },
+                                    data: {
+                                        data: JSON.stringify(agentData[0])
+                                    }
+                                })
+                            } else {
+                                await DatabaseFunctions.initAgentData(a, JSON.stringify(agentData[0]), act.id)
+                                console.log(indent + 'New row added!')
+                            }
+                        }
+                    }
+                }
+            }
+            end = Date.now()
+            console.log(indent + `Done (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+        }
+        end = Date.now()
+        console.log(`AGENT DATA UPDATED (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
+    },
+    getMassAgentData:async function (act){
+        if (act){
+            const data = await prisma.mass_agents.findUnique({
+                where:{
+                    act
+                }
+            })
+            return JSON.parse(data.data)
+        }
+        else {
+            let act = 'all'
+            const data = await prisma.mass_agents.findUnique({
+                where:{
+                    act
+                }
+            })
+            return JSON.parse(data.data)
+        }
+    },
+    updateMassAgentData:async function (matches,Eps,get_all_agent_stats){
+        const currentData = await prisma.mass_agents.findMany({
+            select:{
+                act:true
+            }
+        })
 
+        
+        for (let e of Eps) {
+            if (e.name == "Closed Beta") {
+                let agentData = await get_all_agent_stats(matches, e.id)
+                    if (currentData.some(item => item.act === e.id)) {
+                        await prisma.mass_agents.update({
+                            where: {
+                                act:e.id
+                            },
+                            data: {
+                                data: JSON.stringify(agentData)
+                            }
+                        })
+                    } else {
+                        await prisma.mass_agents.create({
+                            data:{
+                                data:JSON.stringify(agentData),
+                                act:e.id
+                            }
+                        })
+                        console.log(indent + 'New act added!')
+                    }
+                
+            } else {
+                for (let act of e.acts) {
+                    let agentData = await get_all_agent_stats(matches, act.id)
+                        if (currentData.some(item => item.act === act.id)) {
+                            await prisma.mass_agents.update({
+                                where: {
+                                    act:act.id
+                                },
+                                data: {
+                                    data: JSON.stringify(agentData)
+                                }
+                            })
+                        } else {
+                            await prisma.mass_agents.create({
+                                data:{
+                                    data:JSON.stringify(agentData),
+                                    act:act.id
+                                }
+                            })
+                            console.log(indent + 'New act added!')
+                        }
+                    
+                }
+            }
+        }
+        let agentData = await get_all_agent_stats(matches)
+        await prisma.mass_agents.update({
+            where: {
+                act:'all'
+            },
+            data: {
+                data: JSON.stringify(agentData)
+            }
+        })
+
+    },
+    getMapPicks: async function (map) {
+        if (map) {
+            const data = await prisma.map_picks.findMany({
+                where: {
+                    map
+                },
+                select: {
+                    map: true,
+                    count: true,
+                    act: true
+                }
+            })
+            let final = {
+                map,
+                count: 0,
+            }
+            for (let act of data) {
+                final.count += act.count
+            }
+            return final
+
+        } else {
+            let final = {}
+            const data = await prisma.map_picks.findMany({
+                select: {
+                    map: true,
+                    count: true,
+                    act: true
+                }
+            })
+            for (let d of data) {
+                if (final[d.map]) {
+                    final[d.map].count += d.count
+                } else {
+                    final[d.map] = {
+                        count: d.count
+                    }
+                }
+            }
+            return final
+        }
+    },
+    getMapPicksByAct: async function (act,map) {
+        if (map) {
+            const data = await prisma.map_picks.findMany({
+                where: {
+                    map,
+                    act
+                },
+                select: {
+                    map: true,
+                    count: true,
+                    act: true
+                }
+            })
+            return data
+
+        } else {
+            const data = await prisma.map_picks.findMany({
+                where: {
+                    act
+                },
+                select: {
+                    map: true,
+                    count: true,
+                    act: true
+                }
+            })
+            return data
+        }
+    },
+    initMapPicks: async function (matches, data) {
+        if (matches) {
+            let final = []
+            for (let match of matches) {
+                const foundEntry = final.find(item => item.map === match.data.metadata.map && item.act === match.data.metadata.season_id)
+                if (foundEntry) {
+                    foundEntry.count++
+                } else {
+                    final.push({
+                        map: match.data.metadata.map,
+                        count: 1,
+                        act: match.data.metadata.season_id
+                    })
+                }
+            }
+            for (let data of final) {
+                await prisma.map_picks.create({
+                    data
+                })
+            }
+        } else if (data) {
+            await prisma.map_picks.create({
+                data
+            })
+        } else {
+            console.log('Map Pick Error - No data to init')
+        }
+    },
+    updateMapPicks: async function (matches) {
+        console.log('UPDATING MAP PICK DATA')
+        let start = Date.now()
+        let og = Date.now()
+        let end
+        const currentData = await prisma.map_picks.findMany({
+            select:{
+                map:true,
+                count:true,
+                act:true
+            }
+        })
+        for (let data of currentData){
+            data.count = 0
+        }
+        end = Date.now()
+        console.log(indent + `Retrieved old data, and reset count values (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+
+        start = Date.now()
+        for (let match of matches) {
+            const foundEntry = currentData.find(item => item.map === match.data.metadata.map && item.act === match.data.metadata.season_id)
+            if (foundEntry) {
+                foundEntry.count++
+            } else {
+                currentData.push({
+                    map: match.data.metadata.map,
+                    count: 1,
+                    act: match.data.metadata.season_id,
+                    new:true
+                })
+            }
+        }
+        end = Date.now()
+        console.log(indent + `Updated new count values (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+
+        start = Date.now()
+        for (let data of currentData){
+            if (data.new){
+                delete data.new
+                await prisma.map_picks.create({
+                    data
+                })
+            }
+            else {
+                await prisma.map_picks.update({
+                    where:{
+                        map_act:{
+                            map:data.map,
+                            act:data.act
+                        }
+                    },
+                    data
+                })
+            }
+        }
+        end = Date.now()
+        console.log(indent + `Database updated (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+        console.log(`MAP PICK DATA UPDATED (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
+
+    }
 };
 
 module.exports = DatabaseFunctions;

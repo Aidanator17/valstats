@@ -304,7 +304,8 @@
                 <p class="agent-grid-item grid-item-title">KD</p>
                 <% for (a in UserInfo.agents){ if (a < 5){ %>
                     <p class="agent-grid-item">
-                        <%= UserInfo.agents[a].agent %>
+                        <a style="color: #000000; text-decoration: none;" href="<%= '/agent/'+UserInfo.agents[a].agent %>">
+                        <%= UserInfo.agents[a].agent %></a>
                     </p>
                     <p class="agent-grid-item">
                         <%= UserInfo.agents[a].count %>

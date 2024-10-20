@@ -1260,7 +1260,7 @@ const processFunctions = {
                 end = Date.now()
                 console.log(indent + `All ${returned_matches} matches successfully added (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
             }
-            start = Date.now()
+            let mStart = Date.now()
             real_matches = (await DatabaseFunctions.get_matches_by_pid(pid)).sort((a, b) => b.match_starttime - a.match_starttime)
 
             for (m in real_matches) {
@@ -1268,6 +1268,7 @@ const processFunctions = {
             }
             // createJSON('match.json', UserInfo['matches'][0])
             if (agentFilter) {
+                start = Date.now()
                 UserInfo.filter = true
                 for (m in UserInfo['matches']) {
                     if (UserInfo['matches'][m]['data']['metadata']['mode_id'] == 'competitive') {
@@ -1276,6 +1277,8 @@ const processFunctions = {
                         }
                     }
                 }
+                console.log(indent + `User filter applied (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+                end = Date.now()
             }
             else {
                 for (m in UserInfo['matches']) {
@@ -1286,6 +1289,7 @@ const processFunctions = {
             }
 
             if (userFilter) {
+                start = Date.now()
                 UserInfo.filter = true
                 let new_comp = []
                 for (m in UserInfo['comp_matches']) {
@@ -1296,27 +1300,18 @@ const processFunctions = {
                     }
                 }
                 UserInfo['comp_matches'] = new_comp
+                console.log(indent + `User filter applied (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+                end = Date.now()
             }
 
+            start = Date.now()
             UserInfo.agents = await UserFunctions.getAgentStats(UserInfo['comp_matches'],UserInfo['puuid'])
             UserInfo.agents.sort(compare_count)
-            UserInfo.maps_played = await UserFunctions.getMapStats(UserInfo['comp_matches'],UserInfo['puuid'])
-            UserInfo.teammates = await UserFunctions.getTeammates(UserInfo['comp_matches'],UserInfo['puuid'])
-            UserInfo.stats.overall = await UserFunctions.getTotalStats(UserInfo['comp_matches'],UserInfo['puuid'])
-            UserInfo.stats.past5 = await UserFunctions.getHalfStats(UserInfo['comp_matches'].slice(0,5),UserInfo['puuid'])
-            const unfEps = await apiFunctions.getData()
-            const Eps = await this.reformatEpisodes(unfEps['acts'])
-            UserInfo.episodeStats = await UserFunctions.getActStats(UserInfo['comp_matches'],UserInfo['puuid'],Eps)
-            // await createJSON('actStats.json', UserInfo.episodeStats)
+            end = Date.now()
+            console.log(indent + `Agent stats done and formatted (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
 
-            let reformatTeammates = []
-            for (pl in UserInfo.teammates) {
-                if (UserInfo.teammates[pl].count > 1) {
-                    reformatTeammates.push(UserInfo.teammates[pl])
-                }
-            }
-            UserInfo.teammates = reformatTeammates.sort(compare_count)
-            
+            start = Date.now()
+            UserInfo.maps_played = await UserFunctions.getMapStats(UserInfo['comp_matches'],UserInfo['puuid'])
             let reformatMaps = []
             for (m in UserInfo.maps_played) {
                 reformatMaps.push({
@@ -1332,12 +1327,52 @@ const processFunctions = {
             }
             UserInfo.maps_played = reformatMaps
             UserInfo.maps_played.sort(compare_count)
+            end = Date.now()
+            console.log(indent + `Map stats done (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+
+            start = Date.now()
+            UserInfo.teammates = await UserFunctions.getTeammates(UserInfo['comp_matches'],UserInfo['puuid'])
+            let reformatTeammates = []
+            for (pl in UserInfo.teammates) {
+                if (UserInfo.teammates[pl].count > 1) {
+                    reformatTeammates.push(UserInfo.teammates[pl])
+                }
+            }
+            UserInfo.teammates = reformatTeammates.sort(compare_count)
+            end = Date.now()
+            console.log(indent + `Teammate data done (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+
+            start = Date.now()
+            UserInfo.stats.overall = await UserFunctions.getTotalStats(UserInfo['comp_matches'],UserInfo['puuid'])
+            end = Date.now()
+            console.log(indent + `Basic stats done (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+
+            start = Date.now()
+            UserInfo.stats.past5 = await UserFunctions.getHalfStats(UserInfo['comp_matches'].slice(0,5),UserInfo['puuid'])
+            end = Date.now()
+            console.log(indent + `Past5 stats done (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+
+            start = Date.now()
+            const unfEps = await apiFunctions.getData()
+            const Eps = await this.reformatEpisodes(unfEps['acts'])
+            UserInfo.episodeStats = await UserFunctions.getActStats(UserInfo['comp_matches'],UserInfo['puuid'],Eps)
+            end = Date.now()
+            console.log(indent + `Act stats done (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+
+            start = Date.now()
+            UserInfo.utilUsage = await UserFunctions.getUtilUsage(UserInfo['comp_matches'],UserInfo['puuid'],'Gekko')
+            end = Date.now()
+            console.log(indent + `Util usage done (not visible yet, WIP) (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+
+            // await createJSON(`/utilUsage/${UserInfo.username.replace(' ','_')}.json`, UserInfo.utilUsage)
+
+            
             
 
             // createJSON('teammates.json', UserInfo.teammates)
             // console.log(past5wins,past5losses)
             end = Date.now()
-            console.log(indent + `All matches retrieved and formatted (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+            console.log(indent + `All matches retrieved and formatted (${Math.round(((end - mStart) / 1000) * 10) / 10}s)`)
 
             UserInfo.role_stats = await this.get_role_stats(UserInfo.comp_matches, UserInfo.puuid)
             console.log(`${topIndent}Data for ${UserInfo['username']}#${UserInfo['tag']} retrieved (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
@@ -1963,7 +1998,31 @@ const processFunctions = {
             }
         }
         return kills
-    }
+    },
+    massUpdateData:async function (){
+        let og = Date.now()
+        console.log('MASS UPDATE INITIATED')
+
+        let start = Date.now()
+        const matches = await DatabaseFunctions.mass_retrieve_comp()
+        let end = Date.now()
+        console.log(`Retrieved ${matches.length} matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+
+        start = Date.now()
+        const unfEps = await apiFunctions.getData()
+        const Eps = await processFunctions.reformatEpisodes(unfEps['acts'])
+        end = Date.now()
+        console.log(`Retrieved act info (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+        
+        await DatabaseFunctions.updateAgentData(matches,Eps,this.get_agent_stats)
+        await DatabaseFunctions.updateMassAgentData(matches,Eps,this.get_all_agent_stats)
+        await DatabaseFunctions.updateMapPicks(matches)
+
+
+        
+        end = Date.now()
+        console.log(`MASS UPDATE CONCLUDED (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
+    },
 };
 
 module.exports = processFunctions;

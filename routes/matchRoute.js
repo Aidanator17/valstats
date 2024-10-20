@@ -90,6 +90,7 @@ router.get("/:id", async (req, res) => {
         let match = await apiFunctions.getMatch(req.params.id)
         if (match) {
             match = await processFunctions.alterMatch(match, match['data']['players']['red'][0]['puuid'], true)
+            await DatabaseFunctions.mass_add([match])
             res.render('match', {
                 matchData: match
             })

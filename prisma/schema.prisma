@@ -35,16 +35,6 @@ model players_matches {
   @@unique([player_id, matchid], map: "unique_playermatches")
 }
 
-model PlayerMatchesWithAct {
-  id        Int    @id // Assuming `id` is the primary key in `player_matches`
-  player_id Int
-  matchid   String @db.VarChar(200)
-  act_id    String @db.VarChar(200) // The column from the `matches` table
-  // Add any other columns from `player_matches` you want to include
-
-  @@map("player_matches_with_act") // Map the model to the view name in the database
-}
-
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model matches_backup {
   id              Int     @default(0)
@@ -55,4 +45,28 @@ model matches_backup {
   match_starttime Int?
 
   @@ignore
+}
+
+model agents {
+  agents_id Int    @id @unique(map: "agents_id_UNIQUE") @default(autoincrement())
+  name      String @db.VarChar(45)
+  data      String @db.MediumText
+  act       String @db.VarChar(200)
+
+  @@unique([name, act], map: "unique_agent_act")
+}
+
+model map_picks {
+  map_picks_id Int    @id @default(autoincrement())
+  map          String @db.VarChar(45)
+  count        Int
+  act          String @db.VarChar(200)
+
+  @@unique([map, act], map: "unique_map_act")
+}
+
+model mass_agents {
+  mass_agents_id Int    @id @default(autoincrement())
+  data           String @db.MediumText
+  act            String @unique(map: "act_UNIQUE") @db.VarChar(200)
 }

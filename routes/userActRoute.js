@@ -5,6 +5,7 @@ const fs = require('fs');
 const fetch = require("node-fetch")
 const DatabaseFunctions = require("../models/databaseModel");
 const processFunctions = require("../models/processModel");
+const UserFunctions = require("../models/userModel.js")
 const { tr } = require("date-fns/locale");
 const indent = `    `
 
@@ -29,11 +30,11 @@ function compare_count(a, b) {
     return 0;
 }
 
-function winCheck(match,puuid){
-    for (p in match['data']['players']['all_players']){
-        if (match['data']['players']['all_players'][p]['puuid'] == puuid){
-            if (match['data']['players']['all_players'][p]['team'] == 'Red'){
-                if (match['data']['teams']['red']['has_won']){
+function winCheck(match, puuid) {
+    for (p in match['data']['players']['all_players']) {
+        if (match['data']['players']['all_players'][p]['puuid'] == puuid) {
+            if (match['data']['players']['all_players'][p]['team'] == 'Red') {
+                if (match['data']['teams']['red']['has_won']) {
                     return true
                 }
                 else {
@@ -41,7 +42,7 @@ function winCheck(match,puuid){
                 }
             }
             else {
-                if (match['data']['teams']['blue']['has_won']){
+                if (match['data']['teams']['blue']['has_won']) {
                     return true
                 }
                 else {
@@ -51,11 +52,11 @@ function winCheck(match,puuid){
         }
     }
 }
-function winCheckNum(match,puuid){
-    for (p in match['data']['players']['all_players']){
-        if (match['data']['players']['all_players'][p]['puuid'] == puuid){
-            if (match['data']['players']['all_players'][p]['team'] == 'Red'){
-                if (match['data']['teams']['red']['has_won']){
+function winCheckNum(match, puuid) {
+    for (p in match['data']['players']['all_players']) {
+        if (match['data']['players']['all_players'][p]['puuid'] == puuid) {
+            if (match['data']['players']['all_players'][p]['team'] == 'Red') {
+                if (match['data']['teams']['red']['has_won']) {
                     return 1
                 }
                 else {
@@ -63,7 +64,7 @@ function winCheckNum(match,puuid){
                 }
             }
             else {
-                if (match['data']['teams']['blue']['has_won']){
+                if (match['data']['teams']['blue']['has_won']) {
                     return 1
                 }
                 else {
@@ -314,7 +315,7 @@ router.get('/:user/:tag/:act', async (req, res) => {
             console.log(indent + `All ${returned_matches} matches successfully added (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
         }
         start = Date.now()
-        real_matches = (await DatabaseFunctions.get_matches_by_pid(pid,req.params.act)).sort((a, b) => b.match_starttime - a.match_starttime)
+        real_matches = (await DatabaseFunctions.get_matches_by_pid(pid, req.params.act)).sort((a, b) => b.match_starttime - a.match_starttime)
 
         let totalkills = 0
         let totaldeaths = 0
@@ -618,7 +619,7 @@ router.get('/:user/:tag/:act', async (req, res) => {
                         UserInfo.teammates.push({
                             puuid: UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['puuid'],
                             count: 1,
-                            wins:winCheckNum(UserInfo['comp_matches'][m],UserInfo['puuid']),
+                            wins: winCheckNum(UserInfo['comp_matches'][m], UserInfo['puuid']),
                             username: UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['name'],
                             tag: UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['tag'],
                         })
@@ -628,7 +629,7 @@ router.get('/:user/:tag/:act', async (req, res) => {
                         for (pl in UserInfo.teammates) {
                             if (UserInfo.teammates[pl].puuid == UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['puuid']) {
                                 UserInfo.teammates[pl].count++
-                                UserInfo.teammates[pl].wins += winCheckNum(UserInfo['comp_matches'][m],UserInfo['puuid'])
+                                UserInfo.teammates[pl].wins += winCheckNum(UserInfo['comp_matches'][m], UserInfo['puuid'])
                                 found = true
                                 break
                             }
@@ -637,7 +638,7 @@ router.get('/:user/:tag/:act', async (req, res) => {
                             UserInfo.teammates.push({
                                 puuid: UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['puuid'],
                                 count: 1,
-                                wins:winCheckNum(UserInfo['comp_matches'][m],UserInfo['puuid']),
+                                wins: winCheckNum(UserInfo['comp_matches'][m], UserInfo['puuid']),
                                 username: UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['name'],
                                 tag: UserInfo['comp_matches'][m]['data']['players'][userteam][tm]['tag'],
                             })
@@ -705,9 +706,11 @@ router.get('/:user/:tag/:act', async (req, res) => {
 
         end = Date.now()
         console.log(`Data for ${UserInfo['username']}#${UserInfo['tag']} retrieved (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
-        UserInfo.role_stats = await processFunctions.get_role_stats(UserInfo.comp_matches,UserInfo.puuid)
-        UserInfo.roundKills = await processFunctions.getRoundKills(UserInfo.comp_matches,UserInfo.puuid)
+        UserInfo.role_stats = await processFunctions.get_role_stats(UserInfo.comp_matches, UserInfo.puuid)
+        UserInfo.roundKills = await processFunctions.getRoundKills(UserInfo.comp_matches, UserInfo.puuid)
         // console.log(Intl.DateTimeFormat().resolvedOptions().timeZone)
+        UserInfo.utilUsage = await UserFunctions.getUtilUsage(UserInfo['comp_matches'], UserInfo['puuid'])
+        // await createJSON(`/utilUsage/${UserInfo.username}.json`, UserInfo.utilUsage)
         res.render('user', {
             UserInfo,
             title: UserInfo['username'],

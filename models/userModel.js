@@ -495,6 +495,8 @@ const UserFunctions = {
                             wins: winCheckNum(matches[m], puuid),
                             username: matches[m]['data']['players'][userteam][tm]['name'],
                             tag: matches[m]['data']['players'][userteam][tm]['tag'],
+                            pStats: {},
+                            fStats: {}
                         })
                     }
                     else {
@@ -514,6 +516,8 @@ const UserFunctions = {
                                 wins: winCheckNum(matches[m], puuid),
                                 username: matches[m]['data']['players'][userteam][tm]['name'],
                                 tag: matches[m]['data']['players'][userteam][tm]['tag'],
+                                pStats: {},
+                                fStats: {}
                             })
                         }
                     }
@@ -617,6 +621,73 @@ const UserFunctions = {
             }
         }
         return actStats
+    },
+    getUtilUsage: async function (matches, puuid, agent) {
+        let util = {
+            "x_cast": 0,
+            "e_cast": 0,
+            "q_cast": 0,
+            "c_cast": 0
+        }
+        let roundCount = 0
+        let matchCount = 0
+        if (agent) {
+            matchCount = 0
+            for (let match of matches) {
+                for (let player of match['data']['players']['all_players']) {
+                    if (player.puuid == puuid) {
+                        if (player.character == agent) {
+                            matchCount++
+                            util.x_cast += player.ability_casts.x_cast
+                            util.e_cast += player.ability_casts.e_cast
+                            util.q_cast += player.ability_casts.q_cast
+                            util.c_cast += player.ability_casts.c_cast
+                            if (player.behavior.rounds_in_spawn < 1) {
+                                roundCount += (match.data.metadata.rounds_played - player.behavior.afk_rounds)
+                            }
+                            else {
+                                roundCount += (match.data.metadata.rounds_played - player.behavior.afk_rounds - player.behavior.rounds_in_spawn)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            matchCount = matches.length
+            for (let match of matches) {
+                for (let player of match['data']['players']['all_players']) {
+                    if (player.puuid == puuid) {
+                        util.x_cast += player.ability_casts.x_cast
+                        util.e_cast += player.ability_casts.e_cast
+                        util.q_cast += player.ability_casts.q_cast
+                        util.c_cast += player.ability_casts.c_cast
+                        if (player.behavior.rounds_in_spawn < 1) {
+                            roundCount += (match.data.metadata.rounds_played - player.behavior.afk_rounds)
+                        }
+                        else {
+                            roundCount += (match.data.metadata.rounds_played - player.behavior.afk_rounds - player.behavior.rounds_in_spawn)
+                        }
+                    }
+                }
+            }
+        }
+        let utilUsage = {
+            util,
+            utilPerRound: {
+                x_cast: util.x_cast / roundCount,
+                e_cast: util.e_cast / roundCount,
+                q_cast: util.q_cast / roundCount,
+                c_cast: util.c_cast / roundCount
+            },
+            utilPerMatch: {
+                x_cast: util.x_cast / matchCount,
+                e_cast: util.e_cast / matchCount,
+                q_cast: util.q_cast / matchCount,
+                c_cast: util.c_cast / matchCount
+            }
+        }
+        return utilUsage
     }
 };
 
