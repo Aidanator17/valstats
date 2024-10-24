@@ -40,6 +40,13 @@ header h1 {
     justify-content: center;
     padding: 20px;
 }
+.parent-container {
+    display: flex;
+    flex-direction: column; /* Stack the containers vertically */
+}
+.second-container {
+    margin-top: 20px; /* Adjust to the amount of space you need */
+}
 
 /* Styling for the buttons */
 .button {
