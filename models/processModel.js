@@ -2,8 +2,13 @@ const fs = require('fs');
 const apiFunctions = require('../models/valAPI.js');
 const DatabaseFunctions = require("../models/databaseModel");
 const UserFunctions = require("../models/userModel.js")
-const { el } = require('date-fns/locale');
-const { count } = require('console');
+const {
+    el
+} = require('date-fns/locale');
+const {
+    count
+} = require('console');
+let fetch = require('node-fetch')
 
 
 function compare_score(a, b) {
@@ -69,9 +74,11 @@ function getAgentRole(agentName) {
     // console.log(`${agentName} => ${agentRoles[agentName]}`)
     return agentRoles[agentName] || "Unknown Role";
 }
+
 function getRandomInt(max) {
     return Math.floor(Math.random() * max);
 }
+
 function compare_count(a, b) {
     if (a.count < b.count) {
         return 1;
@@ -81,6 +88,7 @@ function compare_count(a, b) {
     }
     return 0;
 }
+
 function agentCheck(match, puuid) {
     for (p in match['data']['players']['all_players']) {
         if (match['data']['players']['all_players'][p]['puuid'] == puuid) {
@@ -88,50 +96,47 @@ function agentCheck(match, puuid) {
         }
     }
 }
+
 function winCheck(match, puuid) {
     for (p in match['data']['players']['all_players']) {
         if (match['data']['players']['all_players'][p]['puuid'] == puuid) {
             if (match['data']['players']['all_players'][p]['team'] == 'Red') {
                 if (match['data']['teams']['red']['has_won']) {
                     return true
-                }
-                else {
+                } else {
                     return false
                 }
-            }
-            else {
+            } else {
                 if (match['data']['teams']['blue']['has_won']) {
                     return true
-                }
-                else {
+                } else {
                     return false
                 }
             }
         }
     }
 }
+
 function winCheckNum(match, puuid) {
     for (p in match['data']['players']['all_players']) {
         if (match['data']['players']['all_players'][p]['puuid'] == puuid) {
             if (match['data']['players']['all_players'][p]['team'] == 'Red') {
                 if (match['data']['teams']['red']['has_won']) {
                     return 1
-                }
-                else {
+                } else {
                     return 0
                 }
-            }
-            else {
+            } else {
                 if (match['data']['teams']['blue']['has_won']) {
                     return 1
-                }
-                else {
+                } else {
                     return 0
                 }
             }
         }
     }
 }
+
 function pickRandomColor(colors) {
     if (colors.length === 0) {
         return null; // If no colors are left, return null
@@ -145,6 +150,7 @@ function pickRandomColor(colors) {
 
     return pickedColor;
 }
+
 function combineUserStats(data) {
     const combinedData = {
         userList: data.userList,
@@ -208,7 +214,9 @@ function combineUserStats(data) {
         // Combine agent data
         account.agents.forEach(agent => {
             if (!agentMap[agent.agent]) {
-                agentMap[agent.agent] = { ...agent };
+                agentMap[agent.agent] = {
+                    ...agent
+                };
             } else {
                 agentMap[agent.agent].count += agent.count;
                 agentMap[agent.agent].wins += agent.wins;
@@ -227,7 +235,9 @@ function combineUserStats(data) {
         // Combine teammate data
         account.teammates.forEach(teammate => {
             if (!teammatesMap[teammate.puuid]) {
-                teammatesMap[teammate.puuid] = { ...teammate };
+                teammatesMap[teammate.puuid] = {
+                    ...teammate
+                };
             } else {
                 teammatesMap[teammate.puuid].count += teammate.count;
                 teammatesMap[teammate.puuid].wins += teammate.wins;
@@ -237,7 +247,9 @@ function combineUserStats(data) {
         // Combine maps played
         account.maps_played.forEach(map => {
             if (!mapsPlayedMap[map.name]) {
-                mapsPlayedMap[map.name] = { ...map };
+                mapsPlayedMap[map.name] = {
+                    ...map
+                };
             } else {
                 mapsPlayedMap[map.name].count += map.count;
                 mapsPlayedMap[map.name].wins += map.wins;
@@ -270,6 +282,7 @@ function combineUserStats(data) {
 
     return combinedData;
 }
+
 function player_match_stats(match, puuid) {
     let stats = {
         score: 0,
@@ -312,8 +325,7 @@ async function formatComp(comps, team) {
             agent_imgs: comp_images,
             count: 1
         }
-    }
-    else {
+    } else {
         for (let c in comps) {
             // Sort both arrays to ensure they are compared in the same order
             // console.log(typeof comps[c])
@@ -337,9 +349,11 @@ async function formatComp(comps, team) {
         }
     }
 }
+
 function isEven(n) {
     return n % 2 == 0;
 }
+
 function getAttkDefWins(match) {
     let attkWins = 0
     let defWins = 0
@@ -348,42 +362,52 @@ function getAttkDefWins(match) {
         if (r < 12) {
             if (rounds[r]['winning_team'] == "Red") {
                 attkWins++
-            }
-            else {
+            } else {
                 defWins++
             }
-        }
-        else if (r < 24) {
+        } else if (r < 24) {
             if (rounds[r]['winning_team'] == "Red") {
                 defWins++
-            }
-            else {
+            } else {
                 attkWins++
             }
-        }
-        else if (isEven(r)) {
+        } else if (isEven(r)) {
             if (rounds[r]['winning_team'] == "Red") {
                 attkWins++
-            }
-            else {
+            } else {
                 defWins++
             }
-        }
-        else {
+        } else {
             if (rounds[r]['winning_team'] == "Red") {
                 defWins++
-            }
-            else {
+            } else {
                 attkWins++
             }
         }
     }
     return [attkWins, defWins]
 }
+
 function isNumber(value) {
     return typeof value === 'number';
 }
 
+function wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+async function fetchUserData(puuid, name) {
+    const API_BASE_URL = 'http://localhost:8000';
+    try {
+        const response = await fetch(`${API_BASE_URL}/user/${puuid}`);
+        if (response.ok) {
+            console.log(`Fetched ${name}`);
+        } else {
+            console.error(`Failed to fetch ${name}: ${response.status}`);
+        }
+    } catch (error) {
+        console.error(`Error fetching ${name}: ${error.message}`);
+    }
+}
 
 const processFunctions = {
     get_agent_stats: async function (agent, matches, actId) {
@@ -645,8 +669,7 @@ const processFunctions = {
                     }
                 }
             }
-        }
-        else {
+        } else {
             for (let m in matches) {
                 let bWinner = false;
                 let rWinner = false;
@@ -818,30 +841,24 @@ const processFunctions = {
                             }
                             if (rWinner) {
                                 newInput.wins++
-                            }
-                            else if (bWinner) {
+                            } else if (bWinner) {
                                 newInput.losses++
-                            }
-                            else {
+                            } else {
                                 newInput.draws++
                             }
                             output.push(newInput)
-                        }
-                        else if (checkList[0]) {
+                        } else if (checkList[0]) {
                             output[checkList[1]].kills += matches[m]['data']['players']['red'][p]['stats']['kills']
                             output[checkList[1]].deaths += matches[m]['data']['players']['red'][p]['stats']['deaths']
                             output[checkList[1]].assists += matches[m]['data']['players']['red'][p]['stats']['assists']
                             if (rWinner) {
                                 output[checkList[1]].wins++
-                            }
-                            else if (bWinner) {
+                            } else if (bWinner) {
                                 output[checkList[1]].losses++
-                            }
-                            else {
+                            } else {
                                 output[checkList[1]].draws++
                             }
-                        }
-                        else {
+                        } else {
                             let newInput = {
                                 name: matches[m]['data']['players']['red'][p]["character"],
                                 role: getAgentRole(matches[m]['data']['players']['red'][p]["character"]),
@@ -855,11 +872,9 @@ const processFunctions = {
                             }
                             if (rWinner) {
                                 newInput.wins++
-                            }
-                            else if (bWinner) {
+                            } else if (bWinner) {
                                 newInput.losses++
-                            }
-                            else {
+                            } else {
                                 newInput.draws++
                             }
                             output.push(newInput)
@@ -874,15 +889,12 @@ const processFunctions = {
                             output[checkList[1]].assists += matches[m]['data']['players']['blue'][p]['stats']['assists']
                             if (bWinner) {
                                 output[checkList[1]].wins++
-                            }
-                            else if (rWinner) {
+                            } else if (rWinner) {
                                 output[checkList[1]].losses++
-                            }
-                            else {
+                            } else {
                                 output[checkList[1]].draws++
                             }
-                        }
-                        else {
+                        } else {
                             let newInput = {
                                 name: matches[m]['data']['players']['blue'][p]["character"],
                                 role: getAgentRole(matches[m]['data']['players']['blue'][p]["character"]),
@@ -896,11 +908,9 @@ const processFunctions = {
                             }
                             if (bWinner) {
                                 newInput.wins++
-                            }
-                            else if (rWinner) {
+                            } else if (rWinner) {
                                 newInput.losses++
-                            }
-                            else {
+                            } else {
                                 newInput.draws++
                             }
                             output.push(newInput)
@@ -908,8 +918,7 @@ const processFunctions = {
                     }
                 }
             }
-        }
-        else {
+        } else {
             for (m in matches) {
                 let bWinner = false;
                 let rWinner = false;
@@ -938,30 +947,24 @@ const processFunctions = {
                         }
                         if (rWinner) {
                             newInput.wins++
-                        }
-                        else if (bWinner) {
+                        } else if (bWinner) {
                             newInput.losses++
-                        }
-                        else {
+                        } else {
                             newInput.draws++
                         }
                         output.push(newInput)
-                    }
-                    else if (checkList[0]) {
+                    } else if (checkList[0]) {
                         output[checkList[1]].kills += matches[m]['data']['players']['red'][p]['stats']['kills']
                         output[checkList[1]].deaths += matches[m]['data']['players']['red'][p]['stats']['deaths']
                         output[checkList[1]].assists += matches[m]['data']['players']['red'][p]['stats']['assists']
                         if (rWinner) {
                             output[checkList[1]].wins++
-                        }
-                        else if (bWinner) {
+                        } else if (bWinner) {
                             output[checkList[1]].losses++
-                        }
-                        else {
+                        } else {
                             output[checkList[1]].draws++
                         }
-                    }
-                    else {
+                    } else {
                         let newInput = {
                             name: matches[m]['data']['players']['red'][p]["character"],
                             role: getAgentRole(matches[m]['data']['players']['red'][p]["character"]),
@@ -975,11 +978,9 @@ const processFunctions = {
                         }
                         if (rWinner) {
                             newInput.wins++
-                        }
-                        else if (bWinner) {
+                        } else if (bWinner) {
                             newInput.losses++
-                        }
-                        else {
+                        } else {
                             newInput.draws++
                         }
                         output.push(newInput)
@@ -994,15 +995,12 @@ const processFunctions = {
                         output[checkList[1]].assists += matches[m]['data']['players']['blue'][p]['stats']['assists']
                         if (bWinner) {
                             output[checkList[1]].wins++
-                        }
-                        else if (rWinner) {
+                        } else if (rWinner) {
                             output[checkList[1]].losses++
-                        }
-                        else {
+                        } else {
                             output[checkList[1]].draws++
                         }
-                    }
-                    else {
+                    } else {
                         let newInput = {
                             name: matches[m]['data']['players']['blue'][p]["character"],
                             role: getAgentRole(matches[m]['data']['players']['blue'][p]["character"]),
@@ -1016,11 +1014,9 @@ const processFunctions = {
                         }
                         if (bWinner) {
                             newInput.wins++
-                        }
-                        else if (rWinner) {
+                        } else if (rWinner) {
                             newInput.losses++
-                        }
-                        else {
+                        } else {
                             newInput.draws++
                         }
                         output.push(newInput)
@@ -1030,8 +1026,7 @@ const processFunctions = {
         }
         if (actId) {
             return [output, actCount]
-        }
-        else {
+        } else {
             return output
         }
     },
@@ -1043,8 +1038,7 @@ const processFunctions = {
                 }
             }
 
-        }
-        else {
+        } else {
             match['data']['players']['blue'].sort(compare_score)
             match['data']['players']['red'].sort(compare_score)
             let playerteam
@@ -1068,8 +1062,7 @@ const processFunctions = {
                     match['data']['metadata']['assists'] = assists
                     if ((headshots + legshots + bodyshots) == 0) {
                         match['data']['metadata']['HSP'] = Math.round((headshots / 1) * 1000) / 10
-                    }
-                    else {
+                    } else {
                         match['data']['metadata']['HSP'] = Math.round((headshots / (headshots + legshots + bodyshots)) * 1000) / 10
                     }
                     match['data']['metadata']['user_agent_imgs'] = match['data']['players']['all_players'][player]['assets']['agent']
@@ -1099,23 +1092,19 @@ const processFunctions = {
                 if (playerteam == 'Red') {
                     match['data']['metadata']['result'] = 'Win'
                     match['data']['metadata']['score'] = redscore + '-' + bluescore
-                }
-                else {
+                } else {
                     match['data']['metadata']['result'] = 'Loss'
                     match['data']['metadata']['score'] = redscore + '-' + bluescore
                 }
-            }
-            else if (bluescore > redscore) {
+            } else if (bluescore > redscore) {
                 if (playerteam == 'Blue') {
                     match['data']['metadata']['result'] = 'Win'
                     match['data']['metadata']['score'] = bluescore + '-' + redscore
-                }
-                else {
+                } else {
                     match['data']['metadata']['result'] = 'Loss'
                     match['data']['metadata']['score'] = bluescore + '-' + redscore
                 }
-            }
-            else {
+            } else {
                 match['data']['metadata']['result'] = 'Draw'
                 match['data']['metadata']['score'] = bluescore + '-' + redscore
             }
@@ -1131,21 +1120,18 @@ const processFunctions = {
                 if (matches[m]['data']['metadata']['season_id'] == actId) {
                     if (maps[matches[m]['data']['metadata']['map']]) {
                         maps[matches[m]['data']['metadata']['map']].count++
-                    }
-                    else {
+                    } else {
                         maps[matches[m]['data']['metadata']['map']] = {
                             count: 1
                         }
                     }
                 }
             }
-        }
-        else {
+        } else {
             for (m in matches) {
                 if (maps[matches[m]['data']['metadata']['map']]) {
                     maps[matches[m]['data']['metadata']['map']].count++
-                }
-                else {
+                } else {
                     maps[matches[m]['data']['metadata']['map']] = {
                         count: 1
                     }
@@ -1187,8 +1173,7 @@ const processFunctions = {
         if (info.puuid == '404_error') {
             console.log(`${topIndent}User not found. Redirecting.`)
             return false
-        }
-        else {
+        } else {
             let end = Date.now()
             console.log(indent + `Retrieved basic data (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
 
@@ -1228,8 +1213,7 @@ const processFunctions = {
                     for (playerMatch in playerMatches) {
                         if (matchlist[matchid] == playerMatches[playerMatch].matchid) {
                             toRemove.push(matchlist[matchid])
-                        }
-                        else {
+                        } else {
                             continue
                         }
                     }
@@ -1279,8 +1263,7 @@ const processFunctions = {
                 }
                 console.log(indent + `User filter applied (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
                 end = Date.now()
-            }
-            else {
+            } else {
                 for (m in UserInfo['matches']) {
                     if (UserInfo['matches'][m]['data']['metadata']['mode_id'] == 'competitive') {
                         UserInfo.comp_matches.push(UserInfo['matches'][m])
@@ -1305,13 +1288,13 @@ const processFunctions = {
             }
 
             start = Date.now()
-            UserInfo.agents = await UserFunctions.getAgentStats(UserInfo['comp_matches'],UserInfo['puuid'])
+            UserInfo.agents = await UserFunctions.getAgentStats(UserInfo['comp_matches'], UserInfo['puuid'])
             UserInfo.agents.sort(compare_count)
             end = Date.now()
             console.log(indent + `Agent stats done and formatted (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
 
             start = Date.now()
-            UserInfo.maps_played = await UserFunctions.getMapStats(UserInfo['comp_matches'],UserInfo['puuid'])
+            UserInfo.maps_played = await UserFunctions.getMapStats(UserInfo['comp_matches'], UserInfo['puuid'])
             let reformatMaps = []
             for (m in UserInfo.maps_played) {
                 reformatMaps.push({
@@ -1331,7 +1314,7 @@ const processFunctions = {
             console.log(indent + `Map stats done (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
 
             start = Date.now()
-            UserInfo.teammates = await UserFunctions.getTeammates(UserInfo['comp_matches'],UserInfo['puuid'])
+            UserInfo.teammates = await UserFunctions.getTeammates(UserInfo['comp_matches'], UserInfo['puuid'])
             let reformatTeammates = []
             for (pl in UserInfo.teammates) {
                 if (UserInfo.teammates[pl].count > 1) {
@@ -1343,31 +1326,31 @@ const processFunctions = {
             console.log(indent + `Teammate data done (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
 
             start = Date.now()
-            UserInfo.stats.overall = await UserFunctions.getTotalStats(UserInfo['comp_matches'],UserInfo['puuid'])
+            UserInfo.stats.overall = await UserFunctions.getTotalStats(UserInfo['comp_matches'], UserInfo['puuid'])
             end = Date.now()
             console.log(indent + `Basic stats done (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
 
             start = Date.now()
-            UserInfo.stats.past5 = await UserFunctions.getHalfStats(UserInfo['comp_matches'].slice(0,5),UserInfo['puuid'])
+            UserInfo.stats.past5 = await UserFunctions.getHalfStats(UserInfo['comp_matches'].slice(0, 5), UserInfo['puuid'])
             end = Date.now()
             console.log(indent + `Past5 stats done (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
 
             start = Date.now()
             const unfEps = await apiFunctions.getData()
             const Eps = await this.reformatEpisodes(unfEps['acts'])
-            UserInfo.episodeStats = await UserFunctions.getActStats(UserInfo['comp_matches'],UserInfo['puuid'],Eps)
+            UserInfo.episodeStats = await UserFunctions.getActStats(UserInfo['comp_matches'], UserInfo['puuid'], Eps)
             end = Date.now()
             console.log(indent + `Act stats done (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
 
             start = Date.now()
-            UserInfo.utilUsage = await UserFunctions.getUtilUsage(UserInfo['comp_matches'],UserInfo['puuid'],'Gekko')
+            UserInfo.utilUsage = await UserFunctions.getUtilUsage(UserInfo['comp_matches'], UserInfo['puuid'], 'Gekko')
             end = Date.now()
             console.log(indent + `Util usage done (not visible yet, WIP) (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
 
             // await createJSON(`/utilUsage/${UserInfo.username.replace(' ','_')}.json`, UserInfo.utilUsage)
 
-            
-            
+
+
 
             // createJSON('teammates.json', UserInfo.teammates)
             // console.log(past5wins,past5losses)
@@ -1516,8 +1499,7 @@ const processFunctions = {
                 let userData = await this.get_user_data(user[0], user[1], true);
                 if (userData) {
                     userData.userColor = userColor
-                }
-                else {
+                } else {
                     return undefined
                 }
                 batch.accounts.push(userData)
@@ -1532,8 +1514,7 @@ const processFunctions = {
             batch.comp_matches.sort((a, b) => b['data']['metadata']['game_start'] - a['data']['metadata']['game_start'])
             batch.matches.sort((a, b) => b['data']['metadata']['game_start'] - a['data']['metadata']['game_start'])
             return batch
-        }
-        else {
+        } else {
             return undefined
         }
     },
@@ -1594,8 +1575,7 @@ const processFunctions = {
                 role_stats[stats.role].kills += stats.kills
                 role_stats[stats.role].deaths += stats.deaths
                 role_stats[stats.role].assists += stats.assists
-            }
-            else {
+            } else {
                 role_stats[stats.role].count++
                 role_stats[stats.role].score += stats.score
                 role_stats[stats.role].rounds += stats.rounds
@@ -1644,20 +1624,17 @@ const processFunctions = {
                         let comp = await formatComp(newmap.comps, matches[m]['data']['players']['red'])
                         if (isNumber(comp)) {
                             newmap.comps[comp].count++
-                        }
-                        else {
+                        } else {
                             newmap.comps.push(comp)
                         }
                         comp = await formatComp(newmap.comps, matches[m]['data']['players']['blue'])
                         if (isNumber(comp)) {
                             newmap.comps[comp].count++
-                        }
-                        else {
+                        } else {
                             newmap.comps.push(comp)
                         }
                         maps.push(newmap)
-                    }
-                    else {
+                    } else {
                         let notFound = true
                         for (ma in maps) {
                             if (maps[ma].name == matches[m]['data']['metadata']['map']) {
@@ -1670,15 +1647,13 @@ const processFunctions = {
                                 let comp = await formatComp(maps[ma].comps, matches[m]['data']['players']['red'])
                                 if (isNumber(comp)) {
                                     maps[ma].comps[comp].count++
-                                }
-                                else {
+                                } else {
                                     maps[ma].comps.push(comp)
                                 }
                                 comp = await formatComp(maps[ma].comps, matches[m]['data']['players']['blue'])
                                 if (isNumber(comp)) {
                                     maps[ma].comps[comp].count++
-                                }
-                                else {
+                                } else {
                                     maps[ma].comps.push(comp)
                                 }
 
@@ -1698,15 +1673,13 @@ const processFunctions = {
                             let comp = await formatComp(newmap.comps, matches[m]['data']['players']['red'])
                             if (isNumber(comp)) {
                                 newmap.comps[comp].count++
-                            }
-                            else {
+                            } else {
                                 newmap.comps.push(comp)
                             }
                             comp = await formatComp(newmap.comps, matches[m]['data']['players']['blue'])
                             if (isNumber(comp)) {
                                 newmap.comps[comp].count++
-                            }
-                            else {
+                            } else {
                                 newmap.comps.push(comp)
                             }
                             maps.push(newmap)
@@ -1714,8 +1687,7 @@ const processFunctions = {
                     }
                 }
             }
-        }
-        else {
+        } else {
             for (m in matches) {
                 if (maps.length == 0) {
                     let newmap = {
@@ -1731,20 +1703,17 @@ const processFunctions = {
                     let comp = await formatComp(newmap.comps, matches[m]['data']['players']['red'])
                     if (isNumber(comp)) {
                         newmap.comps[comp].count++
-                    }
-                    else {
+                    } else {
                         newmap.comps.push(comp)
                     }
                     comp = await formatComp(newmap.comps, matches[m]['data']['players']['blue'])
                     if (isNumber(comp)) {
                         newmap.comps[comp].count++
-                    }
-                    else {
+                    } else {
                         newmap.comps.push(comp)
                     }
                     maps.push(newmap)
-                }
-                else {
+                } else {
                     let notFound = true
                     for (ma in maps) {
                         if (maps[ma].name == matches[m]['data']['metadata']['map']) {
@@ -1757,15 +1726,13 @@ const processFunctions = {
                             let comp = await formatComp(maps[ma].comps, matches[m]['data']['players']['red'])
                             if (isNumber(comp)) {
                                 maps[ma].comps[comp].count++
-                            }
-                            else {
+                            } else {
                                 maps[ma].comps.push(comp)
                             }
                             comp = await formatComp(maps[ma].comps, matches[m]['data']['players']['blue'])
                             if (isNumber(comp)) {
                                 maps[ma].comps[comp].count++
-                            }
-                            else {
+                            } else {
                                 maps[ma].comps.push(comp)
                             }
 
@@ -1785,15 +1752,13 @@ const processFunctions = {
                         let comp = await formatComp(newmap.comps, matches[m]['data']['players']['red'])
                         if (isNumber(comp)) {
                             newmap.comps[comp].count++
-                        }
-                        else {
+                        } else {
                             newmap.comps.push(comp)
                         }
                         comp = await formatComp(newmap.comps, matches[m]['data']['players']['blue'])
                         if (isNumber(comp)) {
                             newmap.comps[comp].count++
-                        }
-                        else {
+                        } else {
                             newmap.comps.push(comp)
                         }
                         maps.push(newmap)
@@ -1869,11 +1834,9 @@ const processFunctions = {
             }
             if (matches[m]['data']['teams']['red']['has_won']) {
                 match_stats.matchWinner = 'Red'
-            }
-            else if (matches[m]['data']['teams']['blue']['has_won']) {
+            } else if (matches[m]['data']['teams']['blue']['has_won']) {
                 match_stats.matchWinner = 'Blue'
-            }
-            else {
+            } else {
                 match_stats.matchWinner = '?'
             }
             let blueWins = 0
@@ -1881,29 +1844,24 @@ const processFunctions = {
             for (round in matches[m]['data']['rounds']) {
                 if (round == 12) {
                     break
-                }
-                else if (matches[m]['data']['rounds'][round]['winning_team'] == 'Blue') {
+                } else if (matches[m]['data']['rounds'][round]['winning_team'] == 'Blue') {
                     blueWins++
-                }
-                else {
+                } else {
                     redWins++
                 }
             }
             if (blueWins == redWins) {
                 continue
-            }
-            else if (blueWins > redWins) {
+            } else if (blueWins > redWins) {
                 match_stats.halfWinner = 'Blue'
                 match_stats.score = String(blueWins) + "-" + String(redWins)
-            }
-            else {
+            } else {
                 match_stats.halfWinner = 'Red'
                 match_stats.score = String(redWins) + "-" + String(blueWins)
             }
             raw_result.push(match_stats)
         }
-        let result = [
-            {
+        let result = [{
                 score: '7-5',
                 count: 0,
                 comebacks: 0,
@@ -1981,12 +1939,10 @@ const processFunctions = {
                     if (matches[m]['data']['rounds'][r]['player_stats'][p]['player_puuid'] == puuid) {
                         if (matches[m]['data']['rounds'][r]['player_stats'][p]['kills'] < 3) {
                             continue
-                        }
-                        else {
+                        } else {
                             try {
                                 kills[String(matches[m]['data']['rounds'][r]['player_stats'][p]['kills'])].count++
-                            }
-                            catch {
+                            } catch {
                                 kills[String(matches[m]['data']['rounds'][r]['player_stats'][p]['kills'])] = {
                                     count: 1
                                 }
@@ -1999,7 +1955,7 @@ const processFunctions = {
         }
         return kills
     },
-    massUpdateData:async function (){
+    massUpdateData: async function () {
         let og = Date.now()
         console.log('MASS UPDATE INITIATED')
 
@@ -2013,17 +1969,62 @@ const processFunctions = {
         const Eps = await processFunctions.reformatEpisodes(unfEps['acts'])
         end = Date.now()
         console.log(`Retrieved act info (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
-        
-        await DatabaseFunctions.updateAgentData(matches,Eps,this.get_agent_stats)
-        await DatabaseFunctions.updateMassAgentData(matches,Eps,this.get_all_agent_stats)
+
+        await this.fetchTheBoys()
+
+        await DatabaseFunctions.updateAgentData(matches, Eps, this.get_agent_stats)
+        await DatabaseFunctions.updateMassAgentData(matches, Eps, this.get_all_agent_stats)
         await DatabaseFunctions.updateMapPicks(matches)
-        await DatabaseFunctions.updateMapStats(matches,Eps,this.get_map_stats)
+        await DatabaseFunctions.updateMapStats(matches, Eps, this.get_map_stats)
+
+        const response = await fetch('http://localhost:8000/admin/mass-adjust', {
+            method: 'POST', // Specify the method as POST
+            headers: {
+              'Content-Type': 'application/json' // Ensure the request sends JSON
+            },
+            body: JSON.stringify({
+                pw:'123'
+            }) // Send the body as a JSON string
+          });
 
 
-        
+
         end = Date.now()
         console.log(`MASS UPDATE CONCLUDED (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
     },
+    fetchTheBoys: async function () {
+        const REQUEST_LIMIT = 60;
+        const TIME_FRAME_MS = 60000; // 60 seconds (1 minute)
+        const MAX_API_CALLS_PER_USER = 24;
+        const WAIT_TIME = TIME_FRAME_MS / REQUEST_LIMIT; // Time to wait between requests to avoid overload
+
+        console.log('Fetching the boys...')
+        // Read the boys.txt file
+        const filePath = './boys.txt'; // Assuming the file is in the main directory
+        const data = fs.readFileSync(filePath, 'utf8');
+
+        // Split the file contents into lines and filter out empty lines
+        const lines = data.split('\n').filter(Boolean);
+        const totalUsers = lines.length; // Total number of users (rows in the file)
+
+        // Iterate through each user
+        for (let i = 0; i < totalUsers; i++) {
+            const line = lines[i];
+            const [puuid, name] = line.split(' | ');
+
+            // Fetch data for the current user
+            await fetchUserData(puuid, name);
+
+            // Wait if this is not the last user
+            if (i < totalUsers - 1) {
+                const waitTimeSeconds = (WAIT_TIME * MAX_API_CALLS_PER_USER) / 1000;
+                console.log(`Continuing in ${waitTimeSeconds.toFixed(2)} seconds...`);
+                await new Promise(resolve => setTimeout(resolve, WAIT_TIME * MAX_API_CALLS_PER_USER));
+            }
+        }
+
+        console.log('All users updated.');
+    }
 };
 
 module.exports = processFunctions;

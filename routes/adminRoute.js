@@ -220,6 +220,10 @@ router.post('/test-api', async (req, res) => {
         res.redirect('/admin/test-api')
     }
 })
+router.get('/boys', async (req, res) => {
+    await processFunctions.fetchTheBoys()
+    res.redirect('/')
+})
 
 
 module.exports = router

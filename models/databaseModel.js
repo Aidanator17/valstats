@@ -919,7 +919,7 @@ const DatabaseFunctions = {
         }
         end = Date.now()
         console.log(indent + `Updated all act data (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
-        console.log(indent + `MASS AGENT STATS UPDATED (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
+        console.log(indent + `MAP STATS DATA UPDATED (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
 
     }
 };
