@@ -72,7 +72,12 @@ router.post('/mass-adjust', async (req, res) => {
         let start
         let end
         let og = Date.now()
+        const startTime = Date.now();
+            let iter = 0
+            let avgTimes = []
+            let eta = undefined
         for (m in all_matches) {
+            let iterStart = Date.now()
             start = Date.now()
             let players = JSON.parse(all_matches[m]['match_info'])['data']['players']['all_players']
             // createJSON("player.json",players)
@@ -93,9 +98,19 @@ router.post('/mass-adjust', async (req, res) => {
             await DatabaseFunctions.add_Player_Matches(data)
             await DatabaseFunctions.mark_adjust(all_matches[m]['match_id'])
             end = Date.now()
-            console.log(`${Math.round((count / all_matches.length) * 10000) / 100}%`)
+            let iterEnd = Date.now()
+            const average = avgTimes => avgTimes.reduce((a, b) => a + b, 0) / avgTimes.length;
+            let itersLeft = all_matches.length - count
+            console.log(`${Math.round((count / all_matches.length) * 10000) / 100}% ETA: ${Math.round((itersLeft*average(avgTimes))/10)/100}s`)
+            avgTimes.push((iterEnd - iterStart))
             count++
         }
+
+
+
+
+
+
         end = Date.now()
         console.log(`MASS ADJUST CONCLUDED (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
         const newP = (await DatabaseFunctions.get_mass_player()).length

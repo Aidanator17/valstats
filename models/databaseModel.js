@@ -3,7 +3,8 @@ const {
 } = require('@prisma/client');
 const {
     tr,
-    fi
+    fi,
+    da
 } = require('date-fns/locale');
 const {
     json
@@ -112,11 +113,19 @@ const DatabaseFunctions = {
             })
             return matches
         } else {
+            
+            let mStart = Date.now()
             const playerMatches = await DatabaseFunctions.get_Player_Matches(pid)
             let ids = []
+            end = Date.now()
+            // console.log(indent + `1 (${Math.round(((end - mStart) / 1000) * 10) / 10}s)`)
+            mStart = Date.now()
             for (pmatch in playerMatches) {
                 ids.push(playerMatches[pmatch].matchid)
             }
+            end = Date.now()
+            // console.log(indent + `2 (${Math.round(((end - mStart) / 1000) * 10) / 10}s)`)
+            mStart = Date.now()
             const matches = await prisma.matches.findMany({
                 where: {
                     match_id: {
@@ -124,6 +133,8 @@ const DatabaseFunctions = {
                     }
                 }
             })
+            end = Date.now()
+            // console.log(indent + `3 (${Math.round(((end - mStart) / 1000) * 10) / 10}s)`)
             return matches
         }
     },
@@ -812,6 +823,11 @@ const DatabaseFunctions = {
             }
         }
     },
+    getCompActTotals: async function (){
+        const data = await prisma.compActTotal.findMany()
+        // console.log(data)
+        return data
+    },
     updateMapStats: async function (matches, Eps, get_map_stats) {
         console.log('UPDATING MAP STATS DATA')
         let start = Date.now()
@@ -921,7 +937,59 @@ const DatabaseFunctions = {
         console.log(indent + `Updated all act data (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
         console.log(indent + `MAP STATS DATA UPDATED (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
 
-    }
+    },
+    updateEpiData: async function (d) {
+        console.log(`UPDATING EPISODE DATA`)
+        let start = Date.now()
+        let data = JSON.stringify(d)
+        const update = await prisma.compact_epi_data.update({
+            where:{
+                compact_epi_data_id:1
+            },
+            data:{
+                data
+            }
+        })
+        let end = Date.now()
+        console.log(`Done (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+    },
+    getEpiData: async function (){
+        const actCount = await this.getCompActTotals()
+        const data = await prisma.compact_epi_data.findUnique({
+            where:{
+                compact_epi_data_id:1
+            },
+            select:{
+                data:true
+            }
+        })
+        let newdata = JSON.parse(data.data)
+        for (let ep of newdata){
+            if (ep.name == "Closed Beta"){
+                for (let a of actCount){
+                    if (a.act_id == ep.id){
+                        ep.count = a.act_count
+                    }
+                }
+                if (!ep.count){
+                    ep.count = 0
+                }
+            }
+            else {
+                for (let act of ep.acts){
+                    for (let a of actCount){
+                        if (a.act_id == act.id){
+                            act.count = a.act_count
+                        }
+                    }
+                    if (!act.count){
+                        act.count = 0
+                    }
+                }
+            }
+        }
+        return newdata
+    },
 };
 
 module.exports = DatabaseFunctions;

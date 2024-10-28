@@ -1234,22 +1234,33 @@ const processFunctions = {
                 let newmatches = []
                 for (m in matchlist) {
                     start = Date.now()
-                    newmatches.push(await apiFunctions.getMatch(matchlist[m]))
-                    end = Date.now()
-                    console.log(indent + `retrieved match ${queue}/${returned_matches} data (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+                    let newmatch = await apiFunctions.getMatch(matchlist[m])
+                    if (newmatch) {
+                        newmatches.push(newmatch)
+                        end = Date.now()
+                        console.log(indent + `retrieved match ${queue}/${returned_matches} data (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+                    } else {
+                        end = Date.now()
+                        console.log(indent + `FAILED to retrieve match, ending API calls ${queue}/${returned_matches} data (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+                        break
+                    }
                     queue++
                 }
                 start = Date.now()
                 await DatabaseFunctions.mass_add(newmatches, rawmatchlist, pid)
                 end = Date.now()
-                console.log(indent + `All ${returned_matches} matches successfully added (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+                console.log(indent + `All ${newmatches.length} matches successfully added (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
             }
             let mStart = Date.now()
             real_matches = (await DatabaseFunctions.get_matches_by_pid(pid)).sort((a, b) => b.match_starttime - a.match_starttime)
+            end = Date.now()
+            // console.log(indent + `! (${Math.round(((end - mStart) / 1000) * 10) / 10}s)`)
 
             for (m in real_matches) {
                 UserInfo['matches'].push(await processFunctions.alterMatch(JSON.parse(real_matches[m]['match_info']), UserInfo['puuid'], false))
             }
+            end = Date.now()
+            // console.log(indent + `!! (${Math.round(((end - mStart) / 1000) * 10) / 10}s)`)
             // createJSON('match.json', UserInfo['matches'][0])
             if (agentFilter) {
                 start = Date.now()
@@ -1336,8 +1347,7 @@ const processFunctions = {
             console.log(indent + `Past5 stats done (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
 
             start = Date.now()
-            const unfEps = await apiFunctions.getData()
-            const Eps = await this.reformatEpisodes(unfEps['acts'])
+            const Eps = await DatabaseFunctions.getEpiData()
             UserInfo.episodeStats = await UserFunctions.getActStats(UserInfo['comp_matches'], UserInfo['puuid'], Eps)
             end = Date.now()
             console.log(indent + `Act stats done (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
@@ -1976,16 +1986,17 @@ const processFunctions = {
         await DatabaseFunctions.updateMassAgentData(matches, Eps, this.get_all_agent_stats)
         await DatabaseFunctions.updateMapPicks(matches)
         await DatabaseFunctions.updateMapStats(matches, Eps, this.get_map_stats)
+        await DatabaseFunctions.updateEpiData(Eps)
 
         const response = await fetch('http://localhost:8000/admin/mass-adjust', {
             method: 'POST', // Specify the method as POST
             headers: {
-              'Content-Type': 'application/json' // Ensure the request sends JSON
+                'Content-Type': 'application/json' // Ensure the request sends JSON
             },
             body: JSON.stringify({
-                pw:'123'
+                pw: '123'
             }) // Send the body as a JSON string
-          });
+        });
 
 
 

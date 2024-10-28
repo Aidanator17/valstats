@@ -88,8 +88,7 @@ router.get('/', async (req, res) => {
 })
 
 router.get('/lookup', async (req, res) => {
-    const unfEps = await apiFunctions.getData()
-    const Eps = await processFunctions.reformatEpisodes(unfEps['acts'])
+    const Eps = await DatabaseFunctions.getEpiData()
     // console.log(Eps)
     if (req.query.failed == 'true') {
         res.render('useractlookup', {

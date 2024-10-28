@@ -18,6 +18,7 @@ model matches {
   adjusted        Int     @default(0) @db.TinyInt
 
   @@index([match_type], map: "idx_match_type")
+  @@index([match_id], map: "idx_match_id")
 }
 
 model players {
@@ -33,6 +34,7 @@ model players_matches {
   players   players @relation(fields: [player_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "players_matches_ibfk_1")
 
   @@unique([player_id, matchid], map: "unique_playermatches")
+  @@index([player_id], map: "idx_player_id")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -78,4 +80,25 @@ model map_stats {
   act          String? @db.VarChar(45)
 
   @@unique([map, act], map: "map_act")
+}
+
+model compact_epi_data {
+  compact_epi_data_id Int    @id @unique(map: "compact_epi_data_id_UNIQUE") @default(autoincrement())
+  data                String @db.MediumText
+}
+
+model PlayerMatchesData {
+  player_match_id Int     @id
+  player_id       Int
+  matchid         String
+  match_info      String?
+
+  @@map("player_matches_data")
+}
+
+model CompActTotal {
+  act_id    String @id // Match the datatype of act_id in your database, adjust if it's different
+  act_count Int
+
+  @@map("comp_act_total") // Map the model to the view's name
 }

@@ -18,8 +18,7 @@ router.get('/', async (req, res) => {
     res.redirect('/map/lookup')
 })
 router.get('/lookup', async (req, res) => {
-    const unfEps = await apiFunctions.getData()
-    const Eps = await processFunctions.reformatEpisodes(unfEps['acts'])
+    const Eps = await DatabaseFunctions.getEpiData()
     if (req.query.failed == 'true') {
         res.render('map_lookup', {
             failed: true,

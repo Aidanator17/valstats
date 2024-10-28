@@ -1,6 +1,6 @@
 const fetch = require("node-fetch")
 const key = "?api_key=HDEV-cbf520fc-b91f-4235-b15b-a4d663f6bc9b"
-const size = '&size=20'
+const size = '&size=50'
 
 const UserData = {
     getBasic: async function (user, tag) {
