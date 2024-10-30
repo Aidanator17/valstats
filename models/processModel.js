@@ -409,6 +409,10 @@ async function fetchUserData(puuid, name) {
     }
 }
 
+function agentExists(agents, role, agentName) {
+    return agents[role].some(agent => agent.name === agentName);
+}
+
 const processFunctions = {
     get_agent_stats: async function (agent, matches, actId) {
         let agentData = {
@@ -1626,8 +1630,52 @@ const processFunctions = {
                             attk_wins: 0,
                             def_wins: 0,
                             comps: [],
+                            agents: {
+                                Controller: [],
+                                Duelist: [],
+                                Initiator: [],
+                                Sentinel: [],
+                            },
                             count: 1,
                         }
+
+                        for (let p of matches[m]['data']['players']['all_players']) {
+                            if (agentExists(newmap.agents, getAgentRole(p.character), p.character)) {
+                                for (let a of newmap.agents[getAgentRole(p.character)]) {
+                                    if (a.name == p.character) {
+                                        a.count++
+                                        a.kills += p.stats.kills
+                                        a.deaths += p.stats.deaths
+                                        a.assists += p.stats.assists
+                                        a.headshots += p.stats.headshots
+                                        a.bodyshots += p.stats.bodyshots
+                                        a.legshots += p.stats.legshots
+                                        if (winCheck(matches[m], p.puuid)) {
+                                            a.wins++
+                                        }
+                                    }
+                                }
+                            } else {
+                                let newAgent = {
+                                    name: p.character,
+                                    img:p.assets.agent.small,
+                                    count: 1,
+                                    kills: p.stats.kills,
+                                    deaths: p.stats.deaths,
+                                    assists: p.stats.assists,
+                                    headshots: p.stats.headshots,
+                                    bodyshots: p.stats.bodyshots,
+                                    legshots: p.stats.legshots,
+                                    wins: 0,
+                                }
+                                if (winCheck(matches[m], p.puuid)) {
+                                    newAgent.wins++
+                                }
+                                newmap.agents[getAgentRole(p.character)].push(newAgent)
+                            }
+                        }
+
+
                         let rounds = getAttkDefWins(matches[m])
                         newmap.attk_wins = rounds[0]
                         newmap.def_wins = rounds[1]
@@ -1654,6 +1702,42 @@ const processFunctions = {
                                 maps[ma].def_wins += rounds[1]
                                 maps[ma].count++
 
+                                for (let p of matches[m]['data']['players']['all_players']) {
+                                    if (agentExists(maps[ma].agents, getAgentRole(p.character), p.character)) {
+                                        for (let a of maps[ma].agents[getAgentRole(p.character)]) {
+                                            if (a.name == p.character) {
+                                                a.count++
+                                                a.kills += p.stats.kills
+                                                a.deaths += p.stats.deaths
+                                                a.assists += p.stats.assists
+                                                a.headshots += p.stats.headshots
+                                                a.bodyshots += p.stats.bodyshots
+                                                a.legshots += p.stats.legshots
+                                                if (winCheck(matches[m], p.puuid)) {
+                                                    a.wins++
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        let newAgent = {
+                                            name: p.character,
+                                            img:p.assets.agent.small,
+                                            count: 1,
+                                            kills: p.stats.kills,
+                                            deaths: p.stats.deaths,
+                                            assists: p.stats.assists,
+                                            headshots: p.stats.headshots,
+                                            bodyshots: p.stats.bodyshots,
+                                            legshots: p.stats.legshots,
+                                            wins: 0,
+                                        }
+                                        if (winCheck(matches[m], p.puuid)) {
+                                            newAgent.wins++
+                                        }
+                                        maps[ma].agents[getAgentRole(p.character)].push(newAgent)
+                                    }
+                                }
+
                                 let comp = await formatComp(maps[ma].comps, matches[m]['data']['players']['red'])
                                 if (isNumber(comp)) {
                                     maps[ma].comps[comp].count++
@@ -1675,8 +1759,51 @@ const processFunctions = {
                                 attk_wins: 0,
                                 def_wins: 0,
                                 comps: [],
+                                agents: {
+                                    Controller: [],
+                                    Duelist: [],
+                                    Initiator: [],
+                                    Sentinel: [],
+                                },
                                 count: 1,
                             }
+
+                            for (let p of matches[m]['data']['players']['all_players']) {
+                                if (agentExists(newmap.agents, getAgentRole(p.character), p.character)) {
+                                    for (let a of newmap.agents[getAgentRole(p.character)]) {
+                                        if (a.name == p.character) {
+                                            a.count++
+                                            a.kills += p.stats.kills
+                                            a.deaths += p.stats.deaths
+                                            a.assists += p.stats.assists
+                                            a.headshots += p.stats.headshots
+                                            a.bodyshots += p.stats.bodyshots
+                                            a.legshots += p.stats.legshots
+                                            if (winCheck(matches[m], p.puuid)) {
+                                                a.wins++
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    let newAgent = {
+                                        name: p.character,
+                                        img:p.assets.agent.small,
+                                        count: 1,
+                                        kills: p.stats.kills,
+                                        deaths: p.stats.deaths,
+                                        assists: p.stats.assists,
+                                        headshots: p.stats.headshots,
+                                        bodyshots: p.stats.bodyshots,
+                                        legshots: p.stats.legshots,
+                                        wins: 0,
+                                    }
+                                    if (winCheck(matches[m], p.puuid)) {
+                                        newAgent.wins++
+                                    }
+                                    newmap.agents[getAgentRole(p.character)].push(newAgent)
+                                }
+                            }
+
                             let rounds = getAttkDefWins(matches[m])
                             newmap.attk_wins = rounds[0]
                             newmap.def_wins = rounds[1]
@@ -1705,8 +1832,51 @@ const processFunctions = {
                         attk_wins: 0,
                         def_wins: 0,
                         comps: [],
+                        agents: {
+                            Controller: [],
+                            Duelist: [],
+                            Initiator: [],
+                            Sentinel: [],
+                        },
                         count: 1,
                     }
+
+                    for (let p of matches[m]['data']['players']['all_players']) {
+                        if (agentExists(newmap.agents, getAgentRole(p.character), p.character)) {
+                            for (let a of newmap.agents[getAgentRole(p.character)]) {
+                                if (a.name == p.character) {
+                                    a.count++
+                                    a.kills += p.stats.kills
+                                    a.deaths += p.stats.deaths
+                                    a.assists += p.stats.assists
+                                    a.headshots += p.stats.headshots
+                                    a.bodyshots += p.stats.bodyshots
+                                    a.legshots += p.stats.legshots
+                                    if (winCheck(matches[m], p.puuid)) {
+                                        a.wins++
+                                    }
+                                }
+                            }
+                        } else {
+                            let newAgent = {
+                                name: p.character,
+                                img:p.assets.agent.small,
+                                count: 1,
+                                kills: p.stats.kills,
+                                deaths: p.stats.deaths,
+                                assists: p.stats.assists,
+                                headshots: p.stats.headshots,
+                                bodyshots: p.stats.bodyshots,
+                                legshots: p.stats.legshots,
+                                wins: 0,
+                            }
+                            if (winCheck(matches[m], p.puuid)) {
+                                newAgent.wins++
+                            }
+                            newmap.agents[getAgentRole(p.character)].push(newAgent)
+                        }
+                    }
+
                     let rounds = getAttkDefWins(matches[m])
                     newmap.attk_wins = rounds[0]
                     newmap.def_wins = rounds[1]
@@ -1733,6 +1903,42 @@ const processFunctions = {
                             maps[ma].def_wins += rounds[1]
                             maps[ma].count++
 
+                            for (let p of matches[m]['data']['players']['all_players']) {
+                                if (agentExists(maps[ma].agents, getAgentRole(p.character), p.character)) {
+                                    for (let a of maps[ma].agents[getAgentRole(p.character)]) {
+                                        if (a.name == p.character) {
+                                            a.count++
+                                            a.kills += p.stats.kills
+                                            a.deaths += p.stats.deaths
+                                            a.assists += p.stats.assists
+                                            a.headshots += p.stats.headshots
+                                            a.bodyshots += p.stats.bodyshots
+                                            a.legshots += p.stats.legshots
+                                            if (winCheck(matches[m], p.puuid)) {
+                                                a.wins++
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    let newAgent = {
+                                        name: p.character,
+                                        img:p.assets.agent.small,
+                                        count: 1,
+                                        kills: p.stats.kills,
+                                        deaths: p.stats.deaths,
+                                        assists: p.stats.assists,
+                                        headshots: p.stats.headshots,
+                                        bodyshots: p.stats.bodyshots,
+                                        legshots: p.stats.legshots,
+                                        wins: 0,
+                                    }
+                                    if (winCheck(matches[m], p.puuid)) {
+                                        newAgent.wins++
+                                    }
+                                    maps[ma].agents[getAgentRole(p.character)].push(newAgent)
+                                }
+                            }
+
                             let comp = await formatComp(maps[ma].comps, matches[m]['data']['players']['red'])
                             if (isNumber(comp)) {
                                 maps[ma].comps[comp].count++
@@ -1754,7 +1960,49 @@ const processFunctions = {
                             attk_wins: 0,
                             def_wins: 0,
                             comps: [],
+                            agents: {
+                                Controller: [],
+                                Duelist: [],
+                                Initiator: [],
+                                Sentinel: [],
+                            },
                             count: 1,
+                        }
+
+                        for (let p of matches[m]['data']['players']['all_players']) {
+                            if (agentExists(newmap.agents, getAgentRole(p.character), p.character)) {
+                                for (let a of newmap.agents[getAgentRole(p.character)]) {
+                                    if (a.name == p.character) {
+                                        a.count++
+                                        a.kills += p.stats.kills
+                                        a.deaths += p.stats.deaths
+                                        a.assists += p.stats.assists
+                                        a.headshots += p.stats.headshots
+                                        a.bodyshots += p.stats.bodyshots
+                                        a.legshots += p.stats.legshots
+                                        if (winCheck(matches[m], p.puuid)) {
+                                            a.wins++
+                                        }
+                                    }
+                                }
+                            } else {
+                                let newAgent = {
+                                    name: p.character,
+                                    img:p.assets.agent.small,
+                                    count: 1,
+                                    kills: p.stats.kills,
+                                    deaths: p.stats.deaths,
+                                    assists: p.stats.assists,
+                                    headshots: p.stats.headshots,
+                                    bodyshots: p.stats.bodyshots,
+                                    legshots: p.stats.legshots,
+                                    wins: 0,
+                                }
+                                if (winCheck(matches[m], p.puuid)) {
+                                    newAgent.wins++
+                                }
+                                newmap.agents[getAgentRole(p.character)].push(newAgent)
+                            }
                         }
                         let rounds = getAttkDefWins(matches[m])
                         newmap.attk_wins = rounds[0]

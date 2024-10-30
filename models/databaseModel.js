@@ -766,10 +766,12 @@ const DatabaseFunctions = {
                         map
                     },
                     select: {
+                        act:true,
                         data: true
                     }
                 })
                 for (let m of data) {
+                    m.data.act = m.act
                     final.push(JSON.parse(m.data))
                 }
                 return final
@@ -782,10 +784,12 @@ const DatabaseFunctions = {
                         map
                     },
                     select: {
+                        act:true,
                         data: true
                     }
                 })
                 for (let m of data) {
+                    m.data.act = m.act
                     final.push(JSON.parse(m.data))
                 }
                 return final
@@ -798,10 +802,12 @@ const DatabaseFunctions = {
                         act
                     },
                     select: {
+                        act:true,
                         data: true
                     }
                 })
                 for (let m of data) {
+                    m.data.act = m.act
                     final.push(JSON.parse(m.data))
                 }
                 return final
@@ -813,10 +819,12 @@ const DatabaseFunctions = {
                         act
                     },
                     select: {
+                        act:true,
                         data: true
                     }
                 })
                 for (let m of data) {
+                    m.data.act = m.act
                     final.push(JSON.parse(m.data))
                 }
                 return final
