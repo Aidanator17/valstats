@@ -119,7 +119,8 @@ router.get('/:user/:tag', async (req, res) => {
         res.render('user', {
             UserInfo,
             title: UserInfo['username'],
-            sheet: 'user.css'
+            sheet: 'user.css',
+            ifAct: false
         })
     }
     else {

@@ -2,12 +2,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
-      <%= title %>
+        <%= title %>
     </title>
     <link rel="stylesheet" href="/css/<%= sheet %>">
-  </head>
-  
-  <body>
+</head>
+
+<body>
     <div class="container">
         <div id="usergrid">
             <div class="usergrid-item">
@@ -41,236 +41,283 @@
                 <a href="/user/clearFilter %>">Clear Filter</a>
             </div>
             <% } %>
-        <div class="stats">
-            <h3>Stats (All Comp Matches)</h3>
-            <div class="statgrid">
-                <div class="statgrid-item">
-                    <p class="statgrid-element">
-                        Headshot: <%= UserInfo['stats']['overall']['HSP'] %>%
-                    </p>
-                    <p class="statgrid-element">
-                        K/D: <%= UserInfo['stats']['overall']['KD'] %>
-                    </p>
-                    <p class="statgrid-element">
-                        Win: <%= UserInfo['stats']['overall']['wp'] %>%
-                    </p>
-                </div>
-            </div>
-        </div>
-        <div class="stats">
-            <h3>Stats (Past 5 Comp Matches)</h3>
-            <div class="statgrid">
-                <div class="statgrid-item">
-                    <p class="statgrid-element">
-                        Headshot: <%= UserInfo['stats']['past5']['HSP'] %>%
-                    </p>
-                    <p class="statgrid-element">
-                        K/D: <%= UserInfo['stats']['past5']['KD'] %>
-                    </p>
-                    <p class="statgrid-element">
-                        Win: <%= UserInfo['stats']['past5']['wp'] %>%
-                    </p>
-                </div>
-            </div>
-
-        </div>
-        <div class="buttons">
-            <button onclick="openCompMatches()" class="tab active" id="comp-matches-btn">Comp Matches</button>
-            <button onclick="openMatches()" class="tab" id="matches-btn">All Matches</button>
-            <button onclick="openAM()" class="tab" id="am-btn">Agents / Maps</button>
-            <button onclick="" class="tab" id="x-btn">Button 3</button>
-        </div>
-        <div id="comp-matches" class="matches">
-            <h3>Matches (<%= UserInfo['comp_matches'].length %>)</h3>
-            <div class="matchgrid">
-                <div class="matchgrid-item">
-                    <p></p>
-                    <p class="matchgrid-element matchgrid-title">
-                        Date
-                    </p>
-                    <p class="matchgrid-element matchgrid-title">
-                        Map
-                    </p>
-                    <p class="matchgrid-element matchgrid-title">
-                        Gamemode
-                    </p>
-                    <p class="matchgrid-element matchgrid-title">
-                        Agent
-                    </p>
-                    <p class="matchgrid-element matchgrid-title">
-                        K/D/A (K/D)
-                    </p>
-                    <p class="matchgrid-element matchgrid-title">
-                        HS%
-                    </p>
-                    <p class="matchgrid-element matchgrid-title">
-                        Match Score
-                    </p>
-                    <p class="matchgrid-element matchgrid-title">
-
-                    </p>
-                </div>
-                <% for (match in UserInfo['comp_matches']) { %>
-                    <div class="matchgrid-item">
-                        <p class="matchgrid-element">
-                            
-                <img id="matchrank" src="/images/ranks/<%= UserInfo['comp_matches'][match]['data']['metadata']['player_rank'] %>_Rank.png" alt="Player Image">
-                        </p>
-                        <p class="matchgrid-element matchgrid-date">
-                            <%= UserInfo['comp_matches'][match]['data']['metadata']['game_start'] %>
-                        </p>
-                        <p class="matchgrid-element">
-                            <%= UserInfo['comp_matches'][match]['data']['metadata']['map'] %>
-                        </p>
-                        <p class="matchgrid-element">
-                            <%= UserInfo['comp_matches'][match]['data']['metadata']['mode'] %>
-                        </p>
-                        <p class="matchgrid-element">
-                            <%= UserInfo['comp_matches'][match]['data']['metadata']['agent'] %>
-                        </p>
-                        <p class="matchgrid-element">
-                            <%= UserInfo['comp_matches'][match]['data']['metadata']['kills'] %>/<%=
-                                    UserInfo['comp_matches'][match]['data']['metadata']['deaths'] %>/<%=
-                                        UserInfo['comp_matches'][match]['data']['metadata']['assists'] %> (<%=
-                                            UserInfo['comp_matches'][match]['data']['metadata']['kd'] %>)
-                        </p>
-                        <p class="matchgrid-element">
-                            <%= UserInfo['comp_matches'][match]['data']['metadata']['HSP'] %>
-                        </p>
-                        <p class="matchgrid-element">
-                            <%= UserInfo['comp_matches'][match]['data']['metadata']['result'] %>
-                                <%= UserInfo['comp_matches'][match]['data']['metadata']['score'] %>
-                        </p>
-                        <form class="matchgrid-element"
-                            action="/user/<%= UserInfo['username'] %>/<%= UserInfo['tag'] %>/<%= UserInfo['comp_matches'][match]['data']['metadata']['matchid'] %>"
-                            method="get">
-                            <button type="submit" class="view-button">view</button>
-                        </form>
-                    </div>
-                    <% } %>
-            </div>
-        </div>
-        <div style="display: none;" id="matches" class="matches">
-            <h3>Matches (<%= UserInfo['matches'].length %>)</h3>
-            <div class="matchgrid">
-                <div class="matchgrid-item">
-                    <p class="matchgrid-element matchgrid-title">
-                        Date
-                    </p>
-                    <p class="matchgrid-element matchgrid-title">
-                        Map
-                    </p>
-                    <p class="matchgrid-element matchgrid-title">
-                        Gamemode
-                    </p>
-                    <p class="matchgrid-element matchgrid-title">
-                        Agent
-                    </p>
-                    <p class="matchgrid-element matchgrid-title">
-                        K/D/A (K/D)
-                    </p>
-                    <p class="matchgrid-element matchgrid-title">
-                        HS%
-                    </p>
-                    <p class="matchgrid-element matchgrid-title">
-                        Match Score
-                    </p>
-                    <p class="matchgrid-element matchgrid-title">
-
-                    </p>
-                </div>
-                <% for (match in UserInfo['matches']) { %>
-                    <div class="matchgrid-item">
-                        <p class="matchgrid-element matchgrid-date">
-                            <%= UserInfo['matches'][match]['data']['metadata']['game_start'] %>
-                        </p>
-                        <p class="matchgrid-element">
-                            <%= UserInfo['matches'][match]['data']['metadata']['map'] %>
-                        </p>
-                        <p class="matchgrid-element">
-                            <%= UserInfo['matches'][match]['data']['metadata']['mode'] %>
-                        </p>
-                        <p class="matchgrid-element">
-                            <%= UserInfo['matches'][match]['data']['metadata']['agent'] %>
-                        </p>
-                        <p class="matchgrid-element">
-                            <%= UserInfo['matches'][match]['data']['metadata']['kills'] %>/<%=
-                                    UserInfo['matches'][match]['data']['metadata']['deaths'] %>/<%=
-                                        UserInfo['matches'][match]['data']['metadata']['assists'] %> (<%=
-                                            UserInfo['matches'][match]['data']['metadata']['kd'] %>)
-                        </p>
-                        <p class="matchgrid-element">
-                            <%= UserInfo['matches'][match]['data']['metadata']['HSP'] %>
-                        </p>
-                        <p class="matchgrid-element">
-                            <%= UserInfo['matches'][match]['data']['metadata']['result'] %>
-                                <%= UserInfo['matches'][match]['data']['metadata']['score'] %>
-                        </p>
-                        <form class="matchgrid-element"
-                            action="/user/<%= UserInfo['username'] %>/<%= UserInfo['tag'] %>/<%= UserInfo['matches'][match]['data']['metadata']['matchid'] %>"
-                            method="get">
-                            <button type="submit" class="view-button">view</button>
-                        </form>
-                    </div>
-                    <% } %>
-            </div>
-        </div>
-        <div style="display: none;" id="agents-maps" class="agents-maps">
-            <p class="agents-maps-item blank-item" data-row="0" data-col="0"></p>
-            <% let maps=UserInfo['maps_played']; if (UserInfo['agents'].length>0){ for (m in Object.keys(UserInfo['agents'][0].maps)){ %>
-                <p class="grid-item-title agents-maps-item" data-row="0" data-col="<%= maps.indexOf(UserInfo['maps_played'].find(obj=>
-                    {
-                    return obj.name === Object.keys(UserInfo['agents'][0].maps)[m]
-                    }))+1 %>">
-                    <%= Object.keys(UserInfo['agents'][0].maps)[m] %>
-                </p>
-                <% } for (a in UserInfo['agents']){ %>
-                    <p class="grid-item-title agents-maps-item" data-row="<%= parseInt(a)+1 %>" data-col="0">
-                        <%= UserInfo['agents'][a].agent %>
-                    </p>
-                    <% for (m in UserInfo['agents'][a].maps){ if (UserInfo['agents'][a].maps[m]>0){
-                        %>
-                        <div style='font-weight: bold;' class="agents-maps-item" data-row="<%= parseInt(a)+1 %>"
-                            data-col="<%= maps.indexOf(UserInfo['maps_played'].find(obj=>
-                                            {
-                                            return obj.name === m
-                                            }))+1 %>">
-                            <%= UserInfo['agents'][a].maps[m]+"/"+UserInfo['maps_played'].find(obj=>{return obj.name ===
-                                m}).count %><br>
-                                <% if (UserInfo['maps_played'].find(obj=>{return obj.name === m}).count == 0){ %>
-                                    N/A
-                                    <% }else{ %>
-                                        <%= Math.round((UserInfo['agents'][a].maps[m]/UserInfo['maps_played'].find(obj=>
-                                            {
-                                            return obj.name === m
-                                            }).count)*1000)/10
-                                            %>%<% } %>
+                <div class="stats">
+                    <h3>Stats (All Comp Matches)</h3>
+                    <div class="statgrid">
+                        <div class="statgrid-item">
+                            <p class="statgrid-element">
+                                Headshot: <%= UserInfo['stats']['overall']['HSP'] %>%
+                            </p>
+                            <p class="statgrid-element">
+                                K/D: <%= UserInfo['stats']['overall']['KD'] %>
+                            </p>
+                            <p class="statgrid-element">
+                                Win: <%= UserInfo['stats']['overall']['wp'] %>%
+                            </p>
                         </div>
+                    </div>
+                </div>
+                <div class="stats">
+                    <h3>Stats (Past 5 Comp Matches)</h3>
+                    <div class="statgrid">
+                        <div class="statgrid-item">
+                            <p class="statgrid-element">
+                                Headshot: <%= UserInfo['stats']['past5']['HSP'] %>%
+                            </p>
+                            <p class="statgrid-element">
+                                K/D: <%= UserInfo['stats']['past5']['KD'] %>
+                            </p>
+                            <p class="statgrid-element">
+                                Win: <%= UserInfo['stats']['past5']['wp'] %>%
+                            </p>
+                        </div>
+                    </div>
 
-                        <% }else{ %>
-                            <div class="agents-maps-item" data-row="<%= parseInt(a)+1 %>" data-col="<%= maps.indexOf(UserInfo['maps_played'].find(obj=>
-                                            {
-                                            return obj.name === m
-                                            }))+1 %>">
-                                <%= UserInfo['agents'][a].maps[m]+"/"+UserInfo['maps_played'].find(obj=>
-                                    {
-                                    return obj.name === m
-                                    }).count %><br>
-                                    <% if (UserInfo['maps_played'].find(obj=>{return obj.name === m}).count == 0){ %>
-                                        N/A
-                                        <% }else{ %>
-                                            <%=
-                                                Math.round((UserInfo['agents'][a].maps[m]/UserInfo['maps_played'].find(obj=>
-                                                {
-                                                return obj.name === m
-                                                }).count)*1000)/10
-                                                %>%<% } %>
+                </div>
+                <div class="buttons">
+                    <button onclick="openCompMatches()" class="tab active" id="comp-matches-btn">Comp Matches</button>
+                    <button onclick="openMatches()" class="tab" id="matches-btn">All Matches</button>
+                    <button onclick="openAM()" class="tab" id="am-btn">Agents / Maps</button>
+                    <button onclick="openAgents()" class="tab" id="a-btn">Agent Stats</button>
+                </div>
+                <div id="comp-matches" class="matches">
+                    <h3>Matches (<%= UserInfo['comp_matches'].length %>)</h3>
+                    <div class="matchgrid">
+                        <div class="matchgrid-item">
+                            <p></p>
+                            <p class="matchgrid-element matchgrid-title">
+                                Date
+                            </p>
+                            <p class="matchgrid-element matchgrid-title">
+                                Map
+                            </p>
+                            <p class="matchgrid-element matchgrid-title">
+                                Gamemode
+                            </p>
+                            <p class="matchgrid-element matchgrid-title">
+                                Agent
+                            </p>
+                            <p class="matchgrid-element matchgrid-title">
+                                K/D/A (K/D)
+                            </p>
+                            <p class="matchgrid-element matchgrid-title">
+                                HS%
+                            </p>
+                            <p class="matchgrid-element matchgrid-title">
+                                Match Score
+                            </p>
+                            <p class="matchgrid-element matchgrid-title">
+
+                            </p>
+                        </div>
+                        <% for (match in UserInfo['comp_matches']) { %>
+                            <div class="matchgrid-item">
+                                <p class="matchgrid-element">
+
+                                    <img id="matchrank"
+                                        src="/images/ranks/<%= UserInfo['comp_matches'][match]['data']['metadata']['player_rank'] %>_Rank.png"
+                                        alt="Player Image">
+                                </p>
+                                <p class="matchgrid-element matchgrid-date">
+                                    <%= UserInfo['comp_matches'][match]['data']['metadata']['game_start'] %>
+                                </p>
+                                <p class="matchgrid-element">
+                                    <%= UserInfo['comp_matches'][match]['data']['metadata']['map'] %>
+                                </p>
+                                <p class="matchgrid-element">
+                                    <%= UserInfo['comp_matches'][match]['data']['metadata']['mode'] %>
+                                </p>
+                                <p class="matchgrid-element">
+                                    <%= UserInfo['comp_matches'][match]['data']['metadata']['agent'] %>
+                                </p>
+                                <p class="matchgrid-element">
+                                    <%= UserInfo['comp_matches'][match]['data']['metadata']['kills'] %>/<%=
+                                            UserInfo['comp_matches'][match]['data']['metadata']['deaths'] %>/<%=
+                                                UserInfo['comp_matches'][match]['data']['metadata']['assists'] %> (<%=
+                                                    UserInfo['comp_matches'][match]['data']['metadata']['kd'] %>)
+                                </p>
+                                <p class="matchgrid-element">
+                                    <%= UserInfo['comp_matches'][match]['data']['metadata']['HSP'] %>
+                                </p>
+                                <p class="matchgrid-element">
+                                    <%= UserInfo['comp_matches'][match]['data']['metadata']['result'] %>
+                                        <%= UserInfo['comp_matches'][match]['data']['metadata']['score'] %>
+                                </p>
+                                <form class="matchgrid-element"
+                                    action="/user/<%= UserInfo['username'] %>/<%= UserInfo['tag'] %>/<%= UserInfo['comp_matches'][match]['data']['metadata']['matchid'] %>"
+                                    method="get">
+                                    <button type="submit" class="view-button">view</button>
+                                </form>
                             </div>
-                            <% }%>
+                            <% } %>
+                    </div>
+                </div>
+                <div style="display: none;" id="matches" class="matches">
+                    <h3>Matches (<%= UserInfo['matches'].length %>)</h3>
+                    <div class="matchgrid">
+                        <div class="matchgrid-item">
+                            <p class="matchgrid-element matchgrid-title">
+                                Date
+                            </p>
+                            <p class="matchgrid-element matchgrid-title">
+                                Map
+                            </p>
+                            <p class="matchgrid-element matchgrid-title">
+                                Gamemode
+                            </p>
+                            <p class="matchgrid-element matchgrid-title">
+                                Agent
+                            </p>
+                            <p class="matchgrid-element matchgrid-title">
+                                K/D/A (K/D)
+                            </p>
+                            <p class="matchgrid-element matchgrid-title">
+                                HS%
+                            </p>
+                            <p class="matchgrid-element matchgrid-title">
+                                Match Score
+                            </p>
+                            <p class="matchgrid-element matchgrid-title">
 
-                                <% } %>
-                                    <% }} %>
-        </div>
+                            </p>
+                        </div>
+                        <% for (match in UserInfo['matches']) { %>
+                            <div class="matchgrid-item">
+                                <p class="matchgrid-element matchgrid-date">
+                                    <%= UserInfo['matches'][match]['data']['metadata']['game_start'] %>
+                                </p>
+                                <p class="matchgrid-element">
+                                    <%= UserInfo['matches'][match]['data']['metadata']['map'] %>
+                                </p>
+                                <p class="matchgrid-element">
+                                    <%= UserInfo['matches'][match]['data']['metadata']['mode'] %>
+                                </p>
+                                <p class="matchgrid-element">
+                                    <%= UserInfo['matches'][match]['data']['metadata']['agent'] %>
+                                </p>
+                                <p class="matchgrid-element">
+                                    <%= UserInfo['matches'][match]['data']['metadata']['kills'] %>/<%=
+                                            UserInfo['matches'][match]['data']['metadata']['deaths'] %>/<%=
+                                                UserInfo['matches'][match]['data']['metadata']['assists'] %> (<%=
+                                                    UserInfo['matches'][match]['data']['metadata']['kd'] %>)
+                                </p>
+                                <p class="matchgrid-element">
+                                    <%= UserInfo['matches'][match]['data']['metadata']['HSP'] %>
+                                </p>
+                                <p class="matchgrid-element">
+                                    <%= UserInfo['matches'][match]['data']['metadata']['result'] %>
+                                        <%= UserInfo['matches'][match]['data']['metadata']['score'] %>
+                                </p>
+                                <form class="matchgrid-element"
+                                    action="/user/<%= UserInfo['username'] %>/<%= UserInfo['tag'] %>/<%= UserInfo['matches'][match]['data']['metadata']['matchid'] %>"
+                                    method="get">
+                                    <button type="submit" class="view-button">view</button>
+                                </form>
+                            </div>
+                            <% } %>
+                    </div>
+                </div>
+                <div style="display: none;" id="agents-maps" class="agents-maps">
+                    <!-- Blank starting cell in the top-left corner -->
+                    <p class="agents-maps-item blank-item" data-row="0" data-col="0"></p>
+
+                    <% let maps=UserInfo['maps_played']; %>
+
+                        <!-- Map names as column headers -->
+                        <% if (UserInfo['agents'].length> 0) {
+                            let firstAgentMaps = Object.keys(UserInfo['agents'][0].maps);
+
+                            firstAgentMaps.forEach((mapName, index) => {
+                            let mapObj = maps.find(obj => obj.name === mapName);
+                            let colIndex = maps.indexOf(mapObj) + 1;
+                            %>
+                            <p class="grid-item-title agents-maps-item" data-row="0" data-col="<%= colIndex %>">
+                                <%= mapName %>
+                            </p>
+                            <% }); %>
+
+                                <!-- Agent names and map stats -->
+                                <% UserInfo['agents'].forEach((agent, agentIndex)=> { %>
+                                    <!-- Agent name as row header -->
+                                    <p class="grid-item-title agents-maps-item" data-row="<%= agentIndex + 1 %>"
+                                        data-col="0">
+                                        <%= agent.agent %>
+                                    </p>
+
+                                    <!-- Agent's map data -->
+                                    <% for (let mapName in agent.maps) { let mapCount=agent.maps[mapName]; let
+                                        mapObj=maps.find(obj=> obj.name === mapName);
+                                        let colIndex = maps.indexOf(mapObj) + 1;
+                                        let mapTotalCount = mapObj ? mapObj.count : 0;
+                                        let percentage = mapTotalCount ? Math.round((mapCount / mapTotalCount) * 1000) /
+                                        10 : 'N/A';
+                                        let boldStyle = mapCount > 0 ? 'font-weight: bold;' : '';
+                                        %>
+                                        <div class="agents-maps-item" data-row="<%= agentIndex + 1 %>"
+                                            data-col="<%= colIndex %>" style="<%= boldStyle %>">
+                                            <%= `${mapCount}/${mapTotalCount}` %><br>
+                                                <%= percentage %>%
+                                        </div>
+                                        <% } %>
+                                            <% }); %>
+                                                <% } %>
+                </div>
+
+
+                <div style="display: none;" id="agents-stats">
+                    <% let agents=UserInfo['agents']; %>
+                        <% const totalPickCount=agents.reduce((acc, agent)=> acc + agent.count, 0); %>
+                            <div id="agent-stats-grid">
+                                <% agents.forEach(agent=> { %>
+                                    <div class="agent-stat-item">
+                                        <img src="<%= agent.img %>" alt="<%= agent.agent %> image" class="agent-img" />
+                                        <div class="agent-header">
+                                            <h3>
+                                                <%= agent.agent %>
+                                            </h3>
+                                        </div>
+
+                                        <div class="agent-details">
+                                            <div class="stat-item"><strong>Pick Rate:</strong>
+                                                <%= ((agent.count / totalPickCount) * 100).toFixed(2) %>%
+                                            </div>
+                                            <div class="stat-item"><strong>Win%:</strong>
+                                                <%= ((agent.wins / (agent.wins + agent.losses + agent.draws)) *
+                                                    100).toFixed(2) %>%
+                                            </div>
+                                            <div class="stat-item"><strong>K/D:</strong>
+                                                <%= (agent.kills / agent.deaths).toFixed(2) %>
+                                            </div>
+                                            <div class="stat-item"><strong>K/D/A:</strong>
+                                                <%= ((agent.kills + agent.assists) / agent.deaths).toFixed(2) %>
+                                            </div>
+                                            <div class="stat-item"><strong>HS%:</strong>
+                                                <%= ((agent.headshots / (agent.headshots + agent.bodyshots +
+                                                    agent.legshots)) * 100).toFixed(1) %>%
+                                            </div>
+
+                                            <div class="ability-casts">
+                                                <strong>Ability Casts per Round:</strong><br>
+                                                <strong>E:</strong>
+                                                <%= (agent.ability_casts.e_cast / agent.rounds).toFixed(2) %>
+                                                    &nbsp;&nbsp;
+                                                    <strong>Q:</strong>
+                                                    <%= (agent.ability_casts.q_cast / agent.rounds).toFixed(2) %>
+                                                        &nbsp;&nbsp;
+                                                        <strong>C:</strong>
+                                                        <%= (agent.ability_casts.c_cast / agent.rounds).toFixed(2) %>
+                                                            &nbsp;&nbsp;
+                                                            <strong>X:</strong>
+                                                            <%= (agent.ability_casts.x_cast / agent.rounds).toFixed(2)
+                                                                %>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <% }); %>
+                            </div>
+
+
+                </div>
     </div>
     <div class="side-containers">
         <div class="side-container">
@@ -304,8 +351,10 @@
                 <p class="agent-grid-item grid-item-title">KD</p>
                 <% for (a in UserInfo.agents){ if (a < 5){ %>
                     <p class="agent-grid-item">
-                        <a style="color: #000000; text-decoration: none;" href="<%= '/agent/'+UserInfo.agents[a].agent %>">
-                        <%= UserInfo.agents[a].agent %></a>
+                        <a style="color: #000000; text-decoration: none;"
+                            href="<%= '/agent/'+UserInfo.agents[a].agent %>">
+                            <%= UserInfo.agents[a].agent %>
+                        </a>
                     </p>
                     <p class="agent-grid-item">
                         <%= UserInfo.agents[a].count %>
@@ -328,7 +377,7 @@
                 <p class="map-grid-item grid-item-title">W-L</p>
                 <p class="map-grid-item grid-item-title">Win%</p>
                 <p class="map-grid-item grid-item-title">KD</p>
-                <% for (a in UserInfo.maps_played){ if (UserInfo.maps_played[a].count > 0){ %>
+                <% for (a in UserInfo.maps_played){ if (UserInfo.maps_played[a].count> 0){ %>
                     <p class="map-grid-item">
                         <%= UserInfo.maps_played[a].name %>
                     </p>
@@ -338,7 +387,7 @@
                     <p class="map-grid-item">
                         <% if (UserInfo.maps_played[a].count>0){ %>
                             <%= UserInfo.maps_played[a].wins %>W - <%= UserInfo.maps_played[a].losses %>L
-                                <% }else{ %>N/A<% } %>
+                                    <% }else{ %>N/A<% } %>
                     </p>
                     <p class="map-grid-item">
                         <% if (UserInfo.maps_played[a].count>0){ %>
@@ -347,7 +396,8 @@
                     </p>
                     <p class="map-grid-item">
                         <% if (UserInfo.maps_played[a].count>0){ %>
-                        <%= Math.round((UserInfo.maps_played[a].kills/UserInfo.maps_played[a].deaths)*100)/100 %><% }else{ %>N/A<% } %>
+                            <%= Math.round((UserInfo.maps_played[a].kills/UserInfo.maps_played[a].deaths)*100)/100 %>
+                                <% }else{ %>N/A<% } %>
                     </p>
                     <% }} %>
             </div>
@@ -360,7 +410,7 @@
                 <p class="role-grid-item grid-item-title">Win%</p>
                 <p class="role-grid-item grid-item-title">KD</p>
                 <p class="role-grid-item grid-item-title">KDA</p>
-                <% for (r in UserInfo.role_stats){ let name = UserInfo.role_stats[r].name.slice(0,1)%>
+                <% for (r in UserInfo.role_stats){ let name=UserInfo.role_stats[r].name.slice(0,1)%>
                     <p class="role-grid-item">
                         <%= name[0].toUpperCase()+UserInfo.role_stats[r].name.slice(1) %>
                     </p>
@@ -368,13 +418,15 @@
                         <%= UserInfo.role_stats[r].play_rate %>
                     </p>
                     <p class="role-grid-item">
-                        <%= Math.round((UserInfo.role_stats[r].wins/(UserInfo.role_stats[r].wins+UserInfo.role_stats[r].losses))*10000)/100 %>%
+                        <%= Math.round((UserInfo.role_stats[r].wins/(UserInfo.role_stats[r].wins+UserInfo.role_stats[r].losses))*10000)/100
+                            %>%
                     </p>
                     <p class="role-grid-item">
                         <%= Math.round((UserInfo.role_stats[r].kills/UserInfo.role_stats[r].deaths)*100)/100 %>
                     </p>
                     <p class="role-grid-item">
-                        <%= Math.round(((UserInfo.role_stats[r].kills+UserInfo.role_stats[r].assists)/UserInfo.role_stats[r].deaths)*100)/100 %>
+                        <%= Math.round(((UserInfo.role_stats[r].kills+UserInfo.role_stats[r].assists)/UserInfo.role_stats[r].deaths)*100)/100
+                            %>
                     </p>
                     <% } %>
             </div>
@@ -386,35 +438,40 @@
                 <p class="kills-grid-item grid-item-title">5Ks</p>
                 <p class="kills-grid-item grid-item-title">6Ks</p>
                 <p class="kills-grid-item grid-item-title">7Ks</p>
-                <% for (let k = 3; k < 8; k++){ %>
+                <% for (let k=3; k < 8; k++){ %>
                     <p class="kills-grid-item">
                         <%= UserInfo.roundKills[String(k)].count %>
                     </p>
                     <% } %>
-                </div>
             </div>
-            <div class="side-container">
-                <div id="actStats-grid">
-                    <p class="actStats-grid-item grid-item-title">Act</p>
-                    <p class="actStats-grid-item grid-item-title">Play Count</p>
-                    <p class="actStats-grid-item grid-item-title">Win%</p>
-                    <p class="actStats-grid-item grid-item-title">KD</p>
-                    <% for (a in UserInfo.episodeStats){ %>
-                        <p class="actStats-grid-item">
-                           <a style="color: #000000; text-decoration: none;" href="/user-by-act/<%= UserInfo.username %>%>/<%= UserInfo.tag %>/<%= UserInfo.episodeStats[a].act %>"><%= UserInfo.episodeStats[a].name %></a>
-                        </p>
-                        <p class="actStats-grid-item">
-                            <%= UserInfo.episodeStats[a].count %>
-                        </p>
-                        <p class="actStats-grid-item">
-                            <%= Math.round((UserInfo.episodeStats[a].wins/(UserInfo.episodeStats[a].wins+UserInfo.episodeStats[a].losses))*10000)/100 %>%
-                        </p>
-                        <p class="actStats-grid-item">
-                            <%= Math.round((UserInfo.episodeStats[a].kills/UserInfo.episodeStats[a].deaths)*100)/100 %>
-                        </p>
-                        <% } %>
-                    </div>
-                </div>
+        </div>
+        <% if (!ifAct){ %>
+        <div class="side-container">
+            <div id="actStats-grid">
+                <p class="actStats-grid-item grid-item-title">Act</p>
+                <p class="actStats-grid-item grid-item-title">Play Count</p>
+                <p class="actStats-grid-item grid-item-title">Win%</p>
+                <p class="actStats-grid-item grid-item-title">KD</p>
+                <% for (a in UserInfo.episodeStats){ %>
+                    <p class="actStats-grid-item">
+                        <a style="color: #000000; text-decoration: none;"
+                            href="/user-by-act/<%= UserInfo.username %>%>/<%= UserInfo.tag %>/<%= UserInfo.episodeStats[a].act %>">
+                            <%= UserInfo.episodeStats[a].name %>
+                        </a>
+                    </p>
+                    <p class="actStats-grid-item">
+                        <%= UserInfo.episodeStats[a].count %>
+                    </p>
+                    <p class="actStats-grid-item">
+                        <%= Math.round((UserInfo.episodeStats[a].wins/(UserInfo.episodeStats[a].wins+UserInfo.episodeStats[a].losses))*10000)/100
+                            %>%
+                    </p>
+                    <p class="actStats-grid-item">
+                        <%= Math.round((UserInfo.episodeStats[a].kills/UserInfo.episodeStats[a].deaths)*100)/100 %>
+                    </p>
+                    <% } %>
+            </div>
+        </div> <% } %>
     </div>
     <script>
         document.querySelectorAll('.agents-maps-item').forEach(item => {
@@ -440,8 +497,8 @@
             let amButton = document.getElementById('am-btn')
             let am = document.getElementById('agents-maps')
 
-            let xButton = document.getElementById('x-btn')
-            let x = undefined
+            let aButton = document.getElementById('a-btn')
+            let a = document.getElementById('agents-stats')
 
             let matchesButton = document.getElementById('matches-btn')
             let matches = document.getElementById('matches')
@@ -458,9 +515,9 @@
                 compMatches.style.display = ''
                 cmButton.classList.add('active')
             }
-            else if (!x.style.display != 'none') {
-                x.style.display = 'none'
-                xButton.classList.remove('active')
+            else if (!a.style.display != 'none') {
+                a.style.display = 'none'
+                aButton.classList.remove('active')
                 compMatches.style.display = ''
                 cmButton.classList.add('active')
             }
@@ -472,8 +529,8 @@
             let amButton = document.getElementById('am-btn')
             let am = document.getElementById('agents-maps')
 
-            let xButton = document.getElementById('x-btn')
-            let x = undefined
+            let aButton = document.getElementById('a-btn')
+            let a = document.getElementById('agents-stats')
 
             let matchesButton = document.getElementById('matches-btn')
             let matches = document.getElementById('matches')
@@ -490,9 +547,9 @@
                 matches.style.display = ''
                 matchesButton.classList.add('active')
             }
-            else if (!x.style.display != 'none') {
-                x.style.display = 'none'
-                xButton.classList.remove('active')
+            else if (!a.style.display != 'none') {
+                a.style.display = 'none'
+                aButton.classList.remove('active')
                 matches.style.display = ''
                 matchesButton.classList.add('active')
             }
@@ -504,8 +561,8 @@
             let amButton = document.getElementById('am-btn')
             let am = document.getElementById('agents-maps')
 
-            let xButton = document.getElementById('x-btn')
-            let x = undefined
+            let aButton = document.getElementById('a-btn')
+            let a = document.getElementById('agents-stats')
 
             let matchesButton = document.getElementById('matches-btn')
             let matches = document.getElementById('matches')
@@ -522,14 +579,46 @@
                 am.style.display = ''
                 amButton.classList.add('active')
             }
-            else if (!x.style.display != 'none') {
-                x.style.display = 'none'
-                xButton.classList.remove('active')
+            else if (!a.style.display != 'none') {
+                a.style.display = 'none'
+                aButton.classList.remove('active')
                 am.style.display = ''
                 amButton.classList.add('active')
             }
         }
-        function openX() { }
+        function openAgents() {
+
+            let cmButton = document.getElementById('comp-matches-btn')
+            let compMatches = document.getElementById('comp-matches')
+
+            let amButton = document.getElementById('am-btn')
+            let am = document.getElementById('agents-maps')
+
+            let aButton = document.getElementById('a-btn')
+            let a = document.getElementById('agents-stats')
+
+            let matchesButton = document.getElementById('matches-btn')
+            let matches = document.getElementById('matches')
+
+            if (matches.style.display != 'none') {
+                matches.style.display = 'none'
+                matchesButton.classList.remove('active')
+                a.style.display = ''
+                aButton.classList.add('active')
+            }
+            else if (compMatches.style.display != 'none') {
+                compMatches.style.display = 'none'
+                cmButton.classList.remove('active')
+                a.style.display = ''
+                aButton.classList.add('active')
+            }
+            else if (am.style.display != 'none') {
+                am.style.display = 'none'
+                amButton.classList.remove('active')
+                a.style.display = ''
+                aButton.classList.add('active')
+            }
+        }
         function getTime(rawTime) {
             // Given epoch time in GMT (milliseconds since January 1, 1970)
             const epochTime = parseInt(rawTime) * 1000; // Example epoch time in milliseconds

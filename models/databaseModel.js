@@ -113,7 +113,7 @@ const DatabaseFunctions = {
             })
             return matches
         } else {
-            
+
             let mStart = Date.now()
             const playerMatches = await DatabaseFunctions.get_Player_Matches(pid)
             let ids = []
@@ -265,7 +265,7 @@ const DatabaseFunctions = {
                 }
             })
             let end = Date.now()
-            // console.log(`Retrieved comp match count (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+            console.log(`Retrieved comp match count (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
             iterTake = 100
             let iter = Math.ceil(totalMatches / iterTake)
             let s = 0
@@ -285,17 +285,18 @@ const DatabaseFunctions = {
                 raw_matches.push(...iter_matches);
                 s += iterTake
                 end = Date.now()
-                // console.log(`retrieved ${iter_matches.length} matches, total: ${totalMatches} (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+                console.log(indent+`retrieved ${Math.round((raw_matches.length/totalMatches)*1000)/10}% matches, total: ${raw_matches.length}/${totalMatches} (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
             }
 
 
 
             end = Date.now()
-            // console.log(`Retrieved comp matches (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
+            console.log(`Retrieved comp matches (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
             start = Date.now()
             let matches = []
-            for (m in raw_matches) {
-                matches.push(JSON.parse(raw_matches[m]['match_info']))
+            while (raw_matches.length > 0) {
+                const item = raw_matches.shift();  // Remove the first item from raw_matches
+                matches.push(JSON.parse(item['match_info']));
             }
             end = Date.now()
             // console.log(`Formatted comp matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
@@ -311,7 +312,7 @@ const DatabaseFunctions = {
         return totalMatches
     },
     fix_act_ids: async function () {
-        if (true) {} else {
+        if (true) { } else {
             const matches = await this.mass_retrieve()
             for (m in matches) {
                 let data = JSON.parse(matches[m]['match_info'])
@@ -582,7 +583,7 @@ const DatabaseFunctions = {
         }
         end = Date.now()
         console.log(indent + `Updated act-specific data (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
-        
+
         start = Date.now()
         let agentData = await get_all_agent_stats(matches)
         await prisma.mass_agents.update({
@@ -766,7 +767,7 @@ const DatabaseFunctions = {
                         map
                     },
                     select: {
-                        act:true,
+                        act: true,
                         data: true
                     }
                 })
@@ -784,7 +785,7 @@ const DatabaseFunctions = {
                         map
                     },
                     select: {
-                        act:true,
+                        act: true,
                         data: true
                     }
                 })
@@ -802,7 +803,7 @@ const DatabaseFunctions = {
                         act
                     },
                     select: {
-                        act:true,
+                        act: true,
                         data: true
                     }
                 })
@@ -819,7 +820,7 @@ const DatabaseFunctions = {
                         act
                     },
                     select: {
-                        act:true,
+                        act: true,
                         data: true
                     }
                 })
@@ -831,7 +832,7 @@ const DatabaseFunctions = {
             }
         }
     },
-    getCompActTotals: async function (){
+    getCompActTotals: async function () {
         const data = await prisma.compActTotal.findMany()
         // console.log(data)
         return data
@@ -843,12 +844,12 @@ const DatabaseFunctions = {
         let end
         const currentData = await prisma.map_stats.findMany({
             select: {
-                map:true,
-                act:true
+                map: true,
+                act: true
             }
         })
-        console.log(indent + `Retrieved old data (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
         end = Date.now()
+        console.log(indent + `Retrieved old data (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
 
         start = Date.now()
         for (let e of Eps) {
@@ -870,10 +871,10 @@ const DatabaseFunctions = {
                             })
                         } else {
                             await prisma.map_stats.create({
-                                data:{
-                                    map:map.name,
-                                    data:JSON.stringify(map),
-                                    act:e.id
+                                data: {
+                                    map: map.name,
+                                    data: JSON.stringify(map),
+                                    act: e.id
                                 }
                             })
                             console.log(indent + 'New row added!')
@@ -899,10 +900,10 @@ const DatabaseFunctions = {
                                 })
                             } else {
                                 await prisma.map_stats.create({
-                                    data:{
-                                        map:map.name,
-                                        data:JSON.stringify(map),
-                                        act:act.id
+                                    data: {
+                                        map: map.name,
+                                        data: JSON.stringify(map),
+                                        act: act.id
                                     }
                                 })
                                 console.log(indent + 'New row added!')
@@ -932,10 +933,10 @@ const DatabaseFunctions = {
                 })
             } else {
                 await prisma.map_stats.create({
-                    data:{
-                        map:map.name,
-                        data:JSON.stringify(map),
-                        act:'all'
+                    data: {
+                        map: map.name,
+                        data: JSON.stringify(map),
+                        act: 'all'
                     }
                 })
                 console.log(indent + 'New row added!')
@@ -951,46 +952,46 @@ const DatabaseFunctions = {
         let start = Date.now()
         let data = JSON.stringify(d)
         const update = await prisma.compact_epi_data.update({
-            where:{
-                compact_epi_data_id:1
+            where: {
+                compact_epi_data_id: 1
             },
-            data:{
+            data: {
                 data
             }
         })
         let end = Date.now()
         console.log(`Done (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
     },
-    getEpiData: async function (){
+    getEpiData: async function () {
         const actCount = await this.getCompActTotals()
         const data = await prisma.compact_epi_data.findUnique({
-            where:{
-                compact_epi_data_id:1
+            where: {
+                compact_epi_data_id: 1
             },
-            select:{
-                data:true
+            select: {
+                data: true
             }
         })
         let newdata = JSON.parse(data.data)
-        for (let ep of newdata){
-            if (ep.name == "Closed Beta"){
-                for (let a of actCount){
-                    if (a.act_id == ep.id){
+        for (let ep of newdata) {
+            if (ep.name == "Closed Beta") {
+                for (let a of actCount) {
+                    if (a.act_id == ep.id) {
                         ep.count = a.act_count
                     }
                 }
-                if (!ep.count){
+                if (!ep.count) {
                     ep.count = 0
                 }
             }
             else {
-                for (let act of ep.acts){
-                    for (let a of actCount){
-                        if (a.act_id == act.id){
+                for (let act of ep.acts) {
+                    for (let a of actCount) {
+                        if (a.act_id == act.id) {
                             act.count = a.act_count
                         }
                     }
-                    if (!act.count){
+                    if (!act.count) {
                         act.count = 0
                     }
                 }

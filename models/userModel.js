@@ -1,13 +1,23 @@
-const { PrismaClient } = require('@prisma/client');
-const { tr } = require('date-fns/locale');
-const { json } = require('express');
+const {
+    PrismaClient
+} = require('@prisma/client');
+const {
+    tr
+} = require('date-fns/locale');
+const {
+    json
+} = require('express');
 const prisma = new PrismaClient();
 const fs = require('fs');
 const apiFunctions = require('./valAPI.js');
 const processFunctions = require("./processModel")
 const DatabaseFunctions = require("./databaseModel");
-const { name } = require('ejs');
-const { kill } = require('process');
+const {
+    name
+} = require('ejs');
+const {
+    kill
+} = require('process');
 
 
 async function createJSON(name, jsondata) {
@@ -17,56 +27,52 @@ async function createJSON(name, jsondata) {
         }
     });
 }
+
 function getUserTeam(match, puuid) {
     for (p in match['data']['players']['all_players']) {
         if (match['data']['players']['all_players'][p]['puuid'] == puuid) {
             if (match['data']['players']['all_players'][p]['team'] == 'Red') {
                 return 'red'
-            }
-            else {
+            } else {
                 return 'blue'
             }
         }
     }
 }
+
 function winCheckNum(match, puuid) {
     for (p in match['data']['players']['all_players']) {
         if (match['data']['players']['all_players'][p]['puuid'] == puuid) {
             if (match['data']['players']['all_players'][p]['team'] == 'Red') {
                 if (match['data']['teams']['red']['has_won']) {
                     return 1
-                }
-                else {
+                } else {
                     return 0
                 }
-            }
-            else {
+            } else {
                 if (match['data']['teams']['blue']['has_won']) {
                     return 1
-                }
-                else {
+                } else {
                     return 0
                 }
             }
         }
     }
 }
+
 function lossCheckNum(match, puuid) {
     for (p in match['data']['players']['all_players']) {
         if (match['data']['players']['all_players'][p]['puuid'] == puuid) {
             if (match['data']['players']['all_players'][p]['team'] == 'Red') {
                 if (match['data']['teams']['red']['has_won']) {
                     return 0
-                }
-                else {
+                } else {
                     return 1
                 }
-            }
-            else {
+            } else {
                 if (match['data']['teams']['blue']['has_won']) {
                     return 0
-                }
-                else {
+                } else {
                     return 1
                 }
             }
@@ -101,11 +107,9 @@ const UserFunctions = {
 
                 if (matches[m]['data']['metadata']['result'] == 'Win') {
                     overall.wins++
-                }
-                else if (matches[m]['data']['metadata']['result'] == 'Loss') {
+                } else if (matches[m]['data']['metadata']['result'] == 'Loss') {
                     overall.losses++
-                }
-                else {
+                } else {
                     overall.draws++
                 }
             }
@@ -141,11 +145,9 @@ const UserFunctions = {
 
                 if (matches[m]['data']['metadata']['result'] == 'Win') {
                     overall.wins++
-                }
-                else if (matches[m]['data']['metadata']['result'] == 'Loss') {
+                } else if (matches[m]['data']['metadata']['result'] == 'Loss') {
                     overall.losses++
-                }
-                else {
+                } else {
                     overall.draws++
                 }
             }
@@ -162,10 +164,15 @@ const UserFunctions = {
                 if (matches[m]['data']['metadata']['result'] == "Win") {
                     let input = {
                         agent: matches[m]['data']['metadata']['agent'],
+                        img: matches[m]['data']['metadata'].agent_img.small,
                         count: 1,
+                        rounds: matches[m]['data']['metadata'].rounds_played,
                         wins: 1,
                         losses: 0,
                         draws: 0,
+                        headshots: matches[m]['data']['metadata'].stats.headshots,
+                        bodyshots: matches[m]['data']['metadata'].stats.bodyshots,
+                        legshots: matches[m]['data']['metadata'].stats.legshots,
                         kills: matches[m]['data']['metadata']['kills'],
                         deaths: matches[m]['data']['metadata']['deaths'],
                         assists: matches[m]['data']['metadata']['assists'],
@@ -181,18 +188,28 @@ const UserFunctions = {
                             "Pearl": 0,
                             "Split": 0,
                             "Sunset": 0,
+                        },
+                        ability_casts: {
+                            "x_cast": matches[m]['data']['metadata'].ability_casts.x_cast,
+                            "e_cast": matches[m]['data']['metadata'].ability_casts.e_cast,
+                            "q_cast": matches[m]['data']['metadata'].ability_casts.q_cast,
+                            "c_cast": matches[m]['data']['metadata'].ability_casts.c_cast
                         }
                     }
                     input.maps[matches[m]['data']['metadata']['map']]++
                     agents.push(input)
-                }
-                else if (matches[m]['data']['metadata']['result'] == "Loss") {
+                } else if (matches[m]['data']['metadata']['result'] == "Loss") {
                     let input = {
                         agent: matches[m]['data']['metadata']['agent'],
+                        img: matches[m]['data']['metadata'].agent_img.small,
                         count: 1,
+                        rounds: matches[m]['data']['metadata'].rounds_played,
                         wins: 0,
                         losses: 1,
                         draws: 0,
+                        headshots: matches[m]['data']['metadata'].stats.headshots,
+                        bodyshots: matches[m]['data']['metadata'].stats.bodyshots,
+                        legshots: matches[m]['data']['metadata'].stats.legshots,
                         kills: matches[m]['data']['metadata']['kills'],
                         deaths: matches[m]['data']['metadata']['deaths'],
                         assists: matches[m]['data']['metadata']['assists'],
@@ -208,18 +225,28 @@ const UserFunctions = {
                             "Pearl": 0,
                             "Split": 0,
                             "Sunset": 0,
+                        },
+                        ability_casts: {
+                            "x_cast": matches[m]['data']['metadata'].ability_casts.x_cast,
+                            "e_cast": matches[m]['data']['metadata'].ability_casts.e_cast,
+                            "q_cast": matches[m]['data']['metadata'].ability_casts.q_cast,
+                            "c_cast": matches[m]['data']['metadata'].ability_casts.c_cast
                         }
                     }
                     input.maps[matches[m]['data']['metadata']['map']]++
                     agents.push(input)
-                }
-                else {
+                } else {
                     let input = {
                         agent: matches[m]['data']['metadata']['agent'],
+                        img: matches[m]['data']['metadata'].agent_img.small,
                         count: 1,
+                        rounds: matches[m]['data']['metadata'].rounds_played,
                         wins: 0,
                         losses: 0,
                         draws: 1,
+                        headshots: matches[m]['data']['metadata'].stats.headshots,
+                        bodyshots: matches[m]['data']['metadata'].stats.bodyshots,
+                        legshots: matches[m]['data']['metadata'].stats.legshots,
                         kills: matches[m]['data']['metadata']['kills'],
                         deaths: matches[m]['data']['metadata']['deaths'],
                         assists: matches[m]['data']['metadata']['assists'],
@@ -235,13 +262,18 @@ const UserFunctions = {
                             "Pearl": 0,
                             "Split": 0,
                             "Sunset": 0,
+                        },
+                        ability_casts: {
+                            "x_cast": matches[m]['data']['metadata'].ability_casts.x_cast,
+                            "e_cast": matches[m]['data']['metadata'].ability_casts.e_cast,
+                            "q_cast": matches[m]['data']['metadata'].ability_casts.q_cast,
+                            "c_cast": matches[m]['data']['metadata'].ability_casts.c_cast
                         }
                     }
                     input.maps[matches[m]['data']['metadata']['map']]++
                     agents.push(input)
                 }
-            }
-            else {
+            } else {
                 let found = false
                 for (a in agents) {
                     if (agents[a].agent == matches[m]['data']['metadata']['agent']) {
@@ -252,15 +284,23 @@ const UserFunctions = {
                         if (matches[m]['data']['metadata']['result'] == "Win") {
                             agents[a].wins++
                             agents[a].maps[matches[m]['data']['metadata']['map']]++
-                        }
-                        else if (matches[m]['data']['metadata']['result'] == "Loss") {
+                        } else if (matches[m]['data']['metadata']['result'] == "Loss") {
                             agents[a].losses++
                             agents[a].maps[matches[m]['data']['metadata']['map']]++
-                        }
-                        else {
+                        } else {
                             agents[a].draws++
                             agents[a].maps[matches[m]['data']['metadata']['map']]++
                         }
+
+                        agents.headshots += matches[m]['data']['metadata'].stats.headshots
+                        agents.bodyshots += matches[m]['data']['metadata'].stats.bodyshots
+                        agents.legshots += matches[m]['data']['metadata'].stats.legshots
+
+                        agents[a].rounds += matches[m]['data']['metadata'].rounds_played
+                        agents[a].ability_casts.c_cast += matches[m]['data']['metadata'].ability_casts.c_cast
+                        agents[a].ability_casts.e_cast += matches[m]['data']['metadata'].ability_casts.e_cast
+                        agents[a].ability_casts.q_cast += matches[m]['data']['metadata'].ability_casts.q_cast
+                        agents[a].ability_casts.x_cast += matches[m]['data']['metadata'].ability_casts.x_cast
                         found = true
                     }
                 }
@@ -268,10 +308,15 @@ const UserFunctions = {
                     if (matches[m]['data']['metadata']['result'] == "Win") {
                         let input = {
                             agent: matches[m]['data']['metadata']['agent'],
+                            img: matches[m]['data']['metadata'].agent_img.small,
                             count: 1,
+                            rounds: matches[m]['data']['metadata'].rounds_played,
                             wins: 1,
                             losses: 0,
                             draws: 0,
+                            headshots: matches[m]['data']['metadata'].stats.headshots,
+                            bodyshots: matches[m]['data']['metadata'].stats.bodyshots,
+                            legshots: matches[m]['data']['metadata'].stats.legshots,
                             kills: matches[m]['data']['metadata']['kills'],
                             deaths: matches[m]['data']['metadata']['deaths'],
                             assists: matches[m]['data']['metadata']['assists'],
@@ -287,18 +332,28 @@ const UserFunctions = {
                                 "Pearl": 0,
                                 "Split": 0,
                                 "Sunset": 0,
+                            },
+                            ability_casts: {
+                                "x_cast": matches[m]['data']['metadata'].ability_casts.x_cast,
+                                "e_cast": matches[m]['data']['metadata'].ability_casts.e_cast,
+                                "q_cast": matches[m]['data']['metadata'].ability_casts.q_cast,
+                                "c_cast": matches[m]['data']['metadata'].ability_casts.c_cast
                             }
                         }
                         input.maps[matches[m]['data']['metadata']['map']]++
                         agents.push(input)
-                    }
-                    else if (matches[m]['data']['metadata']['result'] == "Loss") {
+                    } else if (matches[m]['data']['metadata']['result'] == "Loss") {
                         let input = {
                             agent: matches[m]['data']['metadata']['agent'],
+                            img: matches[m]['data']['metadata'].agent_img.small,
                             count: 1,
+                            rounds: matches[m]['data']['metadata'].rounds_played,
                             wins: 0,
                             losses: 1,
                             draws: 0,
+                            headshots: matches[m]['data']['metadata'].stats.headshots,
+                            bodyshots: matches[m]['data']['metadata'].stats.bodyshots,
+                            legshots: matches[m]['data']['metadata'].stats.legshots,
                             kills: matches[m]['data']['metadata']['kills'],
                             deaths: matches[m]['data']['metadata']['deaths'],
                             assists: matches[m]['data']['metadata']['assists'],
@@ -314,18 +369,28 @@ const UserFunctions = {
                                 "Pearl": 0,
                                 "Split": 0,
                                 "Sunset": 0,
+                            },
+                            ability_casts: {
+                                "x_cast": matches[m]['data']['metadata'].ability_casts.x_cast,
+                                "e_cast": matches[m]['data']['metadata'].ability_casts.e_cast,
+                                "q_cast": matches[m]['data']['metadata'].ability_casts.q_cast,
+                                "c_cast": matches[m]['data']['metadata'].ability_casts.c_cast
                             }
                         }
                         input.maps[matches[m]['data']['metadata']['map']]++
                         agents.push(input)
-                    }
-                    else {
+                    } else {
                         let input = {
                             agent: matches[m]['data']['metadata']['agent'],
+                            img: matches[m]['data']['metadata'].agent_img.small,
                             count: 1,
+                            rounds: matches[m]['data']['metadata'].rounds_played,
                             wins: 0,
                             losses: 0,
                             draws: 1,
+                            headshots: matches[m]['data']['metadata'].stats.headshots,
+                            bodyshots: matches[m]['data']['metadata'].stats.bodyshots,
+                            legshots: matches[m]['data']['metadata'].stats.legshots,
                             kills: matches[m]['data']['metadata']['kills'],
                             deaths: matches[m]['data']['metadata']['deaths'],
                             assists: matches[m]['data']['metadata']['assists'],
@@ -341,6 +406,12 @@ const UserFunctions = {
                                 "Pearl": 0,
                                 "Split": 0,
                                 "Sunset": 0,
+                            },
+                            ability_casts: {
+                                "x_cast": matches[m]['data']['metadata'].ability_casts.x_cast,
+                                "e_cast": matches[m]['data']['metadata'].ability_casts.e_cast,
+                                "q_cast": matches[m]['data']['metadata'].ability_casts.q_cast,
+                                "c_cast": matches[m]['data']['metadata'].ability_casts.c_cast
                             }
                         }
                         input.maps[matches[m]['data']['metadata']['map']]++
@@ -461,16 +532,14 @@ const UserFunctions = {
                 maps_played[matches[m]['data']['metadata']['map']].deaths += matches[m]['data']['metadata']['deaths']
                 maps_played[matches[m]['data']['metadata']['map']].assists += matches[m]['data']['metadata']['assists']
                 maps_played[matches[m]['data']['metadata']['map']].wins++
-            }
-            else if (matches[m]['data']['metadata']['result'] == "Loss") {
+            } else if (matches[m]['data']['metadata']['result'] == "Loss") {
                 maps_played[matches[m]['data']['metadata']['map']].count++
                 maps_played[matches[m]['data']['metadata']['map']].kills += matches[m]['data']['metadata']['kills']
                 maps_played[matches[m]['data']['metadata']['map']].deaths += matches[m]['data']['metadata']['deaths']
                 maps_played[matches[m]['data']['metadata']['map']].assists += matches[m]['data']['metadata']['assists']
                 maps_played[matches[m]['data']['metadata']['map']].losses++
 
-            }
-            else {
+            } else {
                 maps_played[matches[m]['data']['metadata']['map']].count++
                 maps_played[matches[m]['data']['metadata']['map']].kills += matches[m]['data']['metadata']['kills']
                 maps_played[matches[m]['data']['metadata']['map']].deaths += matches[m]['data']['metadata']['deaths']
@@ -498,8 +567,7 @@ const UserFunctions = {
                             pStats: {},
                             fStats: {}
                         })
-                    }
-                    else {
+                    } else {
                         let found = false
                         for (pl in teammates) {
                             if (teammates[pl].puuid == matches[m]['data']['players'][userteam][tm]['puuid']) {
@@ -544,8 +612,7 @@ const UserFunctions = {
                                 deaths: matches[m]['data']['metadata']['deaths'],
                                 assists: matches[m]['data']['metadata']['assists'],
                             })
-                        }
-                        else {
+                        } else {
                             let found = false
                             for (act in actStats) {
                                 if (actStats[act].act == acts[a].id) {
@@ -572,8 +639,7 @@ const UserFunctions = {
                             }
                         }
                     }
-                }
-                else {
+                } else {
                     for (act in acts[a].acts) {
                         if (matches[m]['data']['metadata']['season_id'] == acts[a].acts[act].id) {
                             if (actStats.length == 0) {
@@ -587,8 +653,7 @@ const UserFunctions = {
                                     deaths: matches[m]['data']['metadata']['deaths'],
                                     assists: matches[m]['data']['metadata']['assists'],
                                 })
-                            }
-                            else {
+                            } else {
                                 let found = false
                                 for (ac in actStats) {
                                     if (actStats[ac].act == acts[a].acts[act].id) {
@@ -644,16 +709,14 @@ const UserFunctions = {
                             util.c_cast += player.ability_casts.c_cast
                             if (player.behavior.rounds_in_spawn < 1) {
                                 roundCount += (match.data.metadata.rounds_played - player.behavior.afk_rounds)
-                            }
-                            else {
+                            } else {
                                 roundCount += (match.data.metadata.rounds_played - player.behavior.afk_rounds - player.behavior.rounds_in_spawn)
                             }
                         }
                     }
                 }
             }
-        }
-        else {
+        } else {
             matchCount = matches.length
             for (let match of matches) {
                 for (let player of match['data']['players']['all_players']) {
@@ -664,8 +727,7 @@ const UserFunctions = {
                         util.c_cast += player.ability_casts.c_cast
                         if (player.behavior.rounds_in_spawn < 1) {
                             roundCount += (match.data.metadata.rounds_played - player.behavior.afk_rounds)
-                        }
-                        else {
+                        } else {
                             roundCount += (match.data.metadata.rounds_played - player.behavior.afk_rounds - player.behavior.rounds_in_spawn)
                         }
                     }

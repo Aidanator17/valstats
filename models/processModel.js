@@ -1060,10 +1060,17 @@ const processFunctions = {
                     let headshots = match['data']['players']['all_players'][player]['stats']['headshots']
                     let bodyshots = match['data']['players']['all_players'][player]['stats']['bodyshots']
                     let legshots = match['data']['players']['all_players'][player]['stats']['legshots']
+                    match['data']['metadata'].stats = {
+                        headshots,
+                        bodyshots,
+                        legshots
+                    }
                     match['data']['metadata']['kd'] = Math.round((kills / deaths) * 100) / 100
                     match['data']['metadata']['kills'] = kills
                     match['data']['metadata']['deaths'] = deaths
                     match['data']['metadata']['assists'] = assists
+                    match['data']['metadata'].agent_img = match['data']['players']['all_players'][player].assets.agent
+                    match['data']['metadata'].ability_casts = match['data']['players']['all_players'][player]['ability_casts']
                     if ((headshots + legshots + bodyshots) == 0) {
                         match['data']['metadata']['HSP'] = Math.round((headshots / 1) * 1000) / 10
                     } else {
@@ -1148,14 +1155,20 @@ const processFunctions = {
         // console.log(`Retrieved pickrates (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
         return maps
     },
-    get_user_data: async function (uN, tG, ifBatch, agentFilter, userFilter, tagFilter) {
+    get_user_data: async function (uN, tG, ifBatch, agentFilter, userFilter, tagFilter, act) {
         let indent = `    `
         let topIndent = ``
         if (ifBatch) {
             indent = `        `
             topIndent = `    `
         }
-        console.log(`${topIndent}Attempting to retrieve data for ${uN}#${tG}`)
+        if (act) {
+
+            console.log(`Attempting to retrieve act data for ${uN}#${tG}`)
+        } else {
+
+            console.log(`${topIndent}Attempting to retrieve data for ${uN}#${tG}`)
+        }
         let start = Date.now()
         let og = Date.now()
 
@@ -1256,7 +1269,12 @@ const processFunctions = {
                 console.log(indent + `All ${newmatches.length} matches successfully added (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
             }
             let mStart = Date.now()
-            real_matches = (await DatabaseFunctions.get_matches_by_pid(pid)).sort((a, b) => b.match_starttime - a.match_starttime)
+            let real_matches
+            if (act) {
+                real_matches = (await DatabaseFunctions.get_matches_by_pid(pid, act)).sort((a, b) => b.match_starttime - a.match_starttime)
+            } else {
+                real_matches = (await DatabaseFunctions.get_matches_by_pid(pid)).sort((a, b) => b.match_starttime - a.match_starttime)
+            }
             end = Date.now()
             // console.log(indent + `! (${Math.round(((end - mStart) / 1000) * 10) / 10}s)`)
 
@@ -1305,8 +1323,11 @@ const processFunctions = {
             start = Date.now()
             UserInfo.agents = await UserFunctions.getAgentStats(UserInfo['comp_matches'], UserInfo['puuid'])
             UserInfo.agents.sort(compare_count)
+            createJSON('userAgents.json', UserInfo.agents)
             end = Date.now()
             console.log(indent + `Agent stats done and formatted (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+
+            // createJSON('exampleMatch.json',UserInfo['comp_matches'][0])
 
             start = Date.now()
             UserInfo.maps_played = await UserFunctions.getMapStats(UserInfo['comp_matches'], UserInfo['puuid'])
@@ -1658,7 +1679,7 @@ const processFunctions = {
                             } else {
                                 let newAgent = {
                                     name: p.character,
-                                    img:p.assets.agent.small,
+                                    img: p.assets.agent.small,
                                     count: 1,
                                     kills: p.stats.kills,
                                     deaths: p.stats.deaths,
@@ -1721,7 +1742,7 @@ const processFunctions = {
                                     } else {
                                         let newAgent = {
                                             name: p.character,
-                                            img:p.assets.agent.small,
+                                            img: p.assets.agent.small,
                                             count: 1,
                                             kills: p.stats.kills,
                                             deaths: p.stats.deaths,
@@ -1787,7 +1808,7 @@ const processFunctions = {
                                 } else {
                                     let newAgent = {
                                         name: p.character,
-                                        img:p.assets.agent.small,
+                                        img: p.assets.agent.small,
                                         count: 1,
                                         kills: p.stats.kills,
                                         deaths: p.stats.deaths,
@@ -1860,7 +1881,7 @@ const processFunctions = {
                         } else {
                             let newAgent = {
                                 name: p.character,
-                                img:p.assets.agent.small,
+                                img: p.assets.agent.small,
                                 count: 1,
                                 kills: p.stats.kills,
                                 deaths: p.stats.deaths,
@@ -1922,7 +1943,7 @@ const processFunctions = {
                                 } else {
                                     let newAgent = {
                                         name: p.character,
-                                        img:p.assets.agent.small,
+                                        img: p.assets.agent.small,
                                         count: 1,
                                         kills: p.stats.kills,
                                         deaths: p.stats.deaths,
@@ -1988,7 +2009,7 @@ const processFunctions = {
                             } else {
                                 let newAgent = {
                                     name: p.character,
-                                    img:p.assets.agent.small,
+                                    img: p.assets.agent.small,
                                     count: 1,
                                     kills: p.stats.kills,
                                     deaths: p.stats.deaths,
@@ -2120,41 +2141,41 @@ const processFunctions = {
             raw_result.push(match_stats)
         }
         let result = [{
-                score: '7-5',
-                count: 0,
-                comebacks: 0,
-                comeback_matches: []
-            },
-            {
-                score: '8-4',
-                count: 0,
-                comebacks: 0,
-                comeback_matches: []
-            },
-            {
-                score: '9-3',
-                count: 0,
-                comebacks: 0,
-                comeback_matches: []
-            },
-            {
-                score: '10-2',
-                count: 0,
-                comebacks: 0,
-                comeback_matches: []
-            },
-            {
-                score: '11-1',
-                count: 0,
-                comebacks: 0,
-                comeback_matches: []
-            },
-            {
-                score: '12-0',
-                count: 0,
-                comebacks: 0,
-                comeback_matches: []
-            },
+            score: '7-5',
+            count: 0,
+            comebacks: 0,
+            comeback_matches: []
+        },
+        {
+            score: '8-4',
+            count: 0,
+            comebacks: 0,
+            comeback_matches: []
+        },
+        {
+            score: '9-3',
+            count: 0,
+            comebacks: 0,
+            comeback_matches: []
+        },
+        {
+            score: '10-2',
+            count: 0,
+            comebacks: 0,
+            comeback_matches: []
+        },
+        {
+            score: '11-1',
+            count: 0,
+            comebacks: 0,
+            comeback_matches: []
+        },
+        {
+            score: '12-0',
+            count: 0,
+            comebacks: 0,
+            comeback_matches: []
+        },
         ]
         for (m in raw_result) {
             for (i in result) {
@@ -2217,18 +2238,19 @@ const processFunctions = {
         let og = Date.now()
         console.log('MASS UPDATE INITIATED')
 
-        let start = Date.now()
-        const matches = await DatabaseFunctions.mass_retrieve_comp()
-        let end = Date.now()
-        console.log(`Retrieved ${matches.length} matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
 
-        start = Date.now()
+        let start = Date.now()
         const unfEps = await apiFunctions.getData()
         const Eps = await processFunctions.reformatEpisodes(unfEps['acts'])
-        end = Date.now()
+        let end = Date.now()
         console.log(`Retrieved act info (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
 
         await this.fetchTheBoys()
+
+        start = Date.now()
+        const matches = await DatabaseFunctions.mass_retrieve_comp()
+        end = Date.now()
+        console.log(`Retrieved ${matches.length} matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
 
         await DatabaseFunctions.updateAgentData(matches, Eps, this.get_agent_stats)
         await DatabaseFunctions.updateMassAgentData(matches, Eps, this.get_all_agent_stats)
@@ -2272,17 +2294,75 @@ const processFunctions = {
             const [puuid, name] = line.split(' | ');
 
             // Fetch data for the current user
-            await fetchUserData(puuid, name);
-
-            // Wait if this is not the last user
-            if (i < totalUsers - 1) {
-                const waitTimeSeconds = (WAIT_TIME * MAX_API_CALLS_PER_USER) / 1000;
-                console.log(`Continuing in ${waitTimeSeconds.toFixed(2)} seconds...`);
-                await new Promise(resolve => setTimeout(resolve, WAIT_TIME * MAX_API_CALLS_PER_USER));
+            let amt = await this.checkNewMatches(puuid)
+            if (amt) {
+                await fetchUserData(puuid, name);
+                // Wait if this is not the last user
+                if (amt > 11) {
+                    if (i < totalUsers - 1) {
+                        const waitTimeSeconds = (WAIT_TIME * MAX_API_CALLS_PER_USER) / 1000;
+                        console.log(`Continuing in ${waitTimeSeconds.toFixed(2)} seconds...`);
+                        await new Promise(resolve => setTimeout(resolve, WAIT_TIME * MAX_API_CALLS_PER_USER));
+                    }
+                }
+                else {
+                    if (i < totalUsers - 1) {
+                        const waitTimeSeconds = 10
+                        console.log(`Continuing in ${waitTimeSeconds.toFixed(2)} seconds...`);
+                        await new Promise(resolve => setTimeout(resolve, WAIT_TIME * MAX_API_CALLS_PER_USER));
+                    }
+                }
             }
+            else {
+                console.log(`No new matches for ${name}`)
+            }
+
         }
 
         console.log('All users updated.');
+    },
+    checkNewMatches: async function (puuid) {
+        let checker = await DatabaseFunctions.check_player(puuid)
+        let pid = checker[1]
+
+        let start = Date.now()
+        let matchlist = await apiFunctions.getMatchList(puuid, 'na')
+        let end = Date.now()
+
+        if (matchlist) {
+            // console.log(indent + `Retrieved match list data (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+        }
+
+        start = Date.now()
+        const playerMatches = await DatabaseFunctions.get_Player_Matches(pid)
+        let returned_matches = matchlist.length
+        let toRemove = []
+        if (playerMatches.length > 0) {
+            for (matchid in matchlist) {
+                for (let playerMatch in playerMatches) {
+                    if (matchlist[matchid] == playerMatches[playerMatch].matchid) {
+                        toRemove.push(matchlist[matchid])
+                    } else {
+                        continue
+                    }
+                }
+            }
+            for (let item in toRemove) {
+                const index = matchlist.indexOf(toRemove[item]);
+                if (index > -1) {
+                    matchlist.splice(index, 1);
+                    returned_matches--
+                }
+            }
+            end = Date.now()
+        }
+        // console.log(indent + `${returned_matches} undocumented matches found (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+        if (returned_matches == 0) {
+            return false
+        }
+        else {
+            return returned_matches
+        }
     }
 };
 
