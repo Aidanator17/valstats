@@ -564,8 +564,14 @@ const UserFunctions = {
                             wins: winCheckNum(matches[m], puuid),
                             username: matches[m]['data']['players'][userteam][tm]['name'],
                             tag: matches[m]['data']['players'][userteam][tm]['tag'],
-                            pStats: {},
-                            fStats: {}
+                            pStats: {
+                                kills:matches[m]['data'].metadata.kills,
+                                deaths:matches[m]['data'].metadata.deaths
+                            },
+                            fStats: {
+                                kills:matches[m]['data']['players'][userteam][tm].stats.kills,
+                                deaths:matches[m]['data']['players'][userteam][tm].stats.deaths
+                            }
                         })
                     } else {
                         let found = false
@@ -573,6 +579,10 @@ const UserFunctions = {
                             if (teammates[pl].puuid == matches[m]['data']['players'][userteam][tm]['puuid']) {
                                 teammates[pl].count++
                                 teammates[pl].wins += winCheckNum(matches[m], puuid)
+                                teammates[pl].pStats.kills += matches[m]['data'].metadata.kills
+                                teammates[pl].pStats.deaths += matches[m]['data'].metadata.deaths
+                                teammates[pl].fStats.kills += matches[m]['data']['players'][userteam][tm].stats.kills
+                                teammates[pl].fStats.deaths += matches[m]['data']['players'][userteam][tm].stats.deaths
                                 found = true
                                 break
                             }
@@ -584,8 +594,14 @@ const UserFunctions = {
                                 wins: winCheckNum(matches[m], puuid),
                                 username: matches[m]['data']['players'][userteam][tm]['name'],
                                 tag: matches[m]['data']['players'][userteam][tm]['tag'],
-                                pStats: {},
-                                fStats: {}
+                                pStats: {
+                                    kills:matches[m]['data'].metadata.kills,
+                                    deaths:matches[m]['data'].metadata.deaths
+                                },
+                                fStats: {
+                                    kills:matches[m]['data']['players'][userteam][tm].stats.kills,
+                                    deaths:matches[m]['data']['players'][userteam][tm].stats.deaths
+                                }
                             })
                         }
                     }

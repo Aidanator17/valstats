@@ -326,6 +326,8 @@
                 <p class="grid-item-title">Player</p>
                 <p class="grid-item-title">Count</p>
                 <p class="grid-item-title">Win%</p>
+                <p class="grid-item-title">K/D</p>
+                <p class="grid-item-title">Teammate K/D</p>
                 <% for (tm in UserInfo.teammates){ %>
                     <p class="teammate-grid-item">
                         <a style="color: #000000; text-decoration: none;"
@@ -338,6 +340,12 @@
                     </p>
                     <p class="teammate-grid-item">
                         <%= Math.round((UserInfo.teammates[tm].wins/UserInfo.teammates[tm].count)*10000)/100 %>%
+                    </p>
+                    <p class="teammate-grid-item">
+                        <%= Math.round((UserInfo.teammates[tm].pStats.kills/UserInfo.teammates[tm].pStats.deaths)*100)/100 %>
+                    </p>
+                    <p class="teammate-grid-item">
+                        <%= Math.round((UserInfo.teammates[tm].fStats.kills/UserInfo.teammates[tm].fStats.deaths)*100)/100 %>
                     </p>
                     <% } %>
             </div>
