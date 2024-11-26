@@ -37,6 +37,7 @@ const mapRoute = require("./routes/mapRoute");
 const miscRoute = require("./routes/miscRoute");
 const matchRoute = require("./routes/matchRoute");
 const userMatchSearch = require("./routes/userMatchSearch");
+const leaderRoute = require("./routes/leaderRoute");
 
 
 // Middleware for express
@@ -64,6 +65,7 @@ app.use("/map", mapRoute);
 app.use("/misc", miscRoute);
 app.use("/match", matchRoute);
 app.use("/usermatchsearch", userMatchSearch);
+app.use("/leaderboard", leaderRoute);
 
 
 app.get('/', async (req, res) => {
@@ -74,7 +76,7 @@ app.get('/', async (req, res) => {
 })
 
 app.listen(port, '0.0.0.0', () => {
-  console.log(`🚀 Server has started on port ${port}`);
+  console.log(`🚀 Server has started on port ${port} (http://localhost:${port})`);
 });
 
 

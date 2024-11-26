@@ -285,7 +285,7 @@ const DatabaseFunctions = {
                 raw_matches.push(...iter_matches);
                 s += iterTake
                 end = Date.now()
-                console.log(indent+`retrieved ${Math.round((raw_matches.length/totalMatches)*1000)/10}% matches, total: ${raw_matches.length}/${totalMatches} (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+                console.log(indent + `retrieved ${Math.round((raw_matches.length / totalMatches) * 1000) / 10}% matches, total: ${raw_matches.length}/${totalMatches} (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
             }
 
 
@@ -300,6 +300,52 @@ const DatabaseFunctions = {
             }
             end = Date.now()
             // console.log(`Formatted comp matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+            return matches
+        }
+    },
+    small_retrieve_comp: async function (id) {
+        if (id) {
+            let start = Date.now()
+            const raw_matches = await prisma.matches.findMany({
+                take: 300,
+                where: {
+                    match_type: 'competitive',
+                    act_id: id
+                },
+                select: {
+                    match_info: true
+                }
+            })
+            let end = Date.now()
+            console.log(`Retrieved 300 comp matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+            start = Date.now()
+            let matches = []
+            for (m in raw_matches) {
+                matches.push(JSON.parse(raw_matches[m]['match_info']))
+            }
+            end = Date.now()
+            console.log(`Formatted comp matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+            return matches
+        } else {
+            let start = Date.now()
+            const raw_matches = await prisma.matches.findMany({
+                take: 300,
+                where: {
+                    match_type: 'competitive'
+                },
+                select: {
+                    match_info: true
+                }
+            })
+            let end = Date.now()
+            console.log(`Retrieved 300 comp matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+            start = Date.now()
+            let matches = []
+            for (m in raw_matches) {
+                matches.push(JSON.parse(raw_matches[m]['match_info']))
+            }
+            end = Date.now()
+            console.log(`Formatted comp matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
             return matches
         }
     },
