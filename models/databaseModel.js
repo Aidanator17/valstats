@@ -12,7 +12,7 @@ const {
 const prisma = new PrismaClient();
 const fs = require('fs');
 let indent = `    `
-
+const zlib = require('zlib');
 
 async function createJSON(name, jsondata) {
     fs.writeFile('./extra-files/' + name, JSON.stringify(jsondata), function (err) {
@@ -20,18 +20,31 @@ async function createJSON(name, jsondata) {
             console.log(err);
         }
     });
+};
+
+// Helper function for JSON compression
+async function compressJSON(jsonData) {
+    return new Promise((resolve, reject) => {
+        zlib.gzip(jsonData, (err, compressedBuffer) => {
+            if (err) return reject(err);
+            resolve(compressedBuffer);
+        });
+    });
 }
+
 
 const DatabaseFunctions = {
     check_player: async function (puuid) {
-        const players = await prisma.players.findMany();
-        for (player in players) {
-            if (puuid == players[player].puuid) {
-                return [true, players[player].id]
-            }
+        const player = await prisma.players.findUnique({
+            where: { puuid: puuid }
+        });
+    
+        if (player) {
+            return [true, player.id];
         }
-        return [false, null]
-    },
+        return [false, null];
+    }
+    ,
     get_mass_player: async function () {
         const players = await prisma.players.findMany();
         return players
@@ -87,7 +100,7 @@ const DatabaseFunctions = {
         })
     },
     mark_adjust: async function (id) {
-        const update = await prisma.matches.update({
+        const update = await prisma.blob_matches.update({
             where: {
                 match_id: id
             },
@@ -103,7 +116,7 @@ const DatabaseFunctions = {
             for (pmatch in playerMatches) {
                 ids.push(playerMatches[pmatch].matchid)
             }
-            const matches = await prisma.matches.findMany({
+            const matches = await prisma.blob_matches.findMany({
                 where: {
                     match_id: {
                         in: ids
@@ -126,7 +139,7 @@ const DatabaseFunctions = {
             end = Date.now()
             // console.log(indent + `2 (${Math.round(((end - mStart) / 1000) * 10) / 10}s)`)
             mStart = Date.now()
-            const matches = await prisma.matches.findMany({
+            const matches = await prisma.blob_matches.findMany({
                 where: {
                     match_id: {
                         in: ids
@@ -139,7 +152,7 @@ const DatabaseFunctions = {
         }
     },
     get_match_by_match_id: async function (mid) {
-        const match = await prisma.matches.findUnique({
+        const match = await prisma.blob_matches.findUnique({
             where: {
                 match_id: mid
             }
@@ -148,65 +161,73 @@ const DatabaseFunctions = {
     },
     mass_add: async function (matches, unfiltered_matches, pid) {
         try {
-            let matchinput = []
-            for (match in matches) {
-                matchinput.push({
-                    match_id: matches[match]['data']['metadata']['matchid'],
-                    match_info: JSON.stringify(matches[match]),
-                    match_type: matches[match]['data']['metadata']['mode_id'],
-                    match_map: matches[match]['data']['metadata']['map'],
-                    match_starttime: matches[match]['data']['metadata']['game_start'],
-                    act_id: matches[match]['data']['metadata']['season_id']
+            // Compress and prepare match data
+            const matchinput = await Promise.all(
+                matches.map(async (match) => {
+                    const compressedBuffer = await compressJSON(JSON.stringify(match));
+                    return {
+                        match_id: match.data.metadata.matchid,
+                        match_info: compressedBuffer,
+                        match_type: match.data.metadata.mode_id,
+                        match_map: match.data.metadata.map,
+                        match_starttime: match.data.metadata.game_start,
+                        act_id: match.data.metadata.season_id,
+                    };
                 })
+            );
+
+            // Insert matches into the database
+            if (matchinput.length > 0) {
+                await prisma.blob_matches.createMany({
+                    data: matchinput,
+                    skipDuplicates: true,
+                });
+                console.log(`${indent+matchinput.length} matches added successfully.`);
             }
-            const newMatches = await prisma.matches.createMany({
-                data: matchinput,
-                skipDuplicates: true
-            })
-        } catch (error) {
-            console.error('Error creating matches:', error);
-        }
-        if (pid) {
-            try {
-                let userinput = []
-                for (match in unfiltered_matches) {
-                    userinput.push({
-                        player_id: pid,
-                        matchid: unfiltered_matches[match],
-                    })
+
+            // Process unfiltered_matches and player IDs
+            if (pid) {
+                const userinput = unfiltered_matches.map((matchId) => ({
+                    player_id: pid,
+                    matchid: matchId,
+                }));
+
+                if (userinput.length > 0) {
+                    await prisma.players_matches.createMany({
+                        data: userinput,
+                        skipDuplicates: true,
+                    });
+                    // console.log(`${userinput.length} player-match records added successfully.`);
                 }
-                // createJSON('userinput',userinput)
-                const newPlayersMatches = await prisma.players_matches.createMany({
-                    data: userinput,
-                    skipDuplicates: true
-                })
-            } catch (error) {
-                console.error('Error creating player-matches:', error);
             }
+        } catch (error) {
+            console.error('Error in mass_add:', error);
         }
-
-
     },
-    mass_retrieve: async function () {
-        const totalMatches = await prisma.matches.count({
+    mass_retrieve: async function (skip) {
+        let adj = 0
+        if (skip) {
+            adj = 1
+        }
+        const totalMatches = await prisma.blob_matches.count({
             where: {
-                adjusted: 0
+                adjusted: adj
             }
         });
-        let iter = Math.ceil(totalMatches / 100)
+        let iter = Math.ceil(totalMatches / 300)
         let s = 0
         let all_matches = []
         for (let step = 0; step < iter; step++) {
-            const iter_matches = await prisma.matches.findMany({
+            const iter_matches = await prisma.blob_matches.findMany({
                 skip: s,
-                take: 100,
+                take: 300,
                 where: {
-                    adjusted: 0
+                    adjusted: adj
                 }
             })
             all_matches = all_matches.concat(iter_matches)
-            console.log(`retrieved ${iter_matches.length} matches, total: ${all_matches.length}`)
-            s += 100
+            console.log(`retrieved ${iter_matches.length} matches, total: ${all_matches.length}/${totalMatches}`)
+            s += 300
         }
 
 
@@ -214,10 +235,13 @@ const DatabaseFunctions = {
         // await createJSON('mass_retrieve.json',all_matches)
         return all_matches
     },
+    mass_retrieve_old: async function (skip) {
+
+    },
     mass_retrieve_comp: async function (id) {
         if (id) {
             let start = Date.now()
-            const totalMatches = await prisma.matches.count({
+            const totalMatches = await prisma.blob_matches.count({
                 where: {
                     match_type: 'competitive',
                     act_id: id
@@ -227,7 +251,7 @@ const DatabaseFunctions = {
             let s = 0
             let raw_matches = []
             for (let step = 0; step < iter; step++) {
-                const iter_matches = await prisma.matches.findMany({
+                const iter_matches = await prisma.blob_matches.findMany({
                     skip: s,
                     take: 300,
                     where: {
@@ -248,31 +272,52 @@ const DatabaseFunctions = {
 
             let end = Date.now()
             // console.log(`Retrieved comp matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
-            start = Date.now()
             let matches = []
-            for (m in raw_matches) {
-                matches.push(JSON.parse(raw_matches[m]['match_info']))
+            try {
+                start = Date.now()
+                for (m in raw_matches) {
+
+
+                    // Decompress the data
+                    zlib.gunzip(raw_matches[m]['match_info'], (err, decompressedBuffer) => {
+                        if (err) {
+                            console.error('Error decompressing data:', err);
+                            return;
+                        }
+
+                        const jsonData = JSON.parse(decompressedBuffer.toString());
+                        matches.push(jsonData)
+                    });
+                }
+                end = Date.now()
+                console.log(`Decompressed comp matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+            } catch (error) {
+                console.error('Error retrieving data:', error);
             }
-            end = Date.now()
+
+
+
+
+
             // console.log(`Formatted comp matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
             return matches
         } else {
             let start = Date.now()
             let og = Date.now()
-            const totalMatches = await prisma.matches.count({
+            const totalMatches = await prisma.blob_matches.count({
                 where: {
                     match_type: 'competitive'
                 }
             })
             let end = Date.now()
             console.log(`Retrieved comp match count (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
-            iterTake = 100
+            iterTake = 500
             let iter = Math.ceil(totalMatches / iterTake)
             let s = 0
             let raw_matches = []
             for (let step = 0; step < iter; step++) {
                 start = Date.now()
-                const iter_matches = await prisma.matches.findMany({
+                const iter_matches = await prisma.blob_matches.findMany({
                     skip: s,
                     take: iterTake,
                     where: {
@@ -288,15 +333,37 @@ const DatabaseFunctions = {
                 console.log(indent + `retrieved ${Math.round((raw_matches.length / totalMatches) * 1000) / 10}% matches, total: ${raw_matches.length}/${totalMatches} (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
             }
 
-
+            // createJSON('compressTest.json',raw_matches[0]['match_info'].slice(0, 2)); // Should log <Buffer 1f 8b>
+            
 
             end = Date.now()
             console.log(`Retrieved comp matches (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
             start = Date.now()
             let matches = []
-            while (raw_matches.length > 0) {
-                const item = raw_matches.shift();  // Remove the first item from raw_matches
-                matches.push(JSON.parse(item['match_info']));
+            try {
+                start = Date.now()
+
+                for (const match of raw_matches) {
+                    try {
+                        const decompressedBuffer = await new Promise((resolve, reject) => {
+                            zlib.gunzip(match.match_info, (err, buffer) => {
+                                if (err) return reject(err);
+                                resolve(buffer);
+                            });
+                        });
+
+                        const jsonData = JSON.parse(decompressedBuffer.toString());
+                        matches.push(jsonData);
+                    } catch (error) {
+                        console.error('Error decompressing match:', error, 'Match ID:', match.match_id);
+                    }
+                }
+
+                end = Date.now()
+                console.log(`Decompressed comp matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+                return matches;
+            } catch (error) {
+                console.error('Error retrieving data:', error);
             }
             end = Date.now()
             // console.log(`Formatted comp matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
@@ -1045,6 +1112,288 @@ const DatabaseFunctions = {
         }
         return newdata
     },
+    updateLeaderboard: async function (matches, eps) {
+        let start = Date.now()
+        for (let e of eps) {
+            if (e.name != 'Closed Beta') {
+                for (let a of e.acts) {
+                    const leaderboard = {};
+
+                    matches.forEach(match => {
+                        if (match.data.metadata.season_id == a.id) {
+                            const players = match.data.players.all_players; // Access players array
+                            const totalRounds = match.data.metadata.rounds_played; // Total rounds played in the match
+                            const redTeamWon = match.data.teams.red.has_won; // Check if Red team won
+                            const blueTeamWon = match.data.teams.blue.has_won; // Check if Blue team won
+                            const matchDate = match.data.metadata.game_start; // Game start timestamp (Unix)
+
+                            // Loop through each player in the match
+                            players.forEach(player => {
+                                const playerId = player.puuid; // Unique player identifier
+                                const playerName = player.name; // Player name
+                                const playerTag = player.tag; // Player tag
+                                const stats = player.stats; // Player stats for the match
+                                const currentTier = player.currenttier_patched; // Player's rank (string)
+
+                                if (!leaderboard[playerId]) {
+                                    // If player does not exist in the leaderboard, add them
+                                    leaderboard[playerId] = {
+                                        id: playerId,
+                                        name: playerName,
+                                        tag: playerTag,
+                                        matchesPlayed: 0,
+                                        kills: 0,
+                                        deaths: 0,
+                                        assists: 0,
+                                        score: 0,
+                                        bodyshots: 0,
+                                        headshots: 0,
+                                        legshots: 0,
+                                        totalRounds: 0,
+                                        wins: 0, // Initialize wins to 0
+                                        last_known_rank: currentTier, // Initialize rank with current match's rank
+                                        last_known_rank_date: matchDate, // Initialize rank date with current match's timestamp
+                                    };
+                                }
+
+                                // Update player's stats in the leaderboard
+                                leaderboard[playerId].matchesPlayed += 1;
+                                leaderboard[playerId].kills += stats.kills;
+                                leaderboard[playerId].deaths += stats.deaths;
+                                leaderboard[playerId].assists += stats.assists;
+                                leaderboard[playerId].score += stats.score;
+                                leaderboard[playerId].bodyshots += stats.bodyshots;
+                                leaderboard[playerId].headshots += stats.headshots;
+                                leaderboard[playerId].legshots += stats.legshots;
+                                leaderboard[playerId].totalRounds += totalRounds;
+
+                                // Update wins if the player's team won
+                                if ((player.team === 'Red' && redTeamWon) || (player.team === 'Blue' && blueTeamWon)) {
+                                    leaderboard[playerId].wins += 1;
+                                }
+
+                                // Update last_known_rank and last_known_rank_date if this match is more recent
+                                if (matchDate > leaderboard[playerId].last_known_rank_date) {
+                                    leaderboard[playerId].last_known_rank = currentTier;
+                                    leaderboard[playerId].last_known_rank_date = matchDate;
+                                    leaderboard[playerId].name = playerName;
+                                    leaderboard[playerId].tag = playerTag;
+                                }
+                            });
+                        }
+                    });
+
+                    start = Date.now()
+                    // Step 1: Filter out players with less than 20 matches played
+                    const filteredLeaderboard = Object.values(leaderboard).filter(player => player.matchesPlayed >= 20);
+
+                    // Step 2: Loop through each player and calculate new stats
+                    filteredLeaderboard.forEach(player => {
+                        const totalShots = player.headshots + player.bodyshots + player.legshots;
+                        player.headshot_percentage = totalShots > 0 ? (player.headshots / totalShots) * 100 : 0;
+                        player.KD = player.deaths > 0 ? player.kills / player.deaths : player.kills;
+                        player.KDA = player.deaths > 0 ? (player.kills + player.assists) / player.deaths : player.kills + player.assists;
+                        player.win_percentage = (player.wins / player.matchesPlayed) * 100;
+                        player.ACS = player.totalRounds > 0 ? player.score / player.totalRounds : 0;
+                    });
+                    const sortedByHeadshotPercentage = [...filteredLeaderboard].sort((a, b) => b.headshot_percentage - a.headshot_percentage);
+                    const sortedByKD = [...filteredLeaderboard].sort((a, b) => b.KD - a.KD);
+                    const sortedByKDA = [...filteredLeaderboard].sort((a, b) => b.KDA - a.KDA);
+                    const sortedByWinPercentage = [...filteredLeaderboard].sort((a, b) => b.win_percentage - a.win_percentage);
+                    const sortedByACS = [...filteredLeaderboard].sort((a, b) => b.ACS - a.ACS);
+                    const all_data = {
+                        headshot: sortedByHeadshotPercentage,
+                        kd: sortedByKD,
+                        kda: sortedByKDA,
+                        wins: sortedByWinPercentage,
+                        acs: sortedByACS
+                    }
+                    // createJSON(`/leaderboard/test/${a.id}.json`,all_data)
+                    const update = await prisma.leaderboards.upsert({
+                        where: {
+                            act: a.id,
+                        },
+                        update: {
+                            data: JSON.stringify(all_data)
+                        },
+                        create: {
+                            act: a.id,
+                            data: JSON.stringify(all_data)
+                        }
+                    })
+                }
+            }
+        }
+
+        const leaderboard = {};
+
+        matches.forEach(match => {
+            const players = match.data.players.all_players; // Access players array
+            const totalRounds = match.data.metadata.rounds_played; // Total rounds played in the match
+            const redTeamWon = match.data.teams.red.has_won; // Check if Red team won
+            const blueTeamWon = match.data.teams.blue.has_won; // Check if Blue team won
+            const matchDate = match.data.metadata.game_start; // Game start timestamp (Unix)
+
+            // Loop through each player in the match
+            players.forEach(player => {
+                const playerId = player.puuid; // Unique player identifier
+                const playerName = player.name; // Player name
+                const playerTag = player.tag; // Player tag
+                const stats = player.stats; // Player stats for the match
+                const currentTier = player.currenttier_patched; // Player's rank (string)
+
+                if (!leaderboard[playerId]) {
+                    // If player does not exist in the leaderboard, add them
+                    leaderboard[playerId] = {
+                        id: playerId,
+                        name: playerName,
+                        tag: playerTag,
+                        matchesPlayed: 0,
+                        kills: 0,
+                        deaths: 0,
+                        assists: 0,
+                        score: 0,
+                        bodyshots: 0,
+                        headshots: 0,
+                        legshots: 0,
+                        totalRounds: 0,
+                        wins: 0, // Initialize wins to 0
+                        last_known_rank: currentTier, // Initialize rank with current match's rank
+                        last_known_rank_date: matchDate, // Initialize rank date with current match's timestamp
+                    };
+                }
+
+                // Update player's stats in the leaderboard
+                leaderboard[playerId].matchesPlayed += 1;
+                leaderboard[playerId].kills += stats.kills;
+                leaderboard[playerId].deaths += stats.deaths;
+                leaderboard[playerId].assists += stats.assists;
+                leaderboard[playerId].score += stats.score;
+                leaderboard[playerId].bodyshots += stats.bodyshots;
+                leaderboard[playerId].headshots += stats.headshots;
+                leaderboard[playerId].legshots += stats.legshots;
+                leaderboard[playerId].totalRounds += totalRounds;
+
+                // Update wins if the player's team won
+                if ((player.team === 'Red' && redTeamWon) || (player.team === 'Blue' && blueTeamWon)) {
+                    leaderboard[playerId].wins += 1;
+                }
+
+                // Update last_known_rank and last_known_rank_date if this match is more recent
+                if (matchDate > leaderboard[playerId].last_known_rank_date) {
+                    leaderboard[playerId].last_known_rank = currentTier;
+                    leaderboard[playerId].last_known_rank_date = matchDate;
+                    leaderboard[playerId].name = playerName;
+                    leaderboard[playerId].tag = playerTag;
+                }
+            });
+
+        });
+
+        start = Date.now()
+        // Step 1: Filter out players with less than 20 matches played
+        const filteredLeaderboard = Object.values(leaderboard).filter(player => player.matchesPlayed >= 20);
+
+        // Step 2: Loop through each player and calculate new stats
+        filteredLeaderboard.forEach(player => {
+            const totalShots = player.headshots + player.bodyshots + player.legshots;
+            player.headshot_percentage = totalShots > 0 ? (player.headshots / totalShots) * 100 : 0;
+            player.KD = player.deaths > 0 ? player.kills / player.deaths : player.kills;
+            player.KDA = player.deaths > 0 ? (player.kills + player.assists) / player.deaths : player.kills + player.assists;
+            player.win_percentage = (player.wins / player.matchesPlayed) * 100;
+            player.ACS = player.totalRounds > 0 ? player.score / player.totalRounds : 0;
+        });
+        const sortedByHeadshotPercentage = [...filteredLeaderboard].sort((a, b) => b.headshot_percentage - a.headshot_percentage);
+        const sortedByKD = [...filteredLeaderboard].sort((a, b) => b.KD - a.KD);
+        const sortedByKDA = [...filteredLeaderboard].sort((a, b) => b.KDA - a.KDA);
+        const sortedByWinPercentage = [...filteredLeaderboard].sort((a, b) => b.win_percentage - a.win_percentage);
+        const sortedByACS = [...filteredLeaderboard].sort((a, b) => b.ACS - a.ACS);
+        const all_data = {
+            headshot: sortedByHeadshotPercentage,
+            kd: sortedByKD,
+            kda: sortedByKDA,
+            wins: sortedByWinPercentage,
+            acs: sortedByACS
+        }
+        const update = await prisma.leaderboards.upsert({
+            where: {
+                act: 'all',
+            },
+            update: {
+                data: JSON.stringify(all_data)
+            },
+            create: {
+                act: 'all',
+                data: JSON.stringify(all_data)
+            }
+        })
+        let end = Date.now()
+        console.log(`Recorded leaderboard stats (${Math.round(((end - start) / 1000) * 100) / 100}s)`)
+    },
+    getLeaderboard: async function () {
+        const data = await prisma.leaderboards.findMany()
+        for (let i = data.length - 1; i >= 0; i--) {
+            let act = data[i];
+            let parsedData = JSON.parse(act.data);
+            if (parsedData.headshot.length > 0) {
+                act.data = parsedData;
+            } else {
+                data.splice(i, 1); // Remove the element at index i
+            }
+        }
+        createJSON('massLeaderboard.json', data)
+    },
+    blobSwitch: async function () {
+        const BATCH_SIZE = 100; // Number of matches to insert per batch
+
+        const old_matches = await this.mass_retrieve(true);
+
+        async function batchInsertMatches(matches) {
+            for (let i = 0; i < matches.length; i += BATCH_SIZE) {
+                const batch = matches.slice(i, i + BATCH_SIZE);
+
+                // Compress and insert each batch
+                try {
+                    const batchData = await Promise.all(
+                        batch.map(async (match) => {
+                            const compressedBuffer = await new Promise((resolve, reject) => {
+                                zlib.gzip(match.match_info, (err, compressed) => {
+                                    if (err) return reject(err);
+                                    resolve(compressed);
+                                });
+                            });
+
+                            return {
+                                match_id: match.match_id,
+                                match_info: compressedBuffer,
+                                match_type: match.match_type,
+                                match_map: match.match_map,
+                                match_starttime: match.match_starttime,
+                                act_id: match.act_id,
+                                adjusted: match.adjusted,
+                            };
+                        })
+                    );
+
+                    // Batch insert the prepared data
+                    await prisma.blob_matches.createMany({
+                        data: batchData,
+                        skipDuplicates: true, // Prevents errors on duplicate rows
+                    });
+
+                    console.log(`Batch ${i / BATCH_SIZE + 1} inserted successfully.`);
+                } catch (error) {
+                    console.error(`Error inserting batch ${i / BATCH_SIZE + 1}:`, error);
+                }
+            }
+        }
+
+        // Call the batch insertion function
+        await batchInsertMatches(old_matches);
+
+        console.log('All matches inserted.');
+
+    }
 };
 
 module.exports = DatabaseFunctions;

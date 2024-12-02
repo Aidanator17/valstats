@@ -87,18 +87,35 @@ model compact_epi_data {
   data                String @db.MediumText
 }
 
-model PlayerMatchesData {
-  player_match_id Int     @id
-  player_id       Int
-  matchid         String
-  match_info      String?
-
-  @@map("player_matches_data")
+model leaderboards {
+  id   Int    @id @unique(map: "id_UNIQUE") @default(autoincrement())
+  act  String @unique(map: "act_UNIQUE") @db.VarChar(200)
+  data String @db.MediumText
 }
 
-model CompActTotal {
-  act_id    String @id // Match the datatype of act_id in your database, adjust if it's different
+model per_map_stats {
+  per_map_stats_id Int    @id @unique(map: "per_map_stats_id_UNIQUE") @default(autoincrement())
+  map              String @db.VarChar(45)
+  act              String @db.VarChar(45)
+  data             String @db.MediumText
+}
+
+model blob_matches {
+  id              Int     @id @default(autoincrement())
+  match_id        String? @unique(map: "match_id") @db.VarChar(100)
+  match_info      Bytes?  @db.MediumBlob
+  match_type      String? @db.VarChar(45)
+  match_map       String? @db.VarChar(45)
+  match_starttime Int?
+  act_id          String? @db.VarChar(100)
+  adjusted        Int     @default(0) @db.TinyInt
+
+  @@index([match_id], map: "idx_match_id")
+  @@index([match_type], map: "idx_match_type")
+}
+model compActTotal {
+  act_id   String @unique  @db.VarChar(255) // Match the data type of `act_id` in your database
   act_count Int
 
-  @@map("comp_act_total") // Map the model to the view's name
+  @@map("comp_act_total") // Maps to the MySQL view `comp_act_total`
 }

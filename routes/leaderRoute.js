@@ -15,13 +15,15 @@ async function createJSON(name, jsondata) {
 }
 
 router.get('/', async (req, res) => {
+    await DatabaseFunctions.getLeaderboard()
+    res.redirect('/')
+})
+
+router.get('/x', async (req, res) => {
     const matches = await DatabaseFunctions.small_retrieve_comp()
-    // const matches2 = await DatabaseFunctions.mass_retrieve_comp('292f58db-4c17-89a7-b1c0-ba988f0e9d98')
-    // matches.push(...matches2)
-    const leaderboard = {}; // Object to hold player data
+    const leaderboard = {}; 
 
     let start = Date.now()
-    // Loop through each match
     matches.forEach(match => {
         const players = match.data.players.all_players; // Access players array
         const totalRounds = match.data.metadata.rounds_played; // Total rounds played in the match
@@ -99,25 +101,11 @@ router.get('/', async (req, res) => {
         player.win_percentage = (player.wins / player.matchesPlayed) * 100;
         player.ACS = player.totalRounds > 0 ? player.score / player.totalRounds : 0;
     });
-    end = Date.now()
-    console.log(`Calculated additional stats (${Math.round(((end - start) / 1000) * 100) / 100}s)`)
-
-    start = Date.now()
-    // Step 3: Create arrays sorted by each new stat
     const sortedByHeadshotPercentage = [...filteredLeaderboard].sort((a, b) => b.headshot_percentage - a.headshot_percentage);
     const sortedByKD = [...filteredLeaderboard].sort((a, b) => b.KD - a.KD);
     const sortedByKDA = [...filteredLeaderboard].sort((a, b) => b.KDA - a.KDA);
     const sortedByWinPercentage = [...filteredLeaderboard].sort((a, b) => b.win_percentage - a.win_percentage);
     const sortedByACS = [...filteredLeaderboard].sort((a, b) => b.ACS - a.ACS);
-    end = Date.now()
-    console.log(`Duplicated and sorted (${Math.round(((end - start) / 1000) * 100) / 100}s)`)
-
-    createJSON('leaderboard/headshots.json', sortedByHeadshotPercentage)
-    createJSON('leaderboard/kd.json', sortedByKD)
-    createJSON('leaderboard/kda.json', sortedByKDA)
-    createJSON('leaderboard/wins.json', sortedByWinPercentage)
-    createJSON('leaderboard/acs.json', sortedByACS)
-
 
     res.redirect('/')
 })

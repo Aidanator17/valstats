@@ -10,6 +10,7 @@ const {
     machine
 } = require("os");
 const indent = `    `
+const zlib = require('zlib');
 
 async function createJSON(name, jsondata) {
     fs.writeFile('./extra-files/' + name, JSON.stringify(jsondata), function (err) {
@@ -60,68 +61,98 @@ router.get('/mass-adjust', async (req, res) => {
         sheet: 'mass-adjust-style.css'
     })
 })
-router.post('/mass-adjust', async (req, res) => {
-    if (req.body.pw == '123') {
-        console.log('MASS ADJUST INITIATED')
-        const startingP = (await DatabaseFunctions.get_mass_player()).length
-        const startingPM = (await DatabaseFunctions.get_mass_Player_Matches()).length
-        let data = []
-        let count = 1
-        const all_matches = await DatabaseFunctions.mass_retrieve()
 
-        let start
-        let end
-        let og = Date.now()
-        const startTime = Date.now();
-            let iter = 0
-            let avgTimes = []
-            let eta = undefined
-        for (m in all_matches) {
-            let iterStart = Date.now()
-            start = Date.now()
-            let players = JSON.parse(all_matches[m]['match_info'])['data']['players']['all_players']
-            // createJSON("player.json",players)
-            for (p in players) {
-                let checker = await DatabaseFunctions.check_player(players[p]['puuid'])
-                let exist = checker[0]
-                let pid = checker[1]
-                if (!exist) {
-                    const addplayer = await DatabaseFunctions.create_player(players[p]['puuid'])
-                    checker = await DatabaseFunctions.check_player(players[p]['puuid'])
-                    pid = checker[1]
-                }
-                data.push({
-                    player_id: pid,
-                    matchid: JSON.parse(all_matches[m]['match_info'])['data']['metadata']['matchid']
-                })
+// Helper function to decompress data
+const decompressData = (data) =>
+    new Promise((resolve, reject) => {
+        zlib.gunzip(data, (err, decompressedBuffer) => {
+            if (err) {
+                console.error('Error decompressing data:', err);
+                return reject(err);
             }
-            await DatabaseFunctions.add_Player_Matches(data)
-            await DatabaseFunctions.mark_adjust(all_matches[m]['match_id'])
-            end = Date.now()
-            let iterEnd = Date.now()
-            const average = avgTimes => avgTimes.reduce((a, b) => a + b, 0) / avgTimes.length;
-            let itersLeft = all_matches.length - count
-            console.log(`${Math.round((count / all_matches.length) * 10000) / 100}% ETA: ${Math.round((itersLeft*average(avgTimes))/10)/100}s`)
-            avgTimes.push((iterEnd - iterStart))
-            count++
+            try {
+                const jsonData = JSON.parse(decompressedBuffer.toString());
+                resolve(jsonData);
+            } catch (parseError) {
+                console.error('Error parsing JSON data:', parseError);
+                reject(parseError);
+            }
+        });
+    });
+
+router.post('/mass-adjust', async (req, res) => {
+    if (req.body.pw !== '123') {
+        return res.redirect('/admin/mass-adjust');
+    }
+
+    console.log('MASS ADJUST INITIATED');
+    const startOverall = Date.now();
+
+    try {
+        const startingPlayers = (await DatabaseFunctions.get_mass_player()).length;
+        const startingPlayerMatches = (await DatabaseFunctions.get_mass_Player_Matches()).length;
+
+        const all_matches = await DatabaseFunctions.mass_retrieve();
+        const matches = await Promise.all(
+            all_matches.map((match) => decompressData(match['match_info']))
+        );
+
+        let count = 0;
+        const avgTimes = [];
+        for (const match of matches) {
+            const startIter = Date.now();
+            const players = match.data.players.all_players;
+            const matchId = match.data.metadata.matchid;
+            const data = [];
+
+            for (const player of players) {
+                const [exists, playerId] = await DatabaseFunctions.check_player(player.puuid);
+                const pid = exists
+                    ? playerId
+                    : await DatabaseFunctions.create_player(player.puuid)
+                        .then(() => DatabaseFunctions.check_player(player.puuid))
+                        .then(([_, id]) => id);
+
+                data.push({ player_id: pid, matchid: matchId });
+            }
+
+            // Batch add player matches
+            await DatabaseFunctions.add_Player_Matches(data);
+
+            // Mark match as adjusted
+            await DatabaseFunctions.mark_adjust(matchId);
+
+            // Log progress
+            const endIter = Date.now();
+            avgTimes.push(endIter - startIter);
+            const avgTime = avgTimes.reduce((a, b) => a + b, 0) / avgTimes.length;
+            const eta = Math.round(((all_matches.length - count - 1) * avgTime) / 1000);
+            console.log(
+                `${Math.round(((count + 1) / all_matches.length) * 100)}% completed. ETA: ${eta}s`
+            );
+
+            count++;
         }
 
+        const endOverall = Date.now();
+        const totalTime = ((endOverall - startOverall) / 1000).toFixed(1);
+        const newPlayers = (await DatabaseFunctions.get_mass_player()).length;
+        const newPlayerMatches = (await DatabaseFunctions.get_mass_Player_Matches()).length;
 
+        console.log(`MASS ADJUST CONCLUDED (${totalTime}s)`);
+        console.log(
+            `Players table increased by ${newPlayers - startingPlayers} (${startingPlayers} -> ${newPlayers})\n` +
+            `Player-Matches table increased by ${newPlayerMatches - startingPlayerMatches} (${startingPlayerMatches} -> ${newPlayerMatches})`
+        );
 
-
-
-
-        end = Date.now()
-        console.log(`MASS ADJUST CONCLUDED (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
-        const newP = (await DatabaseFunctions.get_mass_player()).length
-        const newPM = (await DatabaseFunctions.get_mass_Player_Matches()).length
-        console.log(`Players table increased by ${newP - startingP} (${startingP} -> ${newP})\nPlayer-Matches table increased by ${newPM - startingPM} (${startingPM} -> ${newPM})`)
-        logMassAdjust(startingP, newP, startingPM, newPM, Math.round(((end - og) / 1000) * 10) / 10)
-        res.redirect('/')
-    } else {
-        res.redirect('/admin/mass-adjust')
+        logMassAdjust(startingPlayers, newPlayers, startingPlayerMatches, newPlayerMatches, totalTime);
+        res.redirect('/');
+    } catch (error) {
+        console.error('Error during mass adjust:', error);
+        res.status(500).send('An error occurred during the process.');
     }
-})
+});
+
 
 router.get('/mass-update', async (req, res) => {
     res.render('admin-password', {

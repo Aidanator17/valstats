@@ -9,6 +9,7 @@ const {
     count
 } = require('console');
 let fetch = require('node-fetch')
+const zlib = require('zlib');
 
 
 function compare_score(a, b) {
@@ -1278,12 +1279,30 @@ const processFunctions = {
             end = Date.now()
             // console.log(indent + `! (${Math.round(((end - mStart) / 1000) * 10) / 10}s)`)
 
-            for (m in real_matches) {
-                UserInfo['matches'].push(await processFunctions.alterMatch(JSON.parse(real_matches[m]['match_info']), UserInfo['puuid'], false))
-            }
+                for (const m in real_matches) {
+                    try {
+                        // Decompress using a Promise
+                        const decompressedBuffer = await new Promise((resolve, reject) => {
+                            zlib.gunzip(real_matches[m]['match_info'], (err, buffer) => {
+                                if (err) return reject(err);
+                                resolve(buffer);
+                            });
+                        });
+            
+                        // Parse the decompressed JSON
+                        const jsonData = JSON.parse(decompressedBuffer.toString());
+            
+                        // Process the match and push the result
+                        const processedMatch = await processFunctions.alterMatch(jsonData, UserInfo['puuid'], false);
+                        UserInfo['matches'].push(processedMatch);
+                    } catch (error) {
+                        console.error('Error processing match:', error);
+                    }
+                }
+
+
             end = Date.now()
             // console.log(indent + `!! (${Math.round(((end - mStart) / 1000) * 10) / 10}s)`)
-            // createJSON('match.json', UserInfo['matches'][0])
             if (agentFilter) {
                 start = Date.now()
                 UserInfo.filter = true
@@ -2257,6 +2276,7 @@ const processFunctions = {
         await DatabaseFunctions.updateMapPicks(matches)
         await DatabaseFunctions.updateMapStats(matches, Eps, this.get_map_stats)
         await DatabaseFunctions.updateEpiData(Eps)
+        await DatabaseFunctions.updateLeaderboard(matches, Eps)
 
         const response = await fetch('http://localhost:8000/admin/mass-adjust', {
             method: 'POST', // Specify the method as POST

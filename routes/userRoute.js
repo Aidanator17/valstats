@@ -5,6 +5,7 @@ const fs = require('fs');
 const DatabaseFunctions = require("../models/databaseModel");
 const processFunctions = require("../models/processModel")
 const UserFunctions = require("../models/userModel.js")
+const zlib = require('zlib');
 
 async function createJSON(name, jsondata) {
     fs.writeFile('./extra-files/' + name, JSON.stringify(jsondata), function (err) {
@@ -70,7 +71,27 @@ function winCheckNum(match, puuid) {
         }
     }
 }
+async function getDecompressedMatch(req) {
+    try {
+        // Retrieve the compressed match from the database
+        const compressedMatch = await DatabaseFunctions.get_match_by_match_id(req.params.matchid);
+        
+        // Decompress the match_info
+        const decompressedBuffer = await new Promise((resolve, reject) => {
+            zlib.gunzip(compressedMatch['match_info'], (err, buffer) => {
+                if (err) return reject(err);
+                resolve(buffer);
+            });
+        });
 
+        // Parse the decompressed data
+        const match = JSON.parse(decompressedBuffer.toString());
+        return match;
+    } catch (error) {
+        console.error('Error retrieving or decompressing match:', error);
+        throw error;
+    }
+}
 
 
 router.get('/', async (req, res) => {
@@ -131,7 +152,9 @@ router.get('/:user/:tag', async (req, res) => {
 
 router.get('/:user/:tag/:matchid', async (req, res) => {
     let start = Date.now()
-    const match = JSON.parse((await DatabaseFunctions.get_match_by_match_id(req.params.matchid))['match_info'])
+
+    const match = await getDecompressedMatch(req);
+
     const puuid = (await apiFunctions.getBasic(req.params.user, req.params.tag)).puuid
     match['data']['metadata']['main-username'] = req.params.user
     match['data']['metadata']['main-tag'] = req.params.tag
