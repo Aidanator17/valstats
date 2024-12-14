@@ -157,7 +157,7 @@ router.post('/mass-adjust', async (req, res) => {
 router.get('/mass-update', async (req, res) => {
     res.render('admin-password', {
         key: "mass-update",
-        title: 'All Agents Stats',
+        title: 'Mass Update',
         sheet: 'mass-adjust-style.css'
     })
 })

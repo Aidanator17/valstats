@@ -80,6 +80,31 @@ function lossCheckNum(match, puuid) {
     }
 }
 
+function matchPlants(match, puuid) {
+    let plants = 0
+    for (let r of match.data.rounds) {
+        if (r.bomb_planted) {
+            if (r.plant_events.planted_by.puuid == puuid) {
+                plants++
+            }
+        }
+    }
+    return plants
+}
+function matchAgentPlants(match, puuid, agent) {
+    let plants = 0
+    if (match.data.metadata.agent == agent) {
+        for (let r of match.data.rounds) {
+            if (r.bomb_planted) {
+                if (r.plant_events.planted_by.puuid == puuid) {
+                    plants++
+                }
+            }
+        }
+    }
+    return plants
+}
+
 const UserFunctions = {
     getTotalStats: async function (matches, puuid) {
         let overall = {
@@ -170,6 +195,7 @@ const UserFunctions = {
                         wins: 1,
                         losses: 0,
                         draws: 0,
+                        plants: matchAgentPlants(matches[m],puuid,matches[m]['data']['metadata']['agent']),
                         headshots: matches[m]['data']['metadata'].stats.headshots,
                         bodyshots: matches[m]['data']['metadata'].stats.bodyshots,
                         legshots: matches[m]['data']['metadata'].stats.legshots,
@@ -207,6 +233,7 @@ const UserFunctions = {
                         wins: 0,
                         losses: 1,
                         draws: 0,
+                        plants: matchAgentPlants(matches[m],puuid,matches[m]['data']['metadata']['agent']),
                         headshots: matches[m]['data']['metadata'].stats.headshots,
                         bodyshots: matches[m]['data']['metadata'].stats.bodyshots,
                         legshots: matches[m]['data']['metadata'].stats.legshots,
@@ -244,6 +271,7 @@ const UserFunctions = {
                         wins: 0,
                         losses: 0,
                         draws: 1,
+                        plants: matchAgentPlants(matches[m],puuid,matches[m]['data']['metadata']['agent']),
                         headshots: matches[m]['data']['metadata'].stats.headshots,
                         bodyshots: matches[m]['data']['metadata'].stats.bodyshots,
                         legshots: matches[m]['data']['metadata'].stats.legshots,
@@ -291,10 +319,11 @@ const UserFunctions = {
                             agents[a].draws++
                             agents[a].maps[matches[m]['data']['metadata']['map']]++
                         }
+                        agents[a].plants += matchAgentPlants(matches[m],puuid,matches[m]['data']['metadata']['agent'])
 
-                        agents.headshots += matches[m]['data']['metadata'].stats.headshots
-                        agents.bodyshots += matches[m]['data']['metadata'].stats.bodyshots
-                        agents.legshots += matches[m]['data']['metadata'].stats.legshots
+                        agents[a].headshots += matches[m]['data']['metadata'].stats.headshots
+                        agents[a].bodyshots += matches[m]['data']['metadata'].stats.bodyshots
+                        agents[a].legshots += matches[m]['data']['metadata'].stats.legshots
 
                         agents[a].rounds += matches[m]['data']['metadata'].rounds_played
                         agents[a].ability_casts.c_cast += matches[m]['data']['metadata'].ability_casts.c_cast
@@ -314,6 +343,7 @@ const UserFunctions = {
                             wins: 1,
                             losses: 0,
                             draws: 0,
+                            plants: matchAgentPlants(matches[m],puuid,matches[m]['data']['metadata']['agent']),
                             headshots: matches[m]['data']['metadata'].stats.headshots,
                             bodyshots: matches[m]['data']['metadata'].stats.bodyshots,
                             legshots: matches[m]['data']['metadata'].stats.legshots,
@@ -351,6 +381,7 @@ const UserFunctions = {
                             wins: 0,
                             losses: 1,
                             draws: 0,
+                            plants: matchAgentPlants(matches[m],puuid,matches[m]['data']['metadata']['agent']),
                             headshots: matches[m]['data']['metadata'].stats.headshots,
                             bodyshots: matches[m]['data']['metadata'].stats.bodyshots,
                             legshots: matches[m]['data']['metadata'].stats.legshots,
@@ -388,6 +419,7 @@ const UserFunctions = {
                             wins: 0,
                             losses: 0,
                             draws: 1,
+                            plants: matchAgentPlants(matches[m],puuid,matches[m]['data']['metadata']['agent']),
                             headshots: matches[m]['data']['metadata'].stats.headshots,
                             bodyshots: matches[m]['data']['metadata'].stats.bodyshots,
                             legshots: matches[m]['data']['metadata'].stats.legshots,
@@ -565,12 +597,12 @@ const UserFunctions = {
                             username: matches[m]['data']['players'][userteam][tm]['name'],
                             tag: matches[m]['data']['players'][userteam][tm]['tag'],
                             pStats: {
-                                kills:matches[m]['data'].metadata.kills,
-                                deaths:matches[m]['data'].metadata.deaths
+                                kills: matches[m]['data'].metadata.kills,
+                                deaths: matches[m]['data'].metadata.deaths
                             },
                             fStats: {
-                                kills:matches[m]['data']['players'][userteam][tm].stats.kills,
-                                deaths:matches[m]['data']['players'][userteam][tm].stats.deaths
+                                kills: matches[m]['data']['players'][userteam][tm].stats.kills,
+                                deaths: matches[m]['data']['players'][userteam][tm].stats.deaths
                             }
                         })
                     } else {
@@ -595,12 +627,12 @@ const UserFunctions = {
                                 username: matches[m]['data']['players'][userteam][tm]['name'],
                                 tag: matches[m]['data']['players'][userteam][tm]['tag'],
                                 pStats: {
-                                    kills:matches[m]['data'].metadata.kills,
-                                    deaths:matches[m]['data'].metadata.deaths
+                                    kills: matches[m]['data'].metadata.kills,
+                                    deaths: matches[m]['data'].metadata.deaths
                                 },
                                 fStats: {
-                                    kills:matches[m]['data']['players'][userteam][tm].stats.kills,
-                                    deaths:matches[m]['data']['players'][userteam][tm].stats.deaths
+                                    kills: matches[m]['data']['players'][userteam][tm].stats.kills,
+                                    deaths: matches[m]['data']['players'][userteam][tm].stats.deaths
                                 }
                             })
                         }
