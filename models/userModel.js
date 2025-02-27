@@ -104,6 +104,30 @@ function matchAgentPlants(match, puuid, agent) {
     }
     return plants
 }
+function createKillEvents(rounds) {
+    rounds.forEach(round => {
+        if (!round.kill_events) {
+            round.kill_events = [];
+
+            // Populate kill_events from player_stats
+            round.player_stats.forEach(player => {
+                player.kill_events.forEach(event => {
+                    round.kill_events.push({
+                        killer_puuid: player.player_puuid,
+                        killer_team: player.player_team,
+                        victim_puuid: event.victim_puuid,
+                        victim_team: round.player_stats.find(p => p.player_puuid === event.victim_puuid)?.player_team || null,
+                        time: event.kill_time_in_round,
+                    });
+                });
+            });
+
+            // Sort by time for proper event chronology
+            round.kill_events.sort((a, b) => a.time - b.time);
+        }
+    });
+}
+
 
 const UserFunctions = {
     getTotalStats: async function (matches, puuid) {
@@ -195,7 +219,7 @@ const UserFunctions = {
                         wins: 1,
                         losses: 0,
                         draws: 0,
-                        plants: matchAgentPlants(matches[m],puuid,matches[m]['data']['metadata']['agent']),
+                        plants: matchAgentPlants(matches[m], puuid, matches[m]['data']['metadata']['agent']),
                         headshots: matches[m]['data']['metadata'].stats.headshots,
                         bodyshots: matches[m]['data']['metadata'].stats.bodyshots,
                         legshots: matches[m]['data']['metadata'].stats.legshots,
@@ -233,7 +257,7 @@ const UserFunctions = {
                         wins: 0,
                         losses: 1,
                         draws: 0,
-                        plants: matchAgentPlants(matches[m],puuid,matches[m]['data']['metadata']['agent']),
+                        plants: matchAgentPlants(matches[m], puuid, matches[m]['data']['metadata']['agent']),
                         headshots: matches[m]['data']['metadata'].stats.headshots,
                         bodyshots: matches[m]['data']['metadata'].stats.bodyshots,
                         legshots: matches[m]['data']['metadata'].stats.legshots,
@@ -271,7 +295,7 @@ const UserFunctions = {
                         wins: 0,
                         losses: 0,
                         draws: 1,
-                        plants: matchAgentPlants(matches[m],puuid,matches[m]['data']['metadata']['agent']),
+                        plants: matchAgentPlants(matches[m], puuid, matches[m]['data']['metadata']['agent']),
                         headshots: matches[m]['data']['metadata'].stats.headshots,
                         bodyshots: matches[m]['data']['metadata'].stats.bodyshots,
                         legshots: matches[m]['data']['metadata'].stats.legshots,
@@ -319,7 +343,7 @@ const UserFunctions = {
                             agents[a].draws++
                             agents[a].maps[matches[m]['data']['metadata']['map']]++
                         }
-                        agents[a].plants += matchAgentPlants(matches[m],puuid,matches[m]['data']['metadata']['agent'])
+                        agents[a].plants += matchAgentPlants(matches[m], puuid, matches[m]['data']['metadata']['agent'])
 
                         agents[a].headshots += matches[m]['data']['metadata'].stats.headshots
                         agents[a].bodyshots += matches[m]['data']['metadata'].stats.bodyshots
@@ -343,7 +367,7 @@ const UserFunctions = {
                             wins: 1,
                             losses: 0,
                             draws: 0,
-                            plants: matchAgentPlants(matches[m],puuid,matches[m]['data']['metadata']['agent']),
+                            plants: matchAgentPlants(matches[m], puuid, matches[m]['data']['metadata']['agent']),
                             headshots: matches[m]['data']['metadata'].stats.headshots,
                             bodyshots: matches[m]['data']['metadata'].stats.bodyshots,
                             legshots: matches[m]['data']['metadata'].stats.legshots,
@@ -381,7 +405,7 @@ const UserFunctions = {
                             wins: 0,
                             losses: 1,
                             draws: 0,
-                            plants: matchAgentPlants(matches[m],puuid,matches[m]['data']['metadata']['agent']),
+                            plants: matchAgentPlants(matches[m], puuid, matches[m]['data']['metadata']['agent']),
                             headshots: matches[m]['data']['metadata'].stats.headshots,
                             bodyshots: matches[m]['data']['metadata'].stats.bodyshots,
                             legshots: matches[m]['data']['metadata'].stats.legshots,
@@ -419,7 +443,7 @@ const UserFunctions = {
                             wins: 0,
                             losses: 0,
                             draws: 1,
-                            plants: matchAgentPlants(matches[m],puuid,matches[m]['data']['metadata']['agent']),
+                            plants: matchAgentPlants(matches[m], puuid, matches[m]['data']['metadata']['agent']),
                             headshots: matches[m]['data']['metadata'].stats.headshots,
                             bodyshots: matches[m]['data']['metadata'].stats.bodyshots,
                             legshots: matches[m]['data']['metadata'].stats.legshots,
@@ -798,6 +822,159 @@ const UserFunctions = {
             }
         }
         return utilUsage
+    },
+    calculateClutches: async function (matches, playerPUUID) {
+        const clutchCounts = {
+            '1v2': 0,
+            '1v3': 0,
+            '1v4': 0,
+            '1v5': 0,
+            '1v6': 0,
+            '1v7': 0,
+        };
+
+        matches.forEach(match => {
+            createKillEvents(match.data.rounds); // Prepare kill events
+
+            match.data.rounds.forEach(round => {
+                const playerStats = round.player_stats.find(p => p.player_puuid === playerPUUID);
+                if (!playerStats) return;
+
+                const playerTeam = playerStats.player_team;
+
+                // Create arrays for alive teammates and enemies
+                const aliveTeammates = round.player_stats
+                    .filter(p => p.player_team === playerTeam && p.player_puuid !== playerPUUID)
+                    .map(p => p.player_puuid);
+
+                const aliveEnemies = round.player_stats
+                    .filter(p => p.player_team !== playerTeam)
+                    .map(p => p.player_puuid);
+
+                let lastTeammateDeathIndex = -1;
+
+                // Process kill events to track deaths
+                for (let index = 0; index < round.kill_events.length; index++) {
+                    const event = round.kill_events[index];
+
+                    if (aliveTeammates.includes(event.victim_puuid)) {
+                        // Remove killed teammate
+                        aliveTeammates.splice(aliveTeammates.indexOf(event.victim_puuid), 1);
+                    }
+
+                    if (aliveTeammates.length === 0 && lastTeammateDeathIndex === -1) {
+                        // Record when the last teammate dies
+                        lastTeammateDeathIndex = index;
+                        break; // Stop looping since all teammates are dead
+                    }
+
+                    if (aliveEnemies.includes(event.victim_puuid)) {
+                        // Remove killed enemy
+                        aliveEnemies.splice(aliveEnemies.indexOf(event.victim_puuid), 1);
+                    }
+                }
+
+                // Only proceed if all teammates are dead
+                if (lastTeammateDeathIndex !== -1) {
+                    const clutchKillEvents = round.kill_events.slice(lastTeammateDeathIndex + 1);
+
+                    // Calculate clutch size based on alive enemies at last teammate's death
+                    const clutchSize = `1v${aliveEnemies.length}`;
+                    if (round.winning_team === playerTeam && clutchKillEvents.length > 0) {
+                        if (clutchCounts[clutchSize] !== undefined) {
+                            clutchCounts[clutchSize]++;
+                        }
+
+                        // Special cases for 1v6 and 1v7 (based on revives)
+                        if (aliveEnemies.length === 6) {
+                            clutchCounts['1v6']++;
+                        } else if (aliveEnemies.length === 7) {
+                            clutchCounts['1v7']++;
+                        }
+                    }
+                }
+            });
+        });
+
+        return clutchCounts;
+    },
+    getKillStreak: async function (matches, playerPUUID) {
+        let longestKillStreak = 0;
+
+        // Create a unified kill events array
+        const allKillEvents = [];
+        matches.forEach(match => {
+            createKillEvents(match.data.rounds); // Ensure kill events are created
+            match.data.rounds.forEach(round => {
+                allKillEvents.push(...round.kill_events);
+            });
+        });
+
+        // Sort all kill events by time to maintain chronological order
+        allKillEvents.sort((a, b) => a.time - b.time);
+
+        // Calculate the longest kill streak
+        let currentStreak = 0;
+        for (let i = 0; i < allKillEvents.length; i++) {
+            const event = allKillEvents[i];
+
+            if (event.killer_puuid === playerPUUID) {
+                // Player got a kill; increment the current streak
+                currentStreak++;
+                longestKillStreak = Math.max(longestKillStreak, currentStreak);
+            } else if (event.victim_puuid === playerPUUID) {
+                // Player died; reset the streak
+                currentStreak = 0;
+            }
+        }
+
+        return longestKillStreak;
+    },
+    getTop5Matches: async function (matches, playerPUUID) {
+        
+        const top5 = {
+            ACS: [],
+            Kills: [],
+            HeadshotPercentage: [],
+        };
+
+        matches.forEach(match => {
+            const playerData = match.data.players.all_players.find(player => player.puuid === playerPUUID);
+            if (!playerData) return; // Skip if player data is not found
+
+            // Calculate ACS
+            const roundsPlayed = match.data.metadata.rounds_played;
+            const score = playerData.stats.score;
+            const ACS = parseFloat((score / roundsPlayed).toFixed(1));
+
+            // Retrieve kills
+            const kills = playerData.stats.kills;
+
+            // Calculate headshot percentage
+            const headshots = playerData.stats.headshots;
+            const bodyshots = playerData.stats.bodyshots;
+            const legshots = playerData.stats.legshots;
+            const totalShots = headshots + bodyshots + legshots;
+            const headshotPercentage = totalShots > 0
+                ? parseFloat(((headshots / totalShots) * 100).toFixed(1))
+                : 0;
+
+            // Get match ID and agent played
+            const matchId = match.data.metadata.matchid;
+            const agent = playerData.character;
+
+            // Add match data to respective categories
+            top5.ACS.push({ matchId, agent, value: ACS });
+            top5.Kills.push({ matchId, agent, value: kills });
+            top5.HeadshotPercentage.push({ matchId, agent, value: headshotPercentage });
+        });
+
+        // Sort each category and retain the top 5 matches
+        top5.ACS.sort((a, b) => b.value - a.value).splice(5);
+        top5.Kills.sort((a, b) => b.value - a.value).splice(5);
+        top5.HeadshotPercentage.sort((a, b) => b.value - a.value).splice(5);
+
+        return top5;
     }
 };
 

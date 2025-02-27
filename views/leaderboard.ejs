@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard</title>
+    <link rel="stylesheet" href="/css/leaderboard.css">
+</head>
+<body>
+    <header>
+        <h1>Leaderboard</h1>
+    </header>
+    <main>
+        <section id="acts-grid">
+            <% acts.forEach((episode) => { %>
+                <% const episodeHasData = episode.acts.some(act => 
+                    leaderboard.some(lb => lb.act === act.id && 
+                    Object.values(lb.data).some(category => category.length >= 10))
+                ); %>
+                <% if (episodeHasData) { %>
+                    <div class="episode">
+                        <h2><%= episode.name %></h2>
+                        <div class="acts-grid">
+                            <% episode.acts.forEach((act) => { %>
+                                <% const actHasData = leaderboard.some(lb => lb.act === act.id && 
+                                    Object.values(lb.data).some(category => category.length >= 10)); %>
+                                <% if (actHasData) { %>
+                                    <button 
+                                        class="act-btn <%= act.isActive ? 'active' : '' %>" 
+                                        data-act-id="<%= act.id %>">
+                                        <%= act.name %>
+                                    </button>
+                                <% } %>
+                            <% }) %>
+                        </div>
+                    </div>
+                <% } %>
+            <% }) %>
+        </section>
+        <section id="leaderboard">
+            <% leaderboard.forEach((actLeaderboard) => { %>
+                <% const isValidLeaderboard = Object.values(actLeaderboard.data).some(category => category.length >= 10); %>
+                <% if (isValidLeaderboard) { %>
+                    <div 
+                        class="leaderboard-content" 
+                        id="leaderboard-<%= actLeaderboard.act %>" 
+                        style="<%= acts.some(ep => ep.acts.some(act => act.id === actLeaderboard.act && act.isActive)) ? '' : 'display:none;' %>">
+                        <% const orderedStats = ['ACS', 'wins', 'KD', 'headshot', 'KDA']; %>
+                        <% for (const category of orderedStats) { %>
+                            <% const categoryKey = category.toLowerCase(); %> <!-- Fix for matching lowercase keys -->
+                            <% const players = actLeaderboard.data[categoryKey]; %>
+                            <% if (players && players.length >= 10) { %>
+                                <div class="category">
+                                    <h3><%= category.toUpperCase() %></h3>
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Player</th>
+                                                <th>
+                                                    <% if (categoryKey === 'wins') { %>
+                                                        Win %
+                                                    <% } else if (categoryKey === 'headshot') { %>
+                                                        Headshot %
+                                                    <% } else { %>
+                                                        <%= category %>
+                                                    <% } %>
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% players.forEach((player) => { %>
+                                                <tr>
+                                                    <td>
+                                                        <a href="/user/<%= player.id %>" 
+                                                           style="color: #800020; text-decoration: none;">
+                                                            <%= player.name %>#<%= player.tag %>
+                                                        </a>
+                                                    </td>
+                                                    <td>
+                                                        <% if (categoryKey === 'headshot') { %>
+                                                            <%= player.headshot_percentage.toFixed(2) %>%
+                                                        <% } else if (categoryKey === 'kd') { %>
+                                                            <%= player.KD.toFixed(2) %>
+                                                        <% } else if (categoryKey === 'kda') { %>
+                                                            <%= player.KDA.toFixed(2) %>
+                                                        <% } else if (categoryKey === 'acs') { %>
+                                                            <%= player.ACS.toFixed(2) %>
+                                                        <% } else if (categoryKey === 'wins') { %>
+                                                            <%= player.win_percentage.toFixed(2) %>%
+                                                        <% } %>
+                                                    </td>
+                                                </tr>
+                                            <% }) %>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <% } %>
+                        <% } %>
+                    </div>
+                <% } %>
+            <% }) %>
+        </section>
+    </main>
+    <script>
+        document.querySelectorAll('.act-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const actId = button.getAttribute('data-act-id');
+
+                // Remove 'active' class from all buttons
+                document.querySelectorAll('.act-btn').forEach(btn => btn.classList.remove('active'));
+                // Add 'active' class to the clicked button
+                button.classList.add('active');
+
+                // Hide all leaderboard sections
+                document.querySelectorAll('.leaderboard-content').forEach(section => {
+                    section.style.display = 'none';
+                });
+
+                // Show the selected leaderboard section
+                document.getElementById(`leaderboard-${actId}`).style.display = 'block';
+            });
+        });
+    </script>
+</body>
+</html>

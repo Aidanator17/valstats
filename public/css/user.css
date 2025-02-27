@@ -192,7 +192,7 @@ body, html {
 
 .matchgrid-item {
   background: #f9f9f9;
-  padding: 20px;
+  padding: 10px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: grid;
@@ -211,7 +211,7 @@ body, html {
 }
 
 #matchrank {
-  width: 85%;
+  width: 50%;
 }
 
 .view-button {

@@ -10,6 +10,7 @@ const {
 } = require('console');
 let fetch = require('node-fetch')
 const zlib = require('zlib');
+const API_BASE_URL = 'http://localhost:8000';
 
 
 function compare_score(a, b) {
@@ -71,6 +72,7 @@ function getAgentRole(agentName) {
         "kay/o": "Initiator",
         "fade": "Initiator",
         "gekko": "Initiator",
+        "tejo": "Initiator",
     };
     // console.log(`${agentName} => ${agentRoles[agentName]}`)
     return agentRoles[agentName] || "Unknown Role";
@@ -397,7 +399,6 @@ function wait(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 async function fetchUserData(puuid, name) {
-    const API_BASE_URL = 'http://localhost:8000';
     try {
         const response = await fetch(`${API_BASE_URL}/user/${puuid}`);
         if (response.ok) {
@@ -1279,26 +1280,26 @@ const processFunctions = {
             end = Date.now()
             // console.log(indent + `! (${Math.round(((end - mStart) / 1000) * 10) / 10}s)`)
 
-                for (const m in real_matches) {
-                    try {
-                        // Decompress using a Promise
-                        const decompressedBuffer = await new Promise((resolve, reject) => {
-                            zlib.gunzip(real_matches[m]['match_info'], (err, buffer) => {
-                                if (err) return reject(err);
-                                resolve(buffer);
-                            });
+            for (const m in real_matches) {
+                try {
+                    // Decompress using a Promise
+                    const decompressedBuffer = await new Promise((resolve, reject) => {
+                        zlib.gunzip(real_matches[m]['match_info'], (err, buffer) => {
+                            if (err) return reject(err);
+                            resolve(buffer);
                         });
-            
-                        // Parse the decompressed JSON
-                        const jsonData = JSON.parse(decompressedBuffer.toString());
-            
-                        // Process the match and push the result
-                        const processedMatch = await processFunctions.alterMatch(jsonData, UserInfo['puuid'], false);
-                        UserInfo['matches'].push(processedMatch);
-                    } catch (error) {
-                        console.error('Error processing match:', error);
-                    }
+                    });
+
+                    // Parse the decompressed JSON
+                    const jsonData = JSON.parse(decompressedBuffer.toString());
+
+                    // Process the match and push the result
+                    const processedMatch = await processFunctions.alterMatch(jsonData, UserInfo['puuid'], false);
+                    UserInfo['matches'].push(processedMatch);
+                } catch (error) {
+                    console.error('Error processing match:', error);
                 }
+            }
 
 
             end = Date.now()
@@ -1346,7 +1347,7 @@ const processFunctions = {
             end = Date.now()
             console.log(indent + `Agent stats done and formatted (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
 
-            // createJSON('exampleMatch.json',UserInfo['comp_matches'][0])
+            createJSON('exampleMatch.json', UserInfo['comp_matches'][0])
 
             start = Date.now()
             UserInfo.maps_played = await UserFunctions.getMapStats(UserInfo['comp_matches'], UserInfo['puuid'])
@@ -1372,7 +1373,7 @@ const processFunctions = {
             UserInfo.teammates = await UserFunctions.getTeammates(UserInfo['comp_matches'], UserInfo['puuid'])
             let reformatTeammates = []
             for (pl in UserInfo.teammates) {
-                if (UserInfo.teammates[pl].count > 1) {
+                if (UserInfo.teammates[pl].count > 2) {
                     reformatTeammates.push(UserInfo.teammates[pl])
                 }
             }
@@ -1401,7 +1402,10 @@ const processFunctions = {
             end = Date.now()
             console.log(indent + `Util usage done (not visible yet, WIP) (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
 
-            // await createJSON(`/utilUsage/${UserInfo.username.replace(' ','_')}.json`, UserInfo.utilUsage)
+            UserInfo.killStreak = await UserFunctions.getKillStreak(UserInfo['comp_matches'], UserInfo['puuid'])
+
+            UserInfo.topFiveMatches = await UserFunctions.getTop5Matches(UserInfo['comp_matches'], UserInfo['puuid'])
+            createJSON('top5.json', UserInfo.topFiveMatches)
 
 
 
@@ -2072,6 +2076,7 @@ const processFunctions = {
     },
     adjustLastEpisodeActs: async function (episodes) {
         const lastEpisode = episodes[episodes.length - 1];
+        // console.log(lastEpisode)
 
         if (lastEpisode.acts.length > 0) {
             // Check if Act 1 is active
@@ -2090,12 +2095,13 @@ const processFunctions = {
         return episodes;
     },
     reformatEpisodes: async function (data) {
+        // createJSON('data.json',data)
         const result = [];
         let currentEpisode = null;
 
         // Iterate through the data
         for (let i = data.length - 1; i >= 0; i--) {
-            if (data[i].name.startsWith("EPISODE")) {
+            if (data[i].name.startsWith("EPISODE") || data[i].name.startsWith("V")) {
                 currentEpisode = {
                     id: data[i].id,
                     name: data[i].name,
@@ -2260,7 +2266,7 @@ const processFunctions = {
 
         let start = Date.now()
         const unfEps = await apiFunctions.getData()
-        const Eps = await processFunctions.reformatEpisodes(unfEps['acts'])
+        let Eps = await processFunctions.reformatEpisodes(unfEps['acts'])
         let end = Date.now()
         console.log(`Retrieved act info (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
 
@@ -2271,12 +2277,15 @@ const processFunctions = {
         end = Date.now()
         console.log(`Retrieved ${matches.length} matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
 
+        await DatabaseFunctions.updateEpiData(Eps)
+        await DatabaseFunctions.updateCompActTotals(matches)
+        Eps = await DatabaseFunctions.getEpiData()
         await DatabaseFunctions.updateAgentData(matches, Eps, this.get_agent_stats)
         await DatabaseFunctions.updateMassAgentData(matches, Eps, this.get_all_agent_stats)
         await DatabaseFunctions.updateMapPicks(matches)
         await DatabaseFunctions.updateMapStats(matches, Eps, this.get_map_stats)
-        await DatabaseFunctions.updateEpiData(Eps)
         await DatabaseFunctions.updateLeaderboard(matches, Eps)
+        await createJSON("half_stats.json", await this.getHalfStats(matches))
 
         const response = await fetch('http://localhost:8000/admin/mass-adjust', {
             method: 'POST', // Specify the method as POST
@@ -2383,7 +2392,32 @@ const processFunctions = {
         else {
             return returned_matches
         }
-    }
+    },
+    batchAdd: async function (puuidArray) {
+        for (let i = 0; i < puuidArray.length; i++) {
+            const puuid = puuidArray[i];
+            // Check how many new matches there are for this puuid
+            const amt = await this.checkNewMatches(puuid);
+
+            if (amt) {
+                // Execute the GET request
+                await fetch(`${API_BASE_URL}/user/${puuid}`);
+
+                // Only wait if this isn't the last iteration
+                if (i < puuidArray.length - 1) {
+                    // Determine wait time based on the number of matches
+                    const waitTimeMs = amt > 11 ? 40000 : 10000;
+                    const waitTimeSeconds = waitTimeMs / 1000;
+                    // Next iteration in human count is (i+2)
+                    console.log(`Waiting ${waitTimeSeconds} seconds... On iteration ${i + 2} of ${puuidArray.length}`);
+                    await new Promise(resolve => setTimeout(resolve, waitTimeMs));
+                }
+            } else {
+                console.log(`No new matches for ${puuid}`);
+            }
+        }
+    },
+
 };
 
 module.exports = processFunctions;

@@ -38,7 +38,7 @@ const DatabaseFunctions = {
         const player = await prisma.players.findUnique({
             where: { puuid: puuid }
         });
-    
+
         if (player) {
             return [true, player.id];
         }
@@ -182,7 +182,7 @@ const DatabaseFunctions = {
                     data: matchinput,
                     skipDuplicates: true,
                 });
-                console.log(`${indent+matchinput.length} matches added successfully.`);
+                console.log(`${indent + matchinput.length} matches added successfully.`);
             }
 
             // Process unfiltered_matches and player IDs
@@ -334,7 +334,7 @@ const DatabaseFunctions = {
             }
 
             // createJSON('compressTest.json',raw_matches[0]['match_info'].slice(0, 2)); // Should log <Buffer 1f 8b>
-            
+
 
             end = Date.now()
             console.log(`Retrieved comp matches (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
@@ -541,7 +541,8 @@ const DatabaseFunctions = {
             "Gekko",
             "Iso",
             "Deadlock",
-            "Vyse"
+            "Vyse",
+            "Tejo"
         ]
         console.log('UPDATING AGENT DATA')
         let start = Date.now()
@@ -615,12 +616,14 @@ const DatabaseFunctions = {
         console.log(`AGENT DATA UPDATED (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
     },
     getMassAgentData: async function (act) {
+        console.log(act)
         if (act) {
             const data = await prisma.mass_agents.findUnique({
                 where: {
                     act
                 }
             })
+            console.log(data)
             return JSON.parse(data.data)
         } else {
             let act = 'all'
@@ -712,47 +715,96 @@ const DatabaseFunctions = {
         console.log(indent + `MASS AGENT DATA UPDATED (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
 
     },
-    getMapPicks: async function (map) {
-        if (map) {
-            const data = await prisma.map_picks.findMany({
-                where: {
-                    map
-                },
-                select: {
-                    map: true,
-                    count: true,
-                    act: true
+    getMapPicks: async function (map, act) {
+        if (act) {
+            if (map) {
+                const data = await prisma.map_picks.findMany({
+                    where: {
+                        map,
+                        act
+                    },
+                    select: {
+                        map: true,
+                        count: true,
+                        act: true
+                    }
+                })
+                let final = {
+                    map,
+                    count: 0,
                 }
-            })
-            let final = {
-                map,
-                count: 0,
-            }
-            for (let act of data) {
-                final.count += act.count
-            }
-            return final
-
-        } else {
-            let final = {}
-            const data = await prisma.map_picks.findMany({
-                select: {
-                    map: true,
-                    count: true,
-                    act: true
+                for (let act of data) {
+                    final.count += act.count
                 }
-            })
-            for (let d of data) {
-                if (final[d.map]) {
-                    final[d.map].count += d.count
-                } else {
-                    final[d.map] = {
-                        count: d.count
+                return final
+        
+            } else {
+                let final = {}
+                const data = await prisma.map_picks.findMany({
+                    where: {
+                        act
+                    },
+                    select: {
+                        map: true,
+                        count: true,
+                        act: true
+                    }
+                })
+                for (let d of data) {
+                    if (final[d.map]) {
+                        final[d.map].count += d.count
+                    } else {
+                        final[d.map] = {
+                            count: d.count
+                        }
                     }
                 }
+                return final
             }
-            return final
         }
+        else {
+            if (map) {
+                const data = await prisma.map_picks.findMany({
+                    where: {
+                        map
+                    },
+                    select: {
+                        map: true,
+                        count: true,
+                        act: true
+                    }
+                })
+                let final = {
+                    map,
+                    count: 0,
+                }
+                for (let act of data) {
+                    final.count += act.count
+                }
+                return final
+
+            } else {
+                let final = {}
+                const data = await prisma.map_picks.findMany({
+                    select: {
+                        map: true,
+                        count: true,
+                        act: true
+                    }
+                })
+                for (let d of data) {
+                    if (final[d.map]) {
+                        final[d.map].count += d.count
+                    } else {
+                        final[d.map] = {
+                            count: d.count
+                        }
+                    }
+                }
+                return final
+            }
+        }
+
     },
     getMapPicksByAct: async function (act, map) {
         if (map) {
@@ -946,9 +998,47 @@ const DatabaseFunctions = {
         }
     },
     getCompActTotals: async function () {
-        const data = await prisma.compActTotal.findMany()
+        const data = await prisma.act_comp_totals.findMany()
         // console.log(data)
         return data
+    },
+    updateCompActTotals: async function (matches) {
+        let totals = [];
+
+        for (let match of matches) {
+            let actId = match.data.metadata.season_id;
+            let existing = totals.find(item => item.act_id === actId);
+
+            if (existing) {
+                // If act_id exists, increment act_count
+                existing.act_count += 1;
+            } else {
+                // If act_id doesn't exist, add a new object with count 1
+                totals.push({ act_id: actId, act_count: 1 });
+            }
+        }
+
+        for (let total of totals) {
+            const { act_id, act_count } = total;
+
+            // Check if the act_id already exists in the table
+            const existing = await prisma.act_comp_totals.findUnique({
+                where: { act_id: act_id },
+            });
+
+            if (existing) {
+                // If it exists, update the act_count
+                await prisma.act_comp_totals.update({
+                    where: { act_id: act_id },
+                    data: { act_count: act_count },
+                });
+            } else {
+                // If it doesn't exist, create a new entry
+                await prisma.act_comp_totals.create({
+                    data: { act_id: act_id, act_count: act_count },
+                });
+            }
+        }
     },
     updateMapStats: async function (matches, Eps, get_map_stats) {
         console.log('UPDATING MAP STATS DATA')
@@ -1061,7 +1151,6 @@ const DatabaseFunctions = {
 
     },
     updateEpiData: async function (d) {
-        console.log(`UPDATING EPISODE DATA`)
         let start = Date.now()
         let data = JSON.stringify(d)
         const update = await prisma.compact_epi_data.update({
@@ -1073,7 +1162,6 @@ const DatabaseFunctions = {
             }
         })
         let end = Date.now()
-        console.log(`Done (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
     },
     getEpiData: async function () {
         const actCount = await this.getCompActTotals()
@@ -1110,7 +1198,18 @@ const DatabaseFunctions = {
                 }
             }
         }
+        createJSON('actData.json', newdata)
         return newdata
+    },
+    getActiveAct: async function (){
+        let data = await this.getEpiData()
+        for (const episode of data) {
+            const activeAct = episode.acts.find(act => act.isActive === true);
+            if (activeAct) {
+                return activeAct;
+            }
+        }
+        return null; // Return null if no active act is found
     },
     updateLeaderboard: async function (matches, eps) {
         let start = Date.now()
@@ -1185,7 +1284,7 @@ const DatabaseFunctions = {
 
                     start = Date.now()
                     // Step 1: Filter out players with less than 20 matches played
-                    const filteredLeaderboard = Object.values(leaderboard).filter(player => player.matchesPlayed >= 20);
+                    const filteredLeaderboard = Object.values(leaderboard).filter(player => player.matchesPlayed >= 10);
 
                     // Step 2: Loop through each player and calculate new stats
                     filteredLeaderboard.forEach(player => {
@@ -1342,6 +1441,7 @@ const DatabaseFunctions = {
             }
         }
         createJSON('massLeaderboard.json', data)
+        return data
     },
     blobSwitch: async function () {
         const BATCH_SIZE = 100; // Number of matches to insert per batch
@@ -1393,7 +1493,18 @@ const DatabaseFunctions = {
 
         console.log('All matches inserted.');
 
-    }
+    },
+    getRandomPlayers: async function (iter) {
+        // Use a raw query to get random rows from the players table
+        const rows = await prisma.$queryRaw`
+          SELECT puuid 
+          FROM players 
+          ORDER BY RAND() 
+          LIMIT ${iter}
+        `;
+        // Map the resulting rows to extract only the 'puuid' strings.
+        return rows.map(row => row.puuid);
+      }
 };
 
 module.exports = DatabaseFunctions;

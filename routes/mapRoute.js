@@ -19,6 +19,7 @@ router.get('/', async (req, res) => {
 })
 router.get('/all_lookup', async (req, res) => {
     const Eps = await DatabaseFunctions.getEpiData()
+    createJSON('episodes.json',Eps)
     if (req.query.failed == 'true') {
         res.render('map_lookup', {
             failed: true,
@@ -89,12 +90,7 @@ router.get('/id/:id', async (req, res) => {
 })
 
 router.get('/:mapName', async (req, res) => {
-    const matches = await DatabaseFunctions.mass_retrieve_comp()
-    const Eps = await DatabaseFunctions.getEpiData()
-    await DatabaseFunctions.updateMapStats(matches, Eps, processFunctions.get_map_stats)
-
-    let data = await DatabaseFunctions.getMapStats(undefined, 'Ascent')
-    createJSON('ascentStats.json', data)
+    
     res.redirect('/map')
 })
 router.get('/:mapName/:actID', async (req, res) => {

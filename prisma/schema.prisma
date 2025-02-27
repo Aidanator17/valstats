@@ -113,9 +113,9 @@ model blob_matches {
   @@index([match_id], map: "idx_match_id")
   @@index([match_type], map: "idx_match_type")
 }
-model compActTotal {
-  act_id   String @unique  @db.VarChar(255) // Match the data type of `act_id` in your database
-  act_count Int
 
-  @@map("comp_act_total") // Maps to the MySQL view `comp_act_total`
+model act_comp_totals {
+  id        Int    @id @default(autoincrement())
+  act_id    String @unique(map: "act_id_UNIQUE") @db.VarChar(200)
+  act_count Int?
 }

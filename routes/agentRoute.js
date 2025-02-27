@@ -80,7 +80,8 @@ router.get('/', async (req, res) => {
         "Gekko",
         "Iso",
         "Deadlock",
-        "Vyse"
+        "Vyse",
+        "Tejo"
     ]
     if (req.query.failed == 'true') {
         res.render('agentLookup', {
@@ -125,7 +126,8 @@ router.post('/', async (req, res) => {
         "Gekko",
         "Iso",
         "Deadlock",
-        "Vyse"
+        "Vyse",
+        "Tejo"
     ]
     if (agentList.includes(req.body.agent)) {
         res.redirect('/agent/' + req.body.agent)
@@ -240,12 +242,15 @@ router.get('/:agent', async (req, res) => {
         "Gekko",
         "Iso",
         "Deadlock",
-        "Vyse"
+        "Vyse",
+        "Tejo"
     ]
     if (agentList.includes(req.params.agent)) {
-        let agentRaw = await DatabaseFunctions.getAgentData(req.params.agent);
-        let agent = combineAgentActs(agentRaw)
-        const map_pickrate = await DatabaseFunctions.getMapPicks()
+        let activeAct = await DatabaseFunctions.getActiveAct()
+        let activeActId = activeAct.id
+        let agentRaw = await DatabaseFunctions.getAgentData(req.params.agent,activeActId);
+        let agent = await DatabaseFunctions.getAgentData(req.params.agent);
+        const map_pickrate = await DatabaseFunctions.getMapPicks(undefined,activeActId)
         // createJSON(`/agentData/${req.params.agent}-agent.json`,agentRaw)
         let totalPicks = 0;
 

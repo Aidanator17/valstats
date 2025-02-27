@@ -132,6 +132,13 @@ const UserData = {
             headers: {},
         });
         const data = await response.json();
+        const wrongActs = ["ac12e9b3-47e6-9599-8fa1-0bb473e5efc7","5adc33fa-4f30-2899-f131-6fba64c5dd3a","4c4b8cff-43eb-13d3-8f14-96b783c90cd2","c470d964-4bf4-1261-87aa-c484252f2d66"]
+        data.acts = data.acts.filter(ep => !wrongActs.includes(ep.id));
+        // for (let ep of data.acts){
+        //     if (ep.id == "439dd42d-4a59-9e41-b50b-1ebb6810f22c"){
+        //         ep.name = 'EPISODE 10'
+        //     }
+        // }
         return data
     },
     activeSeason: async function () {

@@ -49,20 +49,6 @@ function logMassAdjust(startingP, newP, startingPM, newPM, duration) {
 function getRandomInt(max) {
     return Math.floor(Math.random() * max);
 }
-
-router.get('/', async (req, res) => {
-    res.redirect('/')
-})
-
-router.get('/mass-adjust', async (req, res) => {
-    res.render('admin-password', {
-        key: "mass-adjust",
-        title: 'All Agents Stats',
-        sheet: 'mass-adjust-style.css'
-    })
-})
-
-// Helper function to decompress data
 const decompressData = (data) =>
     new Promise((resolve, reject) => {
         zlib.gunzip(data, (err, decompressedBuffer) => {
@@ -80,6 +66,21 @@ const decompressData = (data) =>
         });
     });
 
+router.get('/', async (req, res) => {
+    res.redirect('/admin/index')
+})
+router.get('/index', async (req, res) => {
+    res.render('adminIndex')
+})
+
+
+router.get('/mass-adjust', async (req, res) => {
+    res.render('admin-password', {
+        key: "mass-adjust",
+        title: 'All Agents Stats',
+        sheet: 'mass-adjust-style.css'
+    })
+})
 router.post('/mass-adjust', async (req, res) => {
     if (req.body.pw !== '123') {
         return res.redirect('/admin/mass-adjust');
@@ -144,8 +145,9 @@ router.post('/mass-adjust', async (req, res) => {
             `Players table increased by ${newPlayers - startingPlayers} (${startingPlayers} -> ${newPlayers})\n` +
             `Player-Matches table increased by ${newPlayerMatches - startingPlayerMatches} (${startingPlayerMatches} -> ${newPlayerMatches})`
         );
-
-        logMassAdjust(startingPlayers, newPlayers, startingPlayerMatches, newPlayerMatches, totalTime);
+        if (matches.length > 0) {
+            logMassAdjust(startingPlayers, newPlayers, startingPlayerMatches, newPlayerMatches, totalTime);
+        }
         res.redirect('/');
     } catch (error) {
         console.error('Error during mass adjust:', error);
@@ -164,112 +166,107 @@ router.get('/mass-update', async (req, res) => {
 router.post('/mass-update', async (req, res) => {
     if (req.body.pw == '123') {
         await processFunctions.massUpdateData()
-        res.redirect('/')
+        res.redirect('/user/Aidanator/JAX')
     } else {
         res.redirect('/admin/mass-update')
     }
 })
 
-router.get('/test-api', async (req, res) => {
-    res.render('admin-password', {
-        key: "test-api",
-        title: 'All Agents Stats',
-        sheet: 'mass-adjust-style.css'
-    })
-})
-router.post('/test-api', async (req, res) => {
-    if (req.body.pw == '123') {
-        console.log('API TEST INITIATED')
-        // let testMatches = true
-        // let testUserPUUID = true 
-        // let testUsernames = true
-
-        let start = Date.now()
-        let og = Date.now()
-        const matches = await DatabaseFunctions.mass_retrieve()
-        let end = Date.now()
-        console.log(indent + `Retrieved ${matches.length} matches from local database (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
-
-        start = Date.now()
-        let failedMatches = 0
-        for (let i = 0; i < 5; i++) {
-            try {
-                chosenMatch = matches[getRandomInt(matches.length)].match_id
-                await apiFunctions.getMatch(chosenMatch)
-            } catch {
-                console.log(indent + `FAILED - Attempted to find match: ${chosenMatch}`)
-                failedMatches++
-            }
-        }
-        end = Date.now()
-        if (failedMatches == 0) {
-            console.log(indent + `Successfully found all 5 matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
-        } else {
-            console.log(indent + `Failed to find ${failedMatches}/5 matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
-        }
-
-        start = Date.now()
-        const users = await DatabaseFunctions.get_mass_player()
-        end = Date.now()
-        console.log(indent + `Retrieved ${users.length} players from local database (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
-
-        start = Date.now()
-        let failedUsers = 0
-        let successfulUsers = []
-        for (let i = 0; i < 10; i++) {
-            try {
-                chosenUser = users[getRandomInt(users.length)].puuid
-                const testUser = await apiFunctions.getBasic_by_puuid(chosenUser)
-                if (testUser.username == 'error') {
-                    throw new Error()
-                }
-                successfulUsers.push(testUser)
-            } catch {
-                console.log(indent + `FAILED - Attempted to find user by PUUID: ${chosenUser}`)
-                failedUsers++
-            }
-        }
-        end = Date.now()
-        if (failedUsers == 0) {
-            console.log(indent + `Successfully found all 10 users by PUUID (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
-        } else {
-            console.log(indent + `Failed to find ${failedUsers}/10 users by PUUID (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
-        }
-
-        start = Date.now()
-        let failedUsernames = 0
-        for (u in successfulUsers) {
-            try {
-                chosenUsername = successfulUsers[u].username
-                chosenTag = successfulUsers[u].tag
-                const testUser = await apiFunctions.getBasic(chosenUsername, chosenTag)
-            } catch (err) {
-                console.log(indent + `FAILED - Attempted to find user by Username: ${chosenUsername}#${chosenTag}`)
-                // console.log(err)
-                failedUsernames++
-            }
-        }
-        end = Date.now()
-        if (failedUsernames == 0) {
-            console.log(indent + `Successfully found all ${successfulUsers.length} users by PUUID (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
-        } else {
-            console.log(indent + `Failed to find ${failedUsernames}/${successfulUsers.length} users by Username (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
-        }
-        end = Date.now()
-        if (failedUsernames == 0 && failedMatches == 0 && failedUsers == 0) {
-            console.log(`API running at 100% (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
-        } else {
-            console.log(`API NOT running at 100%, check logs (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
-        }
-        res.redirect('/')
-    } else {
-        res.redirect('/admin/test-api')
-    }
-})
-router.get('/boys', async (req, res) => {
+router.get('/update-friends', async (req, res) => {
     await processFunctions.fetchTheBoys()
     res.redirect('/')
 })
+router.get('/update-episodes', async (req, res) => {
+    let start = Date.now()
+    const unfEps = await apiFunctions.getData()
+    let Eps = await processFunctions.reformatEpisodes(unfEps['acts'])
+    await DatabaseFunctions.updateEpiData(Eps)
+    let end = Date.now()
+    console.log(`Updated Episode Data (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+    res.redirect('/')
+})
+router.get('/update-agent-data', async (req, res) => {
+    let og = Date.now()
+
+    const unfEps = await apiFunctions.getData()
+    let Eps = await processFunctions.reformatEpisodes(unfEps['acts'])
+
+    let start = Date.now()
+    const matches = await DatabaseFunctions.mass_retrieve_comp()
+    let end = Date.now()
+    console.log(`Retrieved ${matches.length} matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+
+    await DatabaseFunctions.updateAgentData(matches, Eps, processFunctions.get_agent_stats)
+    await DatabaseFunctions.updateMassAgentData(matches, Eps, processFunctions.get_all_agent_stats)
+
+    end = Date.now()
+
+    console.log(`Updated Agent Data (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
+    res.redirect('/')
+})
+router.get('/update-map-data', async (req, res) => {
+    let og = Date.now()
+
+    const unfEps = await apiFunctions.getData()
+    let Eps = await processFunctions.reformatEpisodes(unfEps['acts'])
+
+    let start = Date.now()
+    const matches = await DatabaseFunctions.mass_retrieve_comp()
+    let end = Date.now()
+    console.log(`Retrieved ${matches.length} matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+
+    await DatabaseFunctions.updateMapPicks(matches)
+    await DatabaseFunctions.updateMapStats(matches, Eps, processFunctions.get_map_stats)
+
+    end = Date.now()
+
+    console.log(`Updated Map Data (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
+    res.redirect('/')
+})
+router.get('/update-leaderboard', async (req, res) => {
+    let og = Date.now()
+
+    const unfEps = await apiFunctions.getData()
+    let Eps = await processFunctions.reformatEpisodes(unfEps['acts'])
+
+    let start = Date.now()
+    const matches = await DatabaseFunctions.mass_retrieve_comp()
+    let end = Date.now()
+    console.log(`Retrieved ${matches.length} matches (${Math.round(((end - start) / 1000) * 10) / 10}s)`)
+
+    await DatabaseFunctions.updateLeaderboard(matches, Eps)
+
+    end = Date.now()
+
+    console.log(`Updated the leaderboard (${Math.round(((end - og) / 1000) * 10) / 10}s)`)
+    res.redirect('/')
+})
+router.get('/batch-add', async (req, res) => {
+    res.render('run-limit', {
+        key: "batch-add",
+        title: 'Batch Add',
+        sheet: 'mass-adjust-style.css'
+    })
+})
+router.post('/batch-add', async (req, res) => {
+    if (req.body.iter.trim() === "") {
+        return res.redirect('/admin/batch-add');
+    } else {
+        let num = Number(req.body.iter);
+        let players = []
+        if (isNaN(num)) {
+            return res.redirect('/admin/batch-add');
+        } else if (Number.isInteger(num)) {
+            players = await DatabaseFunctions.getRandomPlayers(num)
+            await processFunctions.batchAdd(players)
+        } else {
+            num = Math.round(num);
+            players = await DatabaseFunctions.getRandomPlayers(num)
+            await processFunctions.batchAdd(players)
+        }
+    }
+    res.redirect('/admin/');
+});
 
 
 module.exports = router
